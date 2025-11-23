@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate PWA Icons</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        canvas {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        button {
+            background: #3b3b3b;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover { background: #555; }
+        .instructions {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PWA Icon Generator for DevUtils</h1>
+        <div class="instructions">
+            <p><strong>Instructions:</strong></p>
+            <ol>
+                <li>Click "Generate 192x192" to create the icon-192.png</li>
+                <li>Click "Generate 512x512" to create the icon-512.png</li>
+                <li>Right-click each canvas and "Save image as..."</li>
+                <li>Save them as icon-192.png and icon-512.png in the /public folder</li>
+            </ol>
+        </div>
+        
+        <h3>192x192 Icon</h3>
+        <canvas id="canvas192" width="192" height="192"></canvas>
+        <button onclick="generateIcon(192)">Generate 192x192</button>
+        <a id="download192" download="icon-192.png" style="display:none;">
+            <button>Download 192x192</button>
+        </a>
+        
+        <h3>512x512 Icon</h3>
+        <canvas id="canvas512" width="512" height="512"></canvas>
+        <button onclick="generateIcon(512)">Generate 512x512</button>
+        <a id="download512" download="icon-512.png" style="display:none;">
+            <button>Download 512x512</button>
+        </a>
+    </div>
+
+    <script>
+        function generateIcon(size) {
+            const canvas = document.getElementById(`canvas${size}`);
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, size, size);
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#3b3b3b');
+            gradient.addColorStop(1, '#1a1a1a');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Draw "DU" text
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${size * 0.4}px system-ui`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('DU', size / 2, size / 2);
+            
+            // Create download link
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const link = document.getElementById(`download${size}`);
+                link.href = url;
+                link.style.display = 'inline-block';
+            });
+        }
+        
+        // Generate on load
+        window.onload = () => {
+            generateIcon(192);
+            generateIcon(512);
+        };
+    </script>
+</body>
+</html>
+

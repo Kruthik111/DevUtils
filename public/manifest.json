@@ -1,0 +1,47 @@
+{
+  "name": "DevUtils - Developer Tools",
+  "short_name": "DevUtils",
+  "description": "A collection of developer tools for notes, testing, server management, and more",
+  "start_url": "/",
+  "display": "standalone",
+  "scope": "/",
+  "background_color": "#fef9f3",
+  "theme_color": "#3b3b3b",
+  "orientation": "any",
+  "dir": "ltr",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["developer", "productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Notes",
+      "short_name": "Notes",
+      "description": "Quick access to notes",
+      "url": "/notes",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Settings",
+      "short_name": "Settings",
+      "description": "App settings",
+      "url": "/settings",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}
+
