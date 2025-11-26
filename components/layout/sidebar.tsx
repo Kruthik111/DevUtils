@@ -1,11 +1,11 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { 
-  StickyNote, 
-  FlaskConical, 
-  Server, 
-  Database, 
+import {
+  StickyNote,
+  FlaskConical,
+  Server,
+  Database,
   Puzzle,
   User
 } from "lucide-react";
@@ -42,7 +42,7 @@ export function Sidebar() {
   return (
     <TooltipProvider>
       {/* Sidebar - same position for mobile and desktop, toggle on mobile */}
-      <aside 
+      <aside
         className={cn(
           "fixed right-4 top-1/2 -translate-y-1/2 z-50",
           // On mobile: toggle visibility, on desktop: always visible
@@ -53,7 +53,7 @@ export function Sidebar() {
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
-            
+
             return (
               <Tooltip key={item.id}>
                 <TooltipTrigger asChild>
@@ -74,7 +74,7 @@ export function Sidebar() {
                     <Icon className="w-5 h-5" />
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="left" className="bg-background/95 backdrop-blur-xl border border-border/50 rounded-xl shadow-lg">
+                <TooltipContent side="left" className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-700 dark:border-gray-300">
                   <p className="font-medium">{item.label}</p>
                 </TooltipContent>
               </Tooltip>
