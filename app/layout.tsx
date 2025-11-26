@@ -52,14 +52,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider
-          attribute="data-theme"
-          defaultTheme="light"
-          themes={["light", "dark", "orange", "purple", "blue", "green", "custom"]}
-          enableSystem={false}
-          storageKey="devutils-theme"
-          disableTransitionOnChange={false}
-        >
+        <ThemeProvider defaultTheme="light">
           <AuthProvider>
             <LayoutWrapper>{children}</LayoutWrapper>
           </AuthProvider>

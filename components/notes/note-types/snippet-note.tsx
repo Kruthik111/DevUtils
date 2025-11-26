@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { Copy, Code, Check } from 'lucide-react';
+import { Copy, Code, Check, Zap } from 'lucide-react';
 import { copyToClipboard } from '@/lib/notes/clipboard';
 
 interface SnippetNoteProps {
@@ -40,7 +40,13 @@ export function SnippetNote({ content, copyMode }: SnippetNoteProps) {
                 } ${copyMode === 'active' ? 'cursor-pointer' : ''}`}
             onClick={handleClick}
         >
-            <Code className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
+         {
+             copyMode === 'active' ? (
+                 <Zap className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
+            ) : (
+                <Code className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
+            )
+         }   
             <pre className="flex-1 text-sm font-mono whitespace-pre-wrap break-words text-foreground/90">
                 {content}
             </pre>

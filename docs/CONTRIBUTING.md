@@ -73,7 +73,7 @@ export function Button({ label, onClick, variant = "primary" }: ButtonProps) {
       onClick={onClick}
       className={cn(
         "px-4 py-2 rounded-xl transition-all duration-200",
-        variant === "primary" && "bg-primary text-primary-foreground",
+        variant === "primary" && "bg-primary text-background",
         variant === "secondary" && "bg-secondary text-secondary-foreground"
       )}
     >

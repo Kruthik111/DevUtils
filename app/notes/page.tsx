@@ -18,6 +18,7 @@ export default function NotesPage() {
   const [editingBlock, setEditingBlock] = useState<{ note: Note; block: TextBlock } | null>(null);
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
   const [deletingBlock, setDeletingBlock] = useState<{ noteId: string; blockId: string } | null>(null);
+  const [tabDeleteWarning, setTabDeleteWarning] = useState(false);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -125,6 +126,13 @@ export default function NotesPage() {
 
   const handleDeleteTab = (tabId: string) => {
     if (!activeGroup || activeGroup.tabs.length <= 1) return;
+
+    // Check if tab has notes
+    const tabToDelete = activeGroup.tabs.find((t) => t.id === tabId);
+    if (tabToDelete && tabToDelete.notes.length > 0) {
+      setTabDeleteWarning(true);
+      return;
+    }
 
     const updatedTabs = activeGroup.tabs.filter((t) => t.id !== tabId);
     const updatedGroups = data.groups.map((g) =>
@@ -517,6 +525,15 @@ export default function NotesPage() {
           message="Are you sure you want to delete this block? This action cannot be undone."
           onConfirm={handleDeleteBlock}
           onCancel={() => setDeletingBlock(null)}
+        />
+
+        {/* Tab Delete Warning */}
+        <ConfirmDialog
+          isOpen={tabDeleteWarning}
+          title="Cannot Delete Tab"
+          message="This tab contains notes and cannot be deleted. Please remove all notes from the tab before deleting it."
+          onConfirm={() => setTabDeleteWarning(false)}
+          onCancel={() => setTabDeleteWarning(false)}
         />
 
         {/* Context Menu */}

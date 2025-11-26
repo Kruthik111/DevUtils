@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/providers/theme-provider";
 import { Palette, Menu, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { themes, type Theme } from "@/lib/theme-config";
@@ -56,7 +56,7 @@ export function Navbar() {
         isHeaderCollapsed ? "h-0 -translate-y-full opacity-0" : "h-16 translate-y-0 opacity-100"
       )}>
         <div className="flex items-center gap-2">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-400 dark:to-purple-500 bg-clip-text text-transparent">
+          <h1 className="text-xl font-bold from-blue-500 to-purple-600 dark:from-blue-400 dark:to-purple-500 bg-clip-text text-transparent">
             DevUtils
           </h1>
         </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Download, Upload, Trash2, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ConfirmDialog } from "@/components/notes/confirm-dialog";
 
 const PROFILE_KEY = "devutils-profile";
 
@@ -12,6 +13,7 @@ export default function ProfilePage() {
   const [storagePercentage, setStoragePercentage] = useState(0);
   const [name, setName] = useState("");
   const [isEditingName, setIsEditingName] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   useEffect(() => {
     calculateStorage();
@@ -121,10 +123,8 @@ export default function ProfilePage() {
   };
 
   const clearStorage = () => {
-    if (confirm("Are you sure you want to clear all localStorage data? This cannot be undone.")) {
-      localStorage.clear();
-      window.location.reload();
-    }
+    localStorage.clear();
+    window.location.reload();
   };
 
   const circumference = 2 * Math.PI * 45;
@@ -169,7 +169,7 @@ export default function ProfilePage() {
                       onClick={saveProfile}
                       className={cn(
                         "px-4 py-2 rounded-xl text-sm font-medium",
-                        "bg-primary text-primary-foreground",
+                        "bg-primary text-background",
                         "hover:bg-primary/90 transition-all"
                       )}
                     >
@@ -234,8 +234,8 @@ export default function ProfilePage() {
                       storagePercentage > 80
                         ? "text-red-500"
                         : storagePercentage > 50
-                        ? "text-yellow-500"
-                        : "text-primary"
+                          ? "text-yellow-500"
+                          : "text-primary"
                     )}
                     strokeLinecap="round"
                   />
@@ -275,7 +275,7 @@ export default function ProfilePage() {
                   onClick={exportStorage}
                   className={cn(
                     "flex items-center gap-2 px-6 py-3 rounded-xl",
-                    "bg-primary text-primary-foreground",
+                    "bg-primary text-background",
                     "hover:bg-primary/90 transition-all",
                     "font-medium"
                   )}
@@ -318,11 +318,11 @@ export default function ProfilePage() {
             <h2 className="text-xl font-semibold mb-4">Danger Zone</h2>
             <div className="flex items-center gap-4">
               <button
-                onClick={clearStorage}
+                onClick={() => setShowClearConfirm(true)}
                 className={cn(
                   "flex items-center gap-2 px-6 py-3 rounded-xl",
-                  "bg-destructive/10 text-destructive border-2 border-destructive/20",
-                  "hover:bg-destructive/20 transition-all",
+                  "bg-red-500/10 text-red-500 border-2 border-red-500/20",
+                  "hover:bg-red-500/20 transition-all",
                   "font-medium"
                 )}
               >
@@ -336,6 +336,15 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Clear Storage Confirmation */}
+      <ConfirmDialog
+        isOpen={showClearConfirm}
+        title="Clear All Data"
+        message="Are you sure you want to clear all localStorage data? This action cannot be undone and will delete all your settings, notes, and data."
+        onConfirm={clearStorage}
+        onCancel={() => setShowClearConfirm(false)}
+      />
     </div>
   );
 }

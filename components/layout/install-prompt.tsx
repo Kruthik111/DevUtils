@@ -87,7 +87,7 @@ export function InstallPrompt() {
             onClick={handleInstallClick}
             className={cn(
               "px-4 py-2 rounded-xl text-sm font-medium",
-              "bg-primary text-primary-foreground",
+              "bg-primary text-background",
               "hover:bg-primary/90 transition-all"
             )}
           >

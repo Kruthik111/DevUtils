@@ -28,8 +28,8 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { id: "notes", label: "Notes", icon: StickyNote, href: "/notes" },
-  { id: "test-tool", label: "Test Tool", icon: FlaskConical, href: "/test-tool" },
-  { id: "handle-server", label: "Handle Server", icon: Server, href: "/handle-server" },
+  // { id: "test-tool", label: "Test Tool", icon: FlaskConical, href: "/test-tool" },
+  // { id: "handle-server", label: "Handle Server", icon: Server, href: "/handle-server" },
   { id: "db-check", label: "Repetitive DB Check", icon: Database, href: "/db-check" },
   { id: "extension", label: "Extension", icon: Puzzle, href: "/extension" },
   { id: "profile", label: "Profile", icon: User, href: "/profile" },

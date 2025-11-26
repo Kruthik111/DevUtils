@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/providers/theme-provider";
 import { cn } from "@/lib/utils";
 import { ColorPicker } from "@/components/ui/color-picker";
 import type { CustomTheme } from "@/lib/theme-config";
@@ -99,7 +99,7 @@ export function ThemeCustomizer({ onOpen, isOpen: controlledIsOpen, onClose }: T
               theme === "custom" ? "border-primary shadow-lg" : "border-border/50"
             )}
           >
-            <div className="w-full h-full rounded-lg bg-gradient-to-br from-purple-400 via-pink-400 to-orange-400" />
+            <div className="w-full h-full rounded-lg from-purple-400 via-pink-400 to-orange-400" />
             {theme === "custom" && (
               <div className="absolute inset-0 rounded-xl border-2 border-primary" />
             )}
@@ -112,7 +112,7 @@ export function ThemeCustomizer({ onOpen, isOpen: controlledIsOpen, onClose }: T
 
       {isOpen && (
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -132,7 +132,7 @@ export function ThemeCustomizer({ onOpen, isOpen: controlledIsOpen, onClose }: T
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-6 border-b border-border/50 flex-shrink-0">
+            <div className="flex items-center justify-between p-6 border-b border-border/50">
               <h3 className="text-lg font-bold">Custom Theme</h3>
               <button
                 onClick={() => {
@@ -176,10 +176,10 @@ export function ThemeCustomizer({ onOpen, isOpen: controlledIsOpen, onClose }: T
               />
             </div>
 
-            <div className="flex gap-2 p-6 border-t border-border/50 flex-shrink-0">
+            <div className="flex gap-2 p-6 border-t border-border/50">
               <button
                 onClick={handleApply}
-                className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all font-medium"
+                className="flex-1 px-4 py-2 bg-primary text-background rounded-xl hover:bg-primary/90 transition-all font-medium"
               >
                 Apply Theme
               </button>

@@ -113,7 +113,7 @@ export function GroupSelector({
                                 />
                                 <button
                                     onClick={handleAddGroup}
-                                    className="px-3 py-1 text-sm bg-primary text-primary-foreground rounded hover:opacity-90"
+                                    className="px-3 py-1 text-sm bg-primary text-background rounded hover:opacity-90"
                                 >
                                     Add
                                 </button>
