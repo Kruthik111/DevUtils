@@ -29,6 +29,19 @@ self.addEventListener('fetch', (event) => {
   if (isFileProtocol) {
     return; // Skip service worker for file:// protocol
   }
+  
+  // Skip service worker for Next.js dev chunks and HMR in development
+  const url = new URL(event.request.url);
+  const isDevChunk = url.pathname.includes('/_next/static/chunks/') || 
+                     url.pathname.includes('/_next/webpack-hmr') ||
+                     url.pathname.includes('/_next/turbopack');
+  
+  // In development, bypass cache for chunks to avoid loading issues
+  if (isDevChunk && (self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+  
   event.respondWith(
     caches.match(event.request)
       .then((response) => {

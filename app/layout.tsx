@@ -60,15 +60,26 @@ export default function RootLayout({
         <Script id="register-sw" strategy="afterInteractive">
           {`
             if ('serviceWorker' in navigator) {
-              window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                  .then((registration) => {
-                    console.log('SW registered: ', registration);
-                  })
-                  .catch((registrationError) => {
-                    console.log('SW registration failed: ', registrationError);
+              // Unregister service worker on localhost to avoid chunk loading issues
+              // Network IP (192.168.x.x) can keep the service worker since it works there
+              if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                navigator.serviceWorker.getRegistrations().then((registrations) => {
+                  registrations.forEach((registration) => {
+                    registration.unregister();
                   });
-              });
+                });
+              } else {
+                // Register service worker for network IP and production
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                      console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                      console.log('SW registration failed: ', registrationError);
+                    });
+                });
+              }
             }
           `}
         </Script>

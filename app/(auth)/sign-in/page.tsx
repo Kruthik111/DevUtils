@@ -37,7 +37,7 @@ export default function SignInPage() {
     <div className="min-h-screen flex flex-col items-center justify-center from-background via-background to-primary/5 p-4">
       {/* Title at top */}
       <div className="absolute top-8 left-1/2 -translate-x-1/2">
-        <h1 className="text-4xl font-bold from-primary to-primary/60 bg-clip-text text-transparent">
+        <h1 className="text-4xl font-bold from-primary to-primary/60 bg-clip-text text-foreground">
           DevUtils
         </h1>
       </div>

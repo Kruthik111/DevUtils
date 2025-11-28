@@ -56,7 +56,7 @@ export function Navbar() {
         isHeaderCollapsed ? "h-0 -translate-y-full opacity-0" : "h-16 translate-y-0 opacity-100"
       )}>
         <div className="flex items-center gap-2">
-          <h1 className="text-xl font-bold from-blue-500 to-purple-600 dark:from-blue-400 dark:to-purple-500 bg-clip-text text-transparent">
+          <h1 className="text-xl font-bold text-foreground">
             DevUtils
           </h1>
         </div>
