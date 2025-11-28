@@ -3,6 +3,12 @@
 import { useState } from 'react';
 import { Plus, Clipboard } from 'lucide-react';
 import { NoteType, CopyMode, TextBlock } from '@/lib/notes/types';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface AddNoteFormProps {
     onAdd: (title: string, blocks: TextBlock[]) => void;
@@ -41,28 +47,36 @@ export function AddNoteForm({ onAdd, onQuickAdd }: AddNoteFormProps) {
 
     if (!isFormVisible) {
         return (
-            <div className="flex gap-3 mb-6">
-                <button
-                    onClick={() => setIsFormVisible(true)}
-                    className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-lg group relative"
-                    title="Add Note"
-                >
-                    <Plus className="w-6 h-6" />
-                    <span className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-1 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                        Add Note
-                    </span>
-                </button>
-                <button
-                    onClick={handleQuickAdd}
-                    className="flex items-center justify-center w-12 h-12 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-all shadow-lg group relative"
-                    title="Quick Add from Clipboard"
-                >
-                    <Clipboard className="w-5 h-5" />
-                    <span className="absolute -bottom-10 right-0 px-3 py-1 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                        Quick Add
-                    </span>
-                </button>
-            </div>
+            <TooltipProvider>
+                <div className="flex gap-3 mb-6">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <button
+                                onClick={() => setIsFormVisible(true)}
+                                className="flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-lg"
+                            >
+                                <Plus className="w-6 h-6" />
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                            <p>Add Note</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <button
+                                onClick={handleQuickAdd}
+                                className="flex items-center justify-center w-12 h-12 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-all shadow-lg"
+                            >
+                                <Clipboard className="w-5 h-5" />
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                            <p>Quick Add</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
+            </TooltipProvider>
         );
     }
     return (

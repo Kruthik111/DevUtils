@@ -74,7 +74,7 @@ export function Sidebar() {
                     <Icon className="w-5 h-5" />
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="left" className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-700 dark:border-gray-300">
+                <TooltipContent side="left">
                   <p className="font-medium">{item.label}</p>
                 </TooltipContent>
               </Tooltip>
