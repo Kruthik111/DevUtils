@@ -103,6 +103,7 @@ export function BlockEditModal({
                     </div>
 
                     {/* Copy Mode */}
+                    { blockType === 'snippet' && (
                     <div>
                         <label className="block text-sm font-medium mb-2">Copy Mode</label>
                         <div className="flex gap-2">
@@ -125,6 +126,7 @@ export function BlockEditModal({
                                 : 'Click the copy icon to copy'}
                         </p>
                     </div>
+                    )}
                 </div>
 
                 {/* Footer */}

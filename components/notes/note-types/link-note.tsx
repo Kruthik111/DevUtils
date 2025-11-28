@@ -27,10 +27,9 @@ export function LinkNote({ content, copyMode }: LinkNoteProps) {
     };
 
     const handleClick = (e: React.MouseEvent) => {
-        if (copyMode === 'active') {
             e.preventDefault();
-            handleCopy(e);
-        }
+            //redirect to the link
+            window.open(content, '_blank');
     };
 
     return (
@@ -41,17 +40,16 @@ export function LinkNote({ content, copyMode }: LinkNoteProps) {
                 } ${copyMode === 'active' ? 'cursor-pointer' : ''}`}
             onClick={handleClick}
         >
-            <ExternalLink className="w-4 h-4 text-blue-500 flex-shrink-0" />
+            <ExternalLink className="w-4 h-4 text-blue-500 shrink-0" />
             <a
                 href={content}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 text-sm text-blue-500 hover:underline truncate"
-                onClick={(e) => copyMode === 'active' && e.preventDefault()}
+                className="flex-1 text-sm text-blue-500 truncate"
+                onClick={(e) => e.preventDefault()}
             >
                 {content}
             </a>
-            {copyMode === 'passive' && (
                 <button
                     onClick={handleCopy}
                     className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-blue-500/20 transition-all"
@@ -63,10 +61,6 @@ export function LinkNote({ content, copyMode }: LinkNoteProps) {
                         <Copy className="w-4 h-4 text-blue-500" />
                     )}
                 </button>
-            )}
-            {copyMode === 'active' && copied && (
-                <Check className="w-4 h-4 text-green-500" />
-            )}
         </div>
     );
 }

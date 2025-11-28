@@ -49,9 +49,9 @@ export function TodoNote({ content, completed, copyMode, onToggle }: TodoNotePro
             onDoubleClick={handleDoubleClick}
         >
             {completed ? (
-                <CheckSquare className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                <CheckSquare className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
             ) : (
-                <Square className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                <Square className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
             )}
             <span
                 className={`flex-1 text-sm ${completed ? 'line-through text-foreground/50' : 'text-foreground/90'
@@ -59,22 +59,6 @@ export function TodoNote({ content, completed, copyMode, onToggle }: TodoNotePro
             >
                 {content}
             </span>
-            {copyMode === 'passive' && (
-                <button
-                    onClick={handleCopy}
-                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-green-500/20 transition-all"
-                    title="Copy todo"
-                >
-                    {copied ? (
-                        <Check className="w-4 h-4 text-green-500" />
-                    ) : (
-                        <Copy className="w-4 h-4 text-green-500" />
-                    )}
-                </button>
-            )}
-            {copyMode === 'active' && copied && (
-                <Check className="w-4 h-4 text-green-500" />
-            )}
         </div>
     );
 }

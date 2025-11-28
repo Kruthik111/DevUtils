@@ -134,7 +134,7 @@ export function AddNoteForm({ onAdd, onQuickAdd }: AddNoteFormProps) {
                 </div>
 
                 {/* Copy Mode (shown when expanded) */}
-                {isExpanded && (
+                {isExpanded && noteType === 'snippet' && (
                     <div className="animate-in fade-in slide-in-from-top-2 duration-200">
                         <label className="block text-sm font-medium mb-2">Copy Mode</label>
                         <div className="flex gap-2">

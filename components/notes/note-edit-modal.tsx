@@ -114,7 +114,7 @@ export function NoteEditModal({
                                                 {block.copyMode}
                                             </span>
                                         </div>
-                                        <p className="text-sm font-mono text-foreground/80 break-words">
+                                        <p className="text-sm font-mono text-foreground/80 wrap-break-words">
                                             {block.content}
                                         </p>
                                     </div>
