@@ -2,19 +2,21 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/components/providers/auth-provider";
+import { useSession } from "next-auth/react";
 
 export default function Home() {
   const router = useRouter();
-  const { authState } = useAuth();
+  const { status } = useSession();
+  const isAuthenticated = status === "authenticated";
+  const isLoading = status === "loading";
 
   useEffect(() => {
-    if (authState.isAuthenticated) {
+    if (status === "unauthenticated") {
+      router.push("/signin");
+    } else if (status === "authenticated") {
       router.push("/notes");
-    } else {
-      router.push("/sign-in");
     }
-  }, [authState.isAuthenticated, router]);
+  }, [status, router]);
 
   return null;
 }

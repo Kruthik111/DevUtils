@@ -23,6 +23,7 @@ export function ThemeProvider({
   const [customTheme, setCustomTheme] = React.useState<CustomTheme | null>(null);
   const [mounted, setMounted] = React.useState(false);
 
+  // Initialize from localStorage on mount
   React.useEffect(() => {
     const savedTheme = localStorage.getItem("devutils-theme") as Theme;
     if (savedTheme) {
@@ -40,9 +41,20 @@ export function ThemeProvider({
     setMounted(true);
   }, []);
 
+  // Save to localStorage when changed
   React.useEffect(() => {
     if (!mounted) return;
     localStorage.setItem("devutils-theme", theme);
+    if (customTheme) {
+      localStorage.setItem("devutils-custom-theme", JSON.stringify(customTheme));
+    } else {
+      localStorage.removeItem("devutils-custom-theme");
+    }
+  }, [theme, customTheme, mounted]);
+
+  // Apply CSS variables when theme changes
+  React.useEffect(() => {
+    if (!mounted) return;
 
     const root = document.documentElement;
     const config = theme === "custom" && customTheme ? customTheme : themeConfig[theme as keyof typeof themeConfig];
@@ -71,23 +83,8 @@ export function ThemeProvider({
     customTheme,
     setCustomTheme: (newCustomTheme: CustomTheme) => {
       setCustomTheme(newCustomTheme);
-      localStorage.setItem("devutils-custom-theme", JSON.stringify(newCustomTheme));
-      if (theme === "custom") {
-        // Force re-render/update
-        const root = document.documentElement;
-        root.style.setProperty("--background", newCustomTheme.background);
-        root.style.setProperty("--foreground", newCustomTheme.foreground);
-        root.style.setProperty("--primary", newCustomTheme.primary);
-        root.style.setProperty("--secondary", newCustomTheme.secondary);
-        root.style.setProperty("--accent", newCustomTheme.accent);
-      }
     }
   }), [theme, customTheme]);
-
-  // Prevent hydration mismatch
-  // if (!mounted) {
-  //   return <>{children}</>;
-  // }
 
   return (
     <ThemeContext.Provider value={value}>

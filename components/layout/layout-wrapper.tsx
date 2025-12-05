@@ -1,7 +1,6 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useAuth } from "@/components/providers/auth-provider";
 import { SidebarProvider } from "@/components/providers/sidebar-provider";
 import { Sidebar } from "./sidebar";
 import { Navbar } from "./navbar";
@@ -9,16 +8,14 @@ import { InstallPrompt } from "./install-prompt";
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { authState } = useAuth();
-  const isSignInPage = pathname === "/sign-in";
-  const shouldShowLayout = authState.isAuthenticated || !isSignInPage;
+  const isLoginPage = pathname.startsWith("/login") || pathname.startsWith("/signin");
 
-  // On sign-in page, hide sidebar and navbar
-  if (isSignInPage) {
-    return <>{children}</>;
+  // On login/signin page, hide sidebar and navbar
+  if (isLoginPage) {
+    return <div className="w-full h-full">{children}</div>;
   }
 
-  // Show layout for authenticated users or other pages
+  // Show layout for all other pages
   return (
     <SidebarProvider>
       <Navbar />

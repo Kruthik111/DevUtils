@@ -66,7 +66,8 @@ export function InstallPrompt() {
     localStorage.setItem("devutils-install-dismissed", Date.now().toString());
   };
 
-  if (isInstalled || !showPrompt || !deferredPrompt) {
+  // if (isInstalled || !showPrompt || !deferredPrompt) {
+  if (isInstalled || !showPrompt) {
     return null;
   }
 

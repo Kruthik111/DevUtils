@@ -4,6 +4,8 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { LayoutWrapper } from "@/components/layout/layout-wrapper";
+import { ThemeSync } from "@/components/providers/theme-sync";
+import { Toaster } from "sonner";
 import Script from "next/script";
 
 const geistSans = Geist({
@@ -54,9 +56,11 @@ export default function RootLayout({
       >
         <ThemeProvider defaultTheme="light">
           <AuthProvider>
+            <ThemeSync />
             <LayoutWrapper>{children}</LayoutWrapper>
           </AuthProvider>
         </ThemeProvider>
+        <Toaster />
         <Script id="register-sw" strategy="afterInteractive">
           {`
             if ('serviceWorker' in navigator) {

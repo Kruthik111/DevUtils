@@ -29,13 +29,13 @@ interface ThemeCustomizerProps {
 }
 
 export function ThemeCustomizer({ onOpen, isOpen: controlledIsOpen, onClose }: ThemeCustomizerProps = {}) {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, setCustomTheme: setProviderCustomTheme } = useTheme();
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [customTheme, setCustomTheme] = useState<CustomTheme>(defaultCustomTheme);
-  
+
   // Use controlled state if provided, otherwise use internal state
   const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
-  const setIsOpen = controlledIsOpen !== undefined 
+  const setIsOpen = controlledIsOpen !== undefined
     ? (value: boolean) => { if (!value) onClose?.(); }
     : setInternalIsOpen;
 
@@ -60,7 +60,7 @@ export function ThemeCustomizer({ onOpen, isOpen: controlledIsOpen, onClose }: T
       root.style.setProperty("--primary", customTheme.primary);
       root.style.setProperty("--secondary", customTheme.secondary);
       root.style.setProperty("--accent", customTheme.accent);
-      
+
       // Save to localStorage
       localStorage.setItem(CUSTOM_THEME_KEY, JSON.stringify(customTheme));
     }
@@ -71,6 +71,7 @@ export function ThemeCustomizer({ onOpen, isOpen: controlledIsOpen, onClose }: T
   };
 
   const handleApply = () => {
+    setProviderCustomTheme(customTheme);
     setTheme("custom");
     if (controlledIsOpen !== undefined) {
       onClose?.();
@@ -111,7 +112,7 @@ export function ThemeCustomizer({ onOpen, isOpen: controlledIsOpen, onClose }: T
       </Tooltip>
 
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
           onClick={(e) => {
@@ -124,9 +125,9 @@ export function ThemeCustomizer({ onOpen, isOpen: controlledIsOpen, onClose }: T
             }
           }}
         >
-          <div 
+          <div
             className="bg-background/95 backdrop-blur-xl border border-border/50 rounded-3xl shadow-2xl w-full max-w-md max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden"
-            style={{ 
+            style={{
               maxHeight: 'calc(100vh - 2rem)',
               margin: 'auto'
             }}

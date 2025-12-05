@@ -58,31 +58,69 @@ export function createDefaultData(): NotesData {
     };
 }
 
-export function loadNotesData(): NotesData {
-    if (typeof window === 'undefined') {
-        return createDefaultData();
-    }
-
+export async function fetchNotesData(): Promise<NotesData> {
     try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-            return JSON.parse(stored);
+        const res = await fetch('/api/notes');
+        if (!res.ok) {
+            if (res.status === 401) {
+                // Not authenticated, return default data or handle redirect
+                return createDefaultData();
+            }
+            throw new Error('Failed to fetch notes');
         }
+
+        const { groups, notes } = await res.json();
+
+        // If no groups, return default data
+        if (!groups || groups.length === 0) {
+            return createDefaultData();
+        }
+
+        // Reconstruct the nested structure
+        // The API returns flat lists of groups and notes.
+        // We need to nest notes into tabs into groups.
+
+        const reconstructedGroups = groups.map((group: any) => ({
+            ...group,
+            tabs: group.tabs.map((tab: any) => ({
+                ...tab,
+                notes: notes.filter((note: any) => note.groupId === group.id && note.tabId === tab.id)
+            }))
+        }));
+
+        return {
+            groups: reconstructedGroups,
+            activeGroupId: groups[0].id,
+            activeTabId: groups[0].tabs[0].id,
+        };
     } catch (error) {
         console.error('Error loading notes data:', error);
+        return createDefaultData();
     }
+}
 
+export async function persistNotesData(data: NotesData): Promise<void> {
+    try {
+        await fetch('/api/notes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                type: 'sync',
+                data,
+            }),
+        });
+    } catch (error) {
+        console.error('Error saving notes data:', error);
+    }
+}
+
+// Deprecated synchronous functions - keeping for compatibility if needed, but should be removed
+export function loadNotesData(): NotesData {
     return createDefaultData();
 }
 
 export function saveNotesData(data: NotesData): void {
-    if (typeof window === 'undefined') {
-        return;
-    }
-
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (error) {
-        console.error('Error saving notes data:', error);
-    }
+    // No-op
 }

@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { NotesData, Note, TextBlock, NoteType, CopyMode, Tab, Group } from '@/lib/notes/types';
-import { loadNotesData, saveNotesData } from '@/lib/notes/storage';
+import { fetchNotesData, persistNotesData } from '@/lib/notes/storage';
 import { GroupSelector } from '@/components/notes/group-selector';
 import { TabBar } from '@/components/notes/tab-bar';
 import { AddNoteForm } from '@/components/notes/add-note-form';
@@ -13,6 +15,10 @@ import { ConfirmDialog } from '@/components/notes/confirm-dialog';
 import { ContextMenu } from '@/components/notes/context-menu';
 
 export default function NotesPage() {
+  const router = useRouter();
+  const { status } = useSession();
+
+  // All hooks must be called before any conditional returns
   const [data, setData] = useState<NotesData | null>(null);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [editingBlock, setEditingBlock] = useState<{ note: Note; block: TextBlock } | null>(null);
@@ -28,15 +34,40 @@ export default function NotesPage() {
 
   // Load data on mount
   useEffect(() => {
-    setData(loadNotesData());
+    const loadData = async () => {
+      const loadedData = await fetchNotesData();
+      setData(loadedData);
+    };
+    loadData();
   }, []);
 
-  // Save data whenever it changes
+  // Save data on change
   useEffect(() => {
     if (data) {
-      saveNotesData(data);
+      persistNotesData(data);
     }
   }, [data]);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/signin');
+    }
+  }, [status, router]);
+
+  // Show loading while checking auth
+  if (status === 'loading') {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-screen">
+        <div className="text-foreground/60">Loading...</div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (status === 'unauthenticated') {
+    return null;
+  }
 
   if (!data) {
     return (

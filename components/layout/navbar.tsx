@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "@/components/providers/theme-provider";
-import { Palette, Menu, X, ChevronDown } from "lucide-react";
+import { Palette, Menu, X, ChevronDown, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { themes, type Theme } from "@/lib/theme-config";
 import { ThemeCustomizer } from "./theme-customizer";
@@ -10,6 +10,7 @@ import { ThemeSwatch } from "./theme-swatch";
 import { PulseDot } from "@/components/ui/pulse-dot";
 import { BackgroundUpload } from "./background-upload";
 import { useSidebar } from "@/components/providers/sidebar-provider";
+import { useSession, signOut } from "next-auth/react";
 import {
   Tooltip,
   TooltipContent,
@@ -19,6 +20,7 @@ import {
 
 export function Navbar() {
   const { theme, setTheme } = useTheme();
+  const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showCustomTheme, setShowCustomTheme] = useState(false);
@@ -62,6 +64,26 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
+          {session?.user && (
+            <div className="flex items-center gap-2 mr-2">
+              <span className="text-sm font-medium hidden md:block">
+                {session.user.name}
+              </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => signOut({ callbackUrl: "/login" })}
+                    className="flex items-center justify-center w-10 h-10 rounded-xl bg-background/50 hover:bg-red-500/10 border border-border/50 hover:border-red-500/50 transition-all duration-200 hover:scale-105 active:scale-95 group"
+                  >
+                    <LogOut className="w-4 h-4 text-foreground group-hover:text-red-500" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>Sign Out</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          )}
           {/* Online/Offline Indicator */}
           <Tooltip>
             <TooltipTrigger asChild>

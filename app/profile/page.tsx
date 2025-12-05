@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Download, Upload, Trash2, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/notes/confirm-dialog";
@@ -8,6 +10,10 @@ import { ConfirmDialog } from "@/components/notes/confirm-dialog";
 const PROFILE_KEY = "devutils-profile";
 
 export default function ProfilePage() {
+  const router = useRouter();
+  const { data: session, update, status } = useSession();
+
+  // All hooks must be called before any conditional returns
   const [storageUsed, setStorageUsed] = useState(0);
   const [storageTotal, setStorageTotal] = useState(0);
   const [storagePercentage, setStoragePercentage] = useState(0);
@@ -15,34 +21,7 @@ export default function ProfilePage() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
-  useEffect(() => {
-    calculateStorage();
-    loadProfile();
-  }, []);
-
-  const loadProfile = () => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(PROFILE_KEY);
-      if (stored) {
-        try {
-          const profile = JSON.parse(stored);
-          setName(profile.name || "");
-        } catch {
-          // Use default
-        }
-      }
-    }
-  };
-
-  const saveProfile = () => {
-    if (typeof window !== "undefined") {
-      const profile = { name };
-      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-      setIsEditingName(false);
-    }
-  };
-
-  const calculateStorage = () => {
+   const calculateStorage = () => {
     let total = 0;
     let used = 0;
 
@@ -59,7 +38,59 @@ export default function ProfilePage() {
       const estimatedTotal = 5 * 1024 * 1024; // 5MB
       setStorageTotal(estimatedTotal);
       setStorageUsed(used);
-      setStoragePercentage(Math.min((used / estimatedTotal) * 100, 100));
+      const usedPercentage = (used / estimatedTotal) * 100;
+      console.log(usedPercentage);
+      setStoragePercentage(Math.min(usedPercentage, 100));
+    }
+  };
+
+  useEffect(() => {
+    calculateStorage();
+    if (session?.user?.name) {
+      setName(session.user.name);
+    }
+  }, [session]);
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/signin');
+    }
+  }, [status, router]);
+
+  // Show loading while checking auth
+  if (status === 'loading') {
+    return (
+      <div className="p-8 flex items-center justify-center min-h-screen">
+        <div className="text-foreground/60">Loading...</div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (status === 'unauthenticated') {
+    return null;
+  }
+
+  const saveProfile = async () => {
+    if (!session?.user?.id) return;
+
+    try {
+      const response = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name }),
+      });
+
+      if (response.ok) {
+        // Update the session to reflect the new name
+        await update({ name });
+        setIsEditingName(false);
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
     }
   };
 
@@ -109,7 +140,6 @@ export default function ProfilePage() {
           localStorage.setItem(key, data[key]);
         }
 
-        loadProfile();
         calculateStorage();
         window.location.reload();
       } catch (error) {
@@ -161,7 +191,7 @@ export default function ProfilePage() {
                           saveProfile();
                         } else if (e.key === "Escape") {
                           setIsEditingName(false);
-                          loadProfile();
+                          setName(session?.user?.name || "");
                         }
                       }}
                     />
@@ -178,7 +208,7 @@ export default function ProfilePage() {
                     <button
                       onClick={() => {
                         setIsEditingName(false);
-                        loadProfile();
+                        setName(session?.user?.name || "");
                       }}
                       className={cn(
                         "px-4 py-2 rounded-xl text-sm font-medium",
@@ -242,8 +272,7 @@ export default function ProfilePage() {
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
-                    {/* <div className="text-2xl font-bold">{Math.round(storagePercentage)}%</div> */}
-                    <div className="text-2xl font-bold">{storageUsed}</div>
+                    <div className="text-2xl font-bold">{Number(storagePercentage).toPrecision(1)}%</div>
                     <div className="text-xs text-foreground/60">Used</div>
                   </div>
                 </div>

@@ -1,38 +1,82 @@
-"use client";
+import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import connectDB from "@/lib/mongodb";
+import User from "@/lib/models/User";
+import { compare } from "bcryptjs";
 
-const AUTH_KEY = "devutils-auth";
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  providers: [
+    Credentials({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      authorize: async (credentials) => {
+        await connectDB();
 
-export interface AuthState {
-  isAuthenticated: boolean;
-  user?: {
-    email?: string;
-    name?: string;
-  };
-}
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
 
-export function getAuthState(): AuthState {
-  if (typeof window === "undefined") {
-    return { isAuthenticated: false };
-  }
-  
-  const stored = localStorage.getItem(AUTH_KEY);
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return { isAuthenticated: false };
-    }
-  }
-  return { isAuthenticated: false };
-}
+        const user = await User.findOne({ email: credentials.email }).select("+password");
 
-export function setAuthState(state: AuthState) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(AUTH_KEY, JSON.stringify(state));
-}
+        if (!user) {
+          return null;
+        }
 
-export function clearAuthState() {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(AUTH_KEY);
-}
+        const isPasswordValid = await compare(
+          credentials.password as string,
+          user.password
+        );
 
+        if (!isPasswordValid) {
+          return null;
+        }
+
+        return {
+          id: user._id.toString(),
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        };
+      },
+    }),
+  ],
+  pages: {
+    signIn: "/signin",
+  },
+  callbacks: {
+    async session({ session, token, trigger, newSession }) {
+      if (token?.sub && session.user) {
+        session.user.id = token.sub;
+        session.user.name = token.name as string;
+        session.user.email = token.email as string;
+      }
+
+      // Handle session updates (when update() is called)
+      if (trigger === "update" && newSession?.name) {
+        session.user.name = newSession.name;
+      }
+
+      return session;
+    },
+    async jwt({ token, user, trigger, session }) {
+      if (user) {
+        token.sub = user.id;
+        token.name = user.name;
+        token.email = user.email;
+      }
+
+      // Handle token updates (when update() is called)
+      if (trigger === "update" && session?.name) {
+        token.name = session.name;
+      }
+
+      return token;
+    },
+  },
+  session: {
+    strategy: "jwt",
+  },
+});
