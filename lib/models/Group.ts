@@ -14,7 +14,7 @@ const GroupSchema = new Schema({
         ref: 'User',
         required: true,
     },
-    id: { type: String, required: true, unique: true }, // Client-side ID
+    id: { type: String, required: true }, // Client-side ID
     name: {
         type: String,
         required: true,
@@ -24,7 +24,7 @@ const GroupSchema = new Schema({
     timestamps: true,
 });
 
-GroupSchema.index({ userId: 1 });
+GroupSchema.index({ userId: 1, id: 1 }, { unique: true });
 
 const Group = models.Group || model('Group', GroupSchema);
 

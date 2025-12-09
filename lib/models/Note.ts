@@ -16,7 +16,7 @@ const NoteSchema = new Schema({
         ref: 'User',
         required: true,
     },
-    id: { type: String, required: true, unique: true }, // Client-side ID
+    id: { type: String, required: true }, // Client-side ID
     title: {
         type: String,
         required: [true, 'Title is required'],
@@ -29,7 +29,7 @@ const NoteSchema = new Schema({
 });
 
 // Index for faster queries by user
-NoteSchema.index({ userId: 1 });
+NoteSchema.index({ userId: 1, id: 1 }, { unique: true });
 
 const Note = models.Note || model('Note', NoteSchema);
 
