@@ -24,6 +24,8 @@ const NoteSchema = new Schema({
     blocks: [TextBlockSchema],
     groupId: { type: String }, // Optional linkage to a group
     tabId: { type: String },   // Optional linkage to a tab
+    deleted: { type: Boolean, default: false }, // Soft delete flag
+    deletedAt: { type: Date }, // When the note was deleted
 }, {
     timestamps: true,
 });

@@ -344,26 +344,44 @@ export default function NotesPage() {
     setEditingNote(null);
   };
 
-  const handleDeleteNote = (noteId: string) => {
-    const updatedGroups = data.groups.map((g) =>
-      g.id === data.activeGroupId
-        ? {
-          ...g,
-          tabs: g.tabs.map((t) =>
-            t.id === data.activeTabId
-              ? { ...t, notes: t.notes.filter((n) => n.id !== noteId) }
-              : t
-          ),
-        }
-        : g
-    );
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      // Call DELETE API to soft delete the note
+      const response = await fetch(`/api/notes?id=${noteId}`, {
+        method: 'DELETE',
+      });
 
-    setData({
-      ...data,
-      groups: updatedGroups,
-    });
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Failed to delete note:', error);
+        alert('Failed to delete note. Please try again.');
+        return;
+      }
 
-    setDeletingNoteId(null);
+      // Update local state to remove the note from UI
+      const updatedGroups = data.groups.map((g) =>
+        g.id === data.activeGroupId
+          ? {
+              ...g,
+              tabs: g.tabs.map((t) =>
+                t.id === data.activeTabId
+                  ? { ...t, notes: t.notes.filter((n) => n.id !== noteId) }
+                  : t
+              ),
+            }
+          : g
+      );
+
+      setData({
+        ...data,
+        groups: updatedGroups,
+      });
+
+      setDeletingNoteId(null);
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      alert('Failed to delete note. Please try again.');
+    }
   };
 
   const handleToggleTodo = (noteId: string, blockId: string) => {

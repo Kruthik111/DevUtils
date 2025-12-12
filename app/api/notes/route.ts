@@ -13,9 +13,12 @@ export async function GET(req: Request) {
 
         await connectDB();
 
-        // Fetch groups and notes for the user
+        // Fetch groups and notes for the user (exclude soft-deleted notes)
         const groups = await Group.find({ userId: session.user.id });
-        const notes = await Note.find({ userId: session.user.id });
+        const notes = await Note.find({ 
+            userId: session.user.id,
+            deleted: { $ne: true } // Exclude soft-deleted notes
+        });
 
         // If no groups exist, return default structure or empty
         // The frontend expects a specific structure, so we might need to construct it here
@@ -119,6 +122,43 @@ export async function POST(req: Request) {
                 error: error.message
             }, { status: 409 });
         }
+        return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+    }
+}
+
+export async function DELETE(req: Request) {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        }
+
+        const { searchParams } = new URL(req.url);
+        const noteId = searchParams.get('id');
+
+        if (!noteId) {
+            return NextResponse.json({ message: "Note ID is required" }, { status: 400 });
+        }
+
+        await connectDB();
+
+        // Soft delete the note
+        const note = await Note.findOneAndUpdate(
+            { id: noteId, userId: session.user.id },
+            { 
+                deleted: true,
+                deletedAt: new Date()
+            },
+            { new: true }
+        );
+
+        if (!note) {
+            return NextResponse.json({ message: "Note not found" }, { status: 404 });
+        }
+
+        return NextResponse.json({ success: true, message: "Note deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting note:", error);
         return NextResponse.json({ message: "Internal server error" }, { status: 500 });
     }
 }
