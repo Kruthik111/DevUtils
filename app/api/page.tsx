@@ -64,6 +64,7 @@ export default function ApiPage() {
     const [envVars, setEnvVars] = useState<{ id: string; key: string; value: string }[]>([]);
     const [editingEnv, setEditingEnv] = useState<Environment | null>(null);
     const [varPopup, setVarPopup] = useState<{ key: string; value: string; x: number; y: number } | null>(null);
+    const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id: string; type: 'api' | 'env' } | null>(null);
 
     // Form state
     const [name, setName] = useState('');
@@ -215,7 +216,7 @@ export default function ApiPage() {
 
     const updateEnvironment = async () => {
         if (!editingEnv || !envName.trim()) {
-            alert('Environment name is required');
+            setError('Environment name is required');
             return;
         }
 
@@ -313,21 +314,44 @@ export default function ApiPage() {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this API configuration?')) return;
+        setDeleteConfirm({ show: true, id, type: 'api' });
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteConfirm) return;
+        const { id, type } = deleteConfirm;
 
         try {
-            const res = await fetch(`/api/api-configs?id=${id}`, {
-                method: 'DELETE',
-            });
+            if (type === 'api') {
+                const res = await fetch(`/api/api-configs?id=${id}`, {
+                    method: 'DELETE',
+                });
 
-            if (!res.ok) throw new Error('Failed to delete API config');
-            
-            await loadApiConfigs();
-            if (selectedConfig?._id === id) {
-                createNew();
+                if (!res.ok) throw new Error('Failed to delete API config');
+                
+                await loadApiConfigs();
+                if (selectedConfig?._id === id) {
+                    createNew();
+                }
+            } else if (type === 'env') {
+                const res = await fetch(`/api/environments?id=${id}`, {
+                    method: 'DELETE',
+                });
+                if (res.ok) {
+                    await loadEnvironments();
+                    if (selectedEnvironment?._id === id) {
+                        setSelectedEnvironment(null);
+                    }
+                    if (editingEnv?._id === id) {
+                        setShowEnvModal(false);
+                        setEditingEnv(null);
+                    }
+                }
             }
         } catch (error: any) {
-            setError(error.message || 'Failed to delete API config');
+            setError(error.message || 'Failed to delete');
+        } finally {
+            setDeleteConfirm(null);
         }
     };
 
@@ -669,6 +693,34 @@ export default function ApiPage() {
                                     <div className="flex-[3]">
                                         <label className="block text-sm font-medium mb-2">URL</label>
                                         <div className="relative">
+                                            {/* Overlay for highlighting - positioned behind input */}
+                                            {selectedEnvironment && url && (
+                                                <div 
+                                                    className={cn(
+                                                        "absolute inset-0 px-4 py-2 rounded-xl",
+                                                        "flex items-center text-sm overflow-hidden"
+                                                    )}
+                                                    style={{ pointerEvents: 'none' }}
+                                                >
+                                                    {highlightVariables(url).map((el, idx) => {
+                                                        const props = (el as any).props;
+                                                        if (props?.className?.includes('cursor-pointer')) {
+                                                            return (
+                                                                <span
+                                                                    key={idx}
+                                                                    className={props.className}
+                                                                    style={{ pointerEvents: 'auto' }}
+                                                                    onClick={props.onClick}
+                                                                >
+                                                                    {props.children}
+                                                                </span>
+                                                            );
+                                                        }
+                                                        return el;
+                                                    })}
+                                                </div>
+                                            )}
+                                            {/* Actual input */}
                                             <input
                                                 type="text"
                                                 value={url}
@@ -676,14 +728,15 @@ export default function ApiPage() {
                                                 placeholder="https://api.example.com/endpoint or {{baseUrl}}/endpoint"
                                                 className={cn(
                                                     "w-full px-4 py-2 rounded-xl border border-border/50",
-                                                    "bg-background/50 focus:outline-none focus:border-primary"
+                                                    "bg-background/50 focus:outline-none focus:border-primary",
+                                                    "relative z-10",
+                                                    selectedEnvironment && url && "text-transparent"
                                                 )}
+                                                style={{ 
+                                                    caretColor: 'currentColor',
+                                                    color: selectedEnvironment && url ? 'transparent' : undefined
+                                                }}
                                             />
-                                            {selectedEnvironment && url && (
-                                                <div className="absolute top-full left-0 mt-1 text-xs text-foreground/60 px-2">
-                                                    Preview: {highlightVariables(url)}
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -720,6 +773,30 @@ export default function ApiPage() {
                                                     )}
                                                 />
                                                 <div className="flex-1 relative">
+                                                    {/* Overlay for highlighting in header value */}
+                                                    {selectedEnvironment && row.value && row.enabled && (
+                                                        <div 
+                                                            className="absolute inset-0 px-3 py-2 rounded-lg flex items-center text-sm overflow-hidden"
+                                                            style={{ pointerEvents: 'none' }}
+                                                        >
+                                                            {highlightVariables(row.value).map((el, idx) => {
+                                                                const props = (el as any).props;
+                                                                if (props?.className?.includes('cursor-pointer')) {
+                                                                    return (
+                                                                        <span
+                                                                            key={idx}
+                                                                            className={props.className}
+                                                                            style={{ pointerEvents: 'auto' }}
+                                                                            onClick={props.onClick}
+                                                                        >
+                                                                            {props.children}
+                                                                        </span>
+                                                                    );
+                                                                }
+                                                                return el;
+                                                            })}
+                                                        </div>
+                                                    )}
                                                     <input
                                                         type="text"
                                                         value={row.value}
@@ -729,14 +806,15 @@ export default function ApiPage() {
                                                         className={cn(
                                                             "w-full px-3 py-2 rounded-lg border border-border/50",
                                                             "bg-background/50 focus:outline-none focus:border-primary text-sm",
-                                                            !row.enabled && "opacity-50"
+                                                            !row.enabled && "opacity-50",
+                                                            "relative z-10",
+                                                            selectedEnvironment && row.value && row.enabled && "text-transparent"
                                                         )}
+                                                        style={{ 
+                                                            caretColor: 'currentColor',
+                                                            color: selectedEnvironment && row.value && row.enabled ? 'transparent' : undefined
+                                                        }}
                                                     />
-                                                    {selectedEnvironment && row.value && row.enabled && (
-                                                        <div className="absolute top-full left-0 mt-1 text-xs text-foreground/60 px-2">
-                                                            {highlightVariables(row.value)}
-                                                        </div>
-                                                    )}
                                                 </div>
                                                 <button
                                                     onClick={() => removeHeaderRow(row.id)}
@@ -775,16 +853,48 @@ export default function ApiPage() {
                                                         "bg-background/50 focus:outline-none focus:border-primary text-sm"
                                                     )}
                                                 />
-                                                <input
-                                                    type="text"
-                                                    value={row.value}
-                                                    onChange={(e) => updateQueryRow(row.id, 'value', e.target.value)}
-                                                    placeholder="Param Value or {{variable}}"
-                                                    className={cn(
-                                                        "flex-1 px-3 py-2 rounded-lg border border-border/50",
-                                                        "bg-background/50 focus:outline-none focus:border-primary text-sm"
+                                                <div className="flex-1 relative">
+                                                    {/* Overlay for highlighting in query param value */}
+                                                    {selectedEnvironment && row.value && (
+                                                        <div 
+                                                            className="absolute inset-0 px-3 py-2 rounded-lg flex items-center text-sm overflow-hidden"
+                                                            style={{ pointerEvents: 'none' }}
+                                                        >
+                                                            {highlightVariables(row.value).map((el, idx) => {
+                                                                const props = (el as any).props;
+                                                                if (props?.className?.includes('cursor-pointer')) {
+                                                                    return (
+                                                                        <span
+                                                                            key={idx}
+                                                                            className={props.className}
+                                                                            style={{ pointerEvents: 'auto' }}
+                                                                            onClick={props.onClick}
+                                                                        >
+                                                                            {props.children}
+                                                                        </span>
+                                                                    );
+                                                                }
+                                                                return el;
+                                                            })}
+                                                        </div>
                                                     )}
-                                                />
+                                                    <input
+                                                        type="text"
+                                                        value={row.value}
+                                                        onChange={(e) => updateQueryRow(row.id, 'value', e.target.value)}
+                                                        placeholder="Param Value or {{variable}}"
+                                                        className={cn(
+                                                            "w-full px-3 py-2 rounded-lg border border-border/50",
+                                                            "bg-background/50 focus:outline-none focus:border-primary text-sm",
+                                                            "relative z-10",
+                                                            selectedEnvironment && row.value && "text-transparent"
+                                                        )}
+                                                        style={{ 
+                                                            caretColor: 'currentColor',
+                                                            color: selectedEnvironment && row.value ? 'transparent' : undefined
+                                                        }}
+                                                    />
+                                                </div>
                                                 <button
                                                     onClick={() => removeQueryRow(row.id)}
                                                     className="px-2 text-red-500 hover:bg-red-500/20 rounded-lg"
@@ -847,12 +957,6 @@ export default function ApiPage() {
                                         )}>
                                             {response.status} {response.statusText}
                                         </div>
-                                    </div>
-                                    <div>
-                                        <div className="text-sm font-medium mb-2">Headers</div>
-                                        <pre className="p-4 rounded-xl bg-background/50 border border-border/50 text-xs font-mono overflow-x-auto">
-                                            {JSON.stringify(response.headers, null, 2)}
-                                        </pre>
                                     </div>
                                     <div>
                                         <div className="text-sm font-medium mb-2">Body</div>
@@ -962,16 +1066,9 @@ export default function ApiPage() {
                                             Update Environment
                                         </button>
                                         <button
-                                            onClick={async () => {
-                                                if (confirm('Delete this environment?')) {
-                                                    const res = await fetch(`/api/environments?id=${editingEnv._id}`, {
-                                                        method: 'DELETE',
-                                                    });
-                                                    if (res.ok) {
-                                                        await loadEnvironments();
-                                                        setShowEnvModal(false);
-                                                        setEditingEnv(null);
-                                                    }
+                                            onClick={() => {
+                                                if (editingEnv._id) {
+                                                    setDeleteConfirm({ show: true, id: editingEnv._id, type: 'env' });
                                                 }
                                             }}
                                             className={cn(

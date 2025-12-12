@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { Download, Upload, Trash2, User, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/notes/confirm-dialog";
-import { UserAccessManager } from "@/components/admin/user-access-manager";
 
 const PROFILE_KEY = "devutils-profile";
 
@@ -27,6 +26,7 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
+  const [showPasswordSuccessDialog, setShowPasswordSuccessDialog] = useState(false);
 
    const calculateStorage = () => {
     let total = 0;
@@ -204,7 +204,7 @@ export default function ProfilePage() {
         setNewPassword("");
         setConfirmPassword("");
         setPasswordError("");
-        alert("Password changed successfully");
+        setShowPasswordSuccessDialog(true);
       } else {
         setPasswordError(data.message || "Failed to change password");
       }
@@ -518,10 +518,14 @@ export default function ProfilePage() {
         onCancel={() => setShowClearConfirm(false)}
       />
 
-      {/* Admin User Access Management */}
-      <div className="mt-6">
-        <UserAccessManager />
-      </div>
+      {/* Password Success Dialog */}
+      <ConfirmDialog
+        isOpen={showPasswordSuccessDialog}
+        title="Password Changed"
+        message="Your password has been changed successfully!"
+        onConfirm={() => setShowPasswordSuccessDialog(false)}
+        onCancel={() => setShowPasswordSuccessDialog(false)}
+      />
     </div>
   );
 }
