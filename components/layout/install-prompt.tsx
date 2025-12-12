@@ -21,25 +21,29 @@ export function InstallPrompt() {
       return;
     }
 
+    // Helper function to check if prompt should be shown
+    const shouldShowPrompt = (): boolean => {
+      const dismissed = localStorage.getItem("devutils-install-dismissed");
+      if (!dismissed) {
+        return true; // Never dismissed, show prompt
+      }
+      const dismissedTime = parseInt(dismissed, 10);
+      const daysSinceDismissed = (Date.now() - dismissedTime) / (1000 * 60 * 60 * 24);
+      // Show again after 7 days
+      return daysSinceDismissed >= 7;
+    };
+
     // Listen for the beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setShowPrompt(true);
+      // Only show prompt if not dismissed or dismissed more than 7 days ago
+      if (shouldShowPrompt()) {
+        setShowPrompt(true);
+      }
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-
-    // Check if user has dismissed the prompt before
-    const dismissed = localStorage.getItem("devutils-install-dismissed");
-    if (dismissed) {
-      const dismissedTime = parseInt(dismissed, 10);
-      const daysSinceDismissed = (Date.now() - dismissedTime) / (1000 * 60 * 60 * 24);
-      // Show again after 7 days
-      if (daysSinceDismissed < 7) {
-        setShowPrompt(false);
-      }
-    }
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
