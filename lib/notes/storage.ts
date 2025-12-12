@@ -19,42 +19,49 @@ export function createDefaultData(): NotesData {
         },
     ];
 
+    // Generate unique IDs to avoid collision with existing data
+    const timestamp = Date.now();
+    const workGroupId = `work-${timestamp}`;
+    const homeGroupId = `home-${timestamp}`;
+    const workTabId = `work-tab-${timestamp}`;
+    const homeTabId = `home-tab-${timestamp}`;
+
     const sampleNote: Note = {
-        id: 'note-1',
+        id: `note-${timestamp}`,
         title: 'Getting Started',
         blocks: sampleBlocks,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+        createdAt: timestamp,
+        updatedAt: timestamp,
     };
 
     const workTab: Tab = {
-        id: 'work-tab-1',
+        id: workTabId,
         name: 'Tab 1',
         notes: [sampleNote],
     };
 
     const homeTab: Tab = {
-        id: 'home-tab-1',
+        id: homeTabId,
         name: 'Tab 1',
         notes: [],
     };
 
     const workGroup: Group = {
-        id: 'work',
+        id: workGroupId,
         name: 'Work',
         tabs: [workTab],
     };
 
     const homeGroup: Group = {
-        id: 'home',
+        id: homeGroupId,
         name: 'Home',
         tabs: [homeTab],
     };
 
     return {
         groups: [workGroup, homeGroup],
-        activeGroupId: 'work',
-        activeTabId: 'work-tab-1',
+        activeGroupId: workGroupId,
+        activeTabId: workTabId,
     };
 }
 

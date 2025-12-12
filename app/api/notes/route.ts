@@ -51,11 +51,26 @@ export async function POST(req: Request) {
 
             // 1. Update Groups
             for (const group of groups) {
-                await Group.findOneAndUpdate(
-                    { id: group.id, userId: session.user.id },
-                    { ...group, userId: session.user.id },
-                    { upsert: true, new: true }
-                );
+                try {
+                    await Group.findOneAndUpdate(
+                        { id: group.id, userId: session.user.id },
+                        { ...group, userId: session.user.id },
+                        { upsert: true, new: true }
+                    );
+                } catch (error: any) {
+                    if (error.code === 11000) {
+                        console.error(`Duplicate key error for group ${group.id}:`, error);
+                        // If it's a duplicate key error on the 'id' field, it might be due to a global index
+                        // We can try to recover or just log it for now.
+                        // Since we are now generating unique IDs in the frontend/storage.ts, this should be rare for new data.
+                        // For existing data, the user might need to drop the index.
+                        return NextResponse.json({
+                            message: "Duplicate key error. Please contact support or check database indexes.",
+                            error: error.message
+                        }, { status: 409 });
+                    }
+                    throw error;
+                }
             }
 
             // 2. Update Notes
@@ -96,8 +111,14 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json({ message: "Invalid operation" }, { status: 400 });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error saving notes:", error);
+        if (error.code === 11000) {
+            return NextResponse.json({
+                message: "Duplicate key error. Please check your data.",
+                error: error.message
+            }, { status: 409 });
+        }
         return NextResponse.json({ message: "Internal server error" }, { status: 500 });
     }
 }
