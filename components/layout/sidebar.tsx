@@ -1,6 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   StickyNote,
   FlaskConical,
@@ -8,7 +10,8 @@ import {
   Database,
   Puzzle,
   User,
-  Code
+  Code,
+  Shield
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -25,6 +28,7 @@ interface NavItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   href: string;
+  adminOnly?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -33,12 +37,28 @@ const navItems: NavItem[] = [
   // { id: "test-tool", label: "Test Tool", icon: FlaskConical, href: "/test-tool" },
   // { id: "handle-server", label: "Handle Server", icon: Server, href: "/handle-server" },
   // { id: "extension", label: "Extension", icon: Puzzle, href: "/extension" },
+  { id: "admin-users", label: "Users", icon: Shield, href: "/admin/users", adminOnly: true },
   { id: "profile", label: "Profile", icon: User, href: "/profile" },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { isMobileSidebarOpen, setIsMobileSidebarOpen } = useSidebar();
+  const { data: session } = useSession();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (session?.user?.email === 'gokruthik2003@gmail.com') {
+      setIsAdmin(true);
+    } else if (session?.user?.email) {
+      // Check from API
+      fetch('/api/users/access')
+        .then(res => {
+          if (res.ok) setIsAdmin(true);
+        })
+        .catch(() => {});
+    }
+  }, [session]);
 
   return (
     <TooltipProvider>
@@ -52,6 +72,8 @@ export function Sidebar() {
       >
         <div className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-3xl p-3 shadow-xl flex flex-col gap-2">
           {navItems.map((item) => {
+            if (item.adminOnly && !isAdmin) return null;
+            
             const Icon = item.icon;
             const isActive = pathname === item.href;
 

@@ -26,6 +26,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
+        // Check if user is suspended (handle undefined case)
+        if (user.suspended === true) {
+          return null; // Suspended users cannot login
+        }
+
         const isPasswordValid = await compare(
           credentials.password as string,
           user.password

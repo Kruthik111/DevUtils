@@ -42,6 +42,10 @@ const UserSchema = new Schema({
         type: [String], // Array of page paths user has access to
         default: [],
     },
+    suspended: {
+        type: Boolean,
+        default: false,
+    },
 }, {
     timestamps: true,
 });

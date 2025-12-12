@@ -37,6 +37,7 @@ interface HeaderRow {
     id: string;
     key: string;
     value: string;
+    enabled: boolean;
 }
 
 interface QueryRow {
@@ -58,8 +59,11 @@ export default function ApiPage() {
     const [environments, setEnvironments] = useState<Environment[]>([]);
     const [selectedEnvironment, setSelectedEnvironment] = useState<Environment | null>(null);
     const [showEnvModal, setShowEnvModal] = useState(false);
+    const [showApiListModal, setShowApiListModal] = useState(false);
     const [envName, setEnvName] = useState('');
     const [envVars, setEnvVars] = useState<{ id: string; key: string; value: string }[]>([]);
+    const [editingEnv, setEditingEnv] = useState<Environment | null>(null);
+    const [varPopup, setVarPopup] = useState<{ key: string; value: string; x: number; y: number } | null>(null);
 
     // Form state
     const [name, setName] = useState('');
@@ -126,6 +130,7 @@ export default function ApiPage() {
             id: `header-${idx}`,
             key,
             value,
+            enabled: true,
         })));
         
         // Convert query params to rows
@@ -151,6 +156,100 @@ export default function ApiPage() {
         return result;
     };
 
+    const highlightVariables = (text: string): React.ReactElement[] => {
+        if (!selectedEnvironment || !text) return [<span key="text">{text}</span>];
+        
+        const parts: React.ReactElement[] = [];
+        let lastIndex = 0;
+        const regex = /\{\{(\w+)\}\}/g;
+        let match;
+
+        while ((match = regex.exec(text)) !== null) {
+            // Add text before match
+            if (match.index > lastIndex) {
+                parts.push(<span key={`text-${lastIndex}`}>{text.substring(lastIndex, match.index)}</span>);
+            }
+            
+            // Add highlighted variable
+            const varName = match[1];
+            const varValue = selectedEnvironment.variables[varName] || '';
+            parts.push(
+                <span
+                    key={`var-${match.index}`}
+                    className="bg-primary/20 text-primary px-1 rounded cursor-pointer border border-primary/30"
+                    onClick={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        setVarPopup({
+                            key: varName,
+                            value: varValue,
+                            x: rect.left,
+                            y: rect.top - 40,
+                        });
+                    }}
+                >
+                    {match[0]}
+                </span>
+            );
+            
+            lastIndex = match.index + match[0].length;
+        }
+        
+        // Add remaining text
+        if (lastIndex < text.length) {
+            parts.push(<span key={`text-${lastIndex}`}>{text.substring(lastIndex)}</span>);
+        }
+        
+        return parts.length > 0 ? parts : [<span key="text">{text}</span>];
+    };
+
+    const loadEnvironmentForEdit = (env: Environment) => {
+        setEditingEnv(env);
+        setEnvName(env.name);
+        setEnvVars(Object.entries(env.variables || {}).map(([key, value], idx) => ({
+            id: `var-${idx}`,
+            key,
+            value,
+        })));
+        setShowEnvModal(true);
+    };
+
+    const updateEnvironment = async () => {
+        if (!editingEnv || !envName.trim()) {
+            alert('Environment name is required');
+            return;
+        }
+
+        const variables: Record<string, string> = {};
+        envVars.forEach(v => {
+            if (v.key.trim()) {
+                variables[v.key] = v.value;
+            }
+        });
+
+        try {
+            const res = await fetch('/api/environments', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: editingEnv._id,
+                    name: envName,
+                    variables,
+                    isDefault: editingEnv.isDefault,
+                }),
+            });
+
+            if (res.ok) {
+                await loadEnvironments();
+                setShowEnvModal(false);
+                setEditingEnv(null);
+                setEnvName('');
+                setEnvVars([]);
+            }
+        } catch (error) {
+            console.error('Error updating environment:', error);
+        }
+    };
+
     const handleSave = async () => {
         if (!url.trim()) {
             setError('URL is required');
@@ -161,10 +260,10 @@ export default function ApiPage() {
         setError(null);
 
         try {
-            // Convert rows back to objects
+            // Convert rows back to objects (only enabled headers)
             const headers: Record<string, string> = {};
             headerRows.forEach(row => {
-                if (row.key.trim()) {
+                if (row.key.trim() && row.enabled) {
                     headers[row.key] = row.value;
                 }
             });
@@ -248,7 +347,7 @@ export default function ApiPage() {
             
             const headers: Record<string, string> = {};
             headerRows.forEach(row => {
-                if (row.key.trim()) {
+                if (row.key.trim() && row.enabled) {
                     headers[row.key] = substituteVariables(row.value);
                 }
             });
@@ -290,7 +389,13 @@ export default function ApiPage() {
     };
 
     const addHeaderRow = () => {
-        setHeaderRows([...headerRows, { id: `header-${Date.now()}`, key: '', value: '' }]);
+        setHeaderRows([...headerRows, { id: `header-${Date.now()}`, key: '', value: '', enabled: true }]);
+    };
+
+    const toggleHeaderEnabled = (id: string) => {
+        setHeaderRows(headerRows.map(row => 
+            row.id === id ? { ...row, enabled: !row.enabled } : row
+        ));
     };
 
     const updateHeaderRow = (id: string, field: 'key' | 'value', value: string) => {
@@ -378,14 +483,22 @@ export default function ApiPage() {
 
     return (
         <div className="h-screen flex flex-col">
-            {/* Mobile: Collapsible Sidebar */}
-            <div className="md:hidden border-b border-border/50 bg-background/80 p-4 flex items-center justify-between">
+            {/* Mobile/Tablet: API List Button */}
+            <div className="lg:hidden border-b border-border/50 bg-background/80 p-4 flex items-center justify-between">
                 <button
-                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                    onClick={() => setShowApiListModal(true)}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary"
                 >
-                    {sidebarOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    APIs ({apiConfigs.length})
+                    {selectedConfig ? (
+                        <>
+                            <span className="text-xs font-mono px-2 py-0.5 rounded bg-primary/10 text-primary">
+                                {selectedConfig.method}
+                            </span>
+                            <span className="font-medium">{selectedConfig.name}</span>
+                        </>
+                    ) : (
+                        <>APIs ({apiConfigs.length})</>
+                    )}
                 </button>
                 <button
                     onClick={createNew}
@@ -396,11 +509,10 @@ export default function ApiPage() {
             </div>
 
             <div className="flex-1 flex overflow-hidden">
-                {/* Left Sidebar - API List */}
+                {/* Left Sidebar - API List (Desktop Only) */}
                 <div className={cn(
                     "w-64 bg-background/80 backdrop-blur-xl border-r border-border/50 flex flex-col",
-                    "md:block",
-                    sidebarOpen ? "block" : "hidden"
+                    "hidden lg:flex"
                 )}>
                     <div className="p-4 border-b border-border/50">
                         <button
@@ -428,7 +540,6 @@ export default function ApiPage() {
                                 )}
                                 onClick={() => {
                                     loadConfig(config);
-                                    setSidebarOpen(false);
                                 }}
                             >
                                 <div className="flex items-center justify-between">
@@ -456,8 +567,8 @@ export default function ApiPage() {
                     </div>
                 </div>
 
-                {/* Main Content */}
-                <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+                {/* Main Content - Vertical on mobile/tablet, horizontal on desktop */}
+                <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
                     {/* Left Panel - API Configuration */}
                     <div className="flex-1 flex flex-col border-r border-border/50 overflow-hidden">
                         <div className="p-4 md:p-6 border-b border-border/50 bg-background/80 flex flex-wrap items-center gap-4">
@@ -493,7 +604,12 @@ export default function ApiPage() {
                                     ))}
                                 </select>
                                 <button
-                                    onClick={() => setShowEnvModal(true)}
+                                    onClick={() => {
+                                        setShowEnvModal(true);
+                                        setEditingEnv(null);
+                                        setEnvName('');
+                                        setEnvVars([]);
+                                    }}
                                     className="p-2 rounded-xl bg-background/50 border border-border/50 hover:bg-background/80"
                                     title="Manage Environments"
                                 >
@@ -552,16 +668,23 @@ export default function ApiPage() {
                                     </div>
                                     <div className="flex-[3]">
                                         <label className="block text-sm font-medium mb-2">URL</label>
-                                        <input
-                                            type="text"
-                                            value={url}
-                                            onChange={(e) => setUrl(e.target.value)}
-                                            placeholder="https://api.example.com/endpoint or {{baseUrl}}/endpoint"
-                                            className={cn(
-                                                "w-full px-4 py-2 rounded-xl border border-border/50",
-                                                "bg-background/50 focus:outline-none focus:border-primary"
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={url}
+                                                onChange={(e) => setUrl(e.target.value)}
+                                                placeholder="https://api.example.com/endpoint or {{baseUrl}}/endpoint"
+                                                className={cn(
+                                                    "w-full px-4 py-2 rounded-xl border border-border/50",
+                                                    "bg-background/50 focus:outline-none focus:border-primary"
+                                                )}
+                                            />
+                                            {selectedEnvironment && url && (
+                                                <div className="absolute top-full left-0 mt-1 text-xs text-foreground/60 px-2">
+                                                    Preview: {highlightVariables(url)}
+                                                </div>
                                             )}
-                                        />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -577,27 +700,44 @@ export default function ApiPage() {
                                     </div>
                                     <div className="space-y-2">
                                         {headerRows.map((row) => (
-                                            <div key={row.id} className="flex gap-2">
+                                            <div key={row.id} className="flex gap-2 items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={row.enabled}
+                                                    onChange={() => toggleHeaderEnabled(row.id)}
+                                                    className="w-4 h-4 rounded border-border/50"
+                                                />
                                                 <input
                                                     type="text"
                                                     value={row.key}
                                                     onChange={(e) => updateHeaderRow(row.id, 'key', e.target.value)}
                                                     placeholder="Header Name"
+                                                    disabled={!row.enabled}
                                                     className={cn(
                                                         "flex-1 px-3 py-2 rounded-lg border border-border/50",
-                                                        "bg-background/50 focus:outline-none focus:border-primary text-sm"
+                                                        "bg-background/50 focus:outline-none focus:border-primary text-sm",
+                                                        !row.enabled && "opacity-50"
                                                     )}
                                                 />
-                                                <input
-                                                    type="text"
-                                                    value={row.value}
-                                                    onChange={(e) => updateHeaderRow(row.id, 'value', e.target.value)}
-                                                    placeholder="Header Value or {{variable}}"
-                                                    className={cn(
-                                                        "flex-1 px-3 py-2 rounded-lg border border-border/50",
-                                                        "bg-background/50 focus:outline-none focus:border-primary text-sm"
+                                                <div className="flex-1 relative">
+                                                    <input
+                                                        type="text"
+                                                        value={row.value}
+                                                        onChange={(e) => updateHeaderRow(row.id, 'value', e.target.value)}
+                                                        placeholder="Header Value or {{variable}}"
+                                                        disabled={!row.enabled}
+                                                        className={cn(
+                                                            "w-full px-3 py-2 rounded-lg border border-border/50",
+                                                            "bg-background/50 focus:outline-none focus:border-primary text-sm",
+                                                            !row.enabled && "opacity-50"
+                                                        )}
+                                                    />
+                                                    {selectedEnvironment && row.value && row.enabled && (
+                                                        <div className="absolute top-full left-0 mt-1 text-xs text-foreground/60 px-2">
+                                                            {highlightVariables(row.value)}
+                                                        </div>
                                                     )}
-                                                />
+                                                </div>
                                                 <button
                                                     onClick={() => removeHeaderRow(row.id)}
                                                     className="px-2 text-red-500 hover:bg-red-500/20 rounded-lg"
@@ -684,10 +824,10 @@ export default function ApiPage() {
                         </div>
                     </div>
 
-                    {/* Right Panel - Response (Desktop) / Below (Mobile) */}
+                    {/* Right Panel - Response (Desktop) / Below (Mobile/Tablet) */}
                     <div className={cn(
-                        "w-full md:w-1/2 flex flex-col border-t md:border-t-0 md:border-l border-border/50",
-                        "h-1/2 md:h-auto"
+                        "w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 lg:border-l border-border/50",
+                        "h-1/2 lg:h-auto"
                     )}>
                         <div className="p-4 border-b border-border/50 bg-background/80">
                             <h3 className="font-semibold">Response</h3>
@@ -807,18 +947,170 @@ export default function ApiPage() {
                                     ))}
                                 </div>
                             </div>
-                            <button
-                                onClick={saveEnvironment}
-                                className={cn(
-                                    "w-full px-4 py-2 rounded-xl",
-                                    "bg-primary text-background",
-                                    "hover:bg-primary/90 transition-all",
-                                    "font-medium"
+                            <div className="flex gap-2">
+                                {editingEnv ? (
+                                    <>
+                                        <button
+                                            onClick={updateEnvironment}
+                                            className={cn(
+                                                "flex-1 px-4 py-2 rounded-xl",
+                                                "bg-primary text-background",
+                                                "hover:bg-primary/90 transition-all",
+                                                "font-medium"
+                                            )}
+                                        >
+                                            Update Environment
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                if (confirm('Delete this environment?')) {
+                                                    const res = await fetch(`/api/environments?id=${editingEnv._id}`, {
+                                                        method: 'DELETE',
+                                                    });
+                                                    if (res.ok) {
+                                                        await loadEnvironments();
+                                                        setShowEnvModal(false);
+                                                        setEditingEnv(null);
+                                                    }
+                                                }
+                                            }}
+                                            className={cn(
+                                                "px-4 py-2 rounded-xl",
+                                                "bg-red-500 text-background",
+                                                "hover:bg-red-600 transition-all",
+                                                "font-medium"
+                                            )}
+                                        >
+                                            Delete
+                                        </button>
+                                    </>
+                                ) : (
+                                    <button
+                                        onClick={saveEnvironment}
+                                        className={cn(
+                                            "w-full px-4 py-2 rounded-xl",
+                                            "bg-primary text-background",
+                                            "hover:bg-primary/90 transition-all",
+                                            "font-medium"
+                                        )}
+                                    >
+                                        Create Environment
+                                    </button>
                                 )}
-                            >
-                                Create Environment
-                            </button>
+                            </div>
+                            {environments.length > 0 && (
+                                <div className="mt-6">
+                                    <h3 className="text-sm font-medium mb-2">Existing Environments</h3>
+                                    <div className="space-y-2">
+                                        {environments.map((env) => (
+                                            <div
+                                                key={env._id}
+                                                className="p-3 rounded-xl bg-background/50 border border-border/30 flex items-center justify-between"
+                                            >
+                                                <div>
+                                                    <div className="font-medium">{env.name} {env.isDefault && '(Default)'}</div>
+                                                    <div className="text-xs text-foreground/60">
+                                                        {Object.keys(env.variables || {}).length} variables
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => loadEnvironmentForEdit(env)}
+                                                    className="px-3 py-1 rounded-lg bg-primary/10 text-primary text-sm hover:bg-primary/20"
+                                                >
+                                                    Edit
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* API List Modal (Mobile/Tablet) */}
+            {showApiListModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-background rounded-3xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xl font-semibold">API Requests</h2>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={createNew}
+                                    className="px-3 py-1 rounded-lg bg-primary text-background text-sm"
+                                >
+                                    <Plus className="w-4 h-4 inline mr-1" />
+                                    New
+                                </button>
+                                <button
+                                    onClick={() => setShowApiListModal(false)}
+                                    className="p-2 rounded-lg hover:bg-background/80"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            {apiConfigs.map((config) => (
+                                <div
+                                    key={config._id}
+                                    className={cn(
+                                        "p-3 rounded-xl cursor-pointer transition-all",
+                                        selectedConfig?._id === config._id
+                                            ? "bg-primary/20 border border-primary/50"
+                                            : "bg-background/50 border border-border/30 hover:bg-background/80"
+                                    )}
+                                    onClick={() => {
+                                        loadConfig(config);
+                                        setShowApiListModal(false);
+                                    }}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-xs font-mono px-2 py-0.5 rounded bg-primary/10 text-primary">
+                                                    {config.method}
+                                                </span>
+                                                <span className="text-sm font-medium truncate">{config.name}</span>
+                                            </div>
+                                            <div className="text-xs text-foreground/60 truncate">{config.url}</div>
+                                        </div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDelete(config._id);
+                                            }}
+                                            className="ml-2 p-1 rounded hover:bg-red-500/20 text-red-500"
+                                        >
+                                            <Trash2 className="w-3 h-3" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                            {apiConfigs.length === 0 && (
+                                <div className="text-center text-foreground/60 py-8">
+                                    No APIs yet. Create one to get started!
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Variable Popup */}
+            {varPopup && (
+                <div
+                    className="fixed z-50 bg-background border border-border/50 rounded-xl p-3 shadow-xl"
+                    style={{
+                        left: `${varPopup.x}px`,
+                        top: `${varPopup.y}px`,
+                    }}
+                    onMouseLeave={() => setVarPopup(null)}
+                >
+                    <div className="text-sm font-medium mb-1">{varPopup.key}</div>
+                    <div className="text-xs text-foreground/60 font-mono break-all max-w-xs">
+                        {varPopup.value || '(empty)'}
                     </div>
                 </div>
             )}

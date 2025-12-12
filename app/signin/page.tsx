@@ -44,7 +44,11 @@ export default function LoginPage() {
                 });
 
                 if (res?.error) {
-                    throw new Error("Invalid credentials");
+                    // Check if user might be suspended
+                    const errorMessage = res.error === "CredentialsSignin" 
+                        ? "Invalid email or password. If your account is suspended, please contact an administrator."
+                        : "Invalid credentials";
+                    throw new Error(errorMessage);
                 }
 
                 router.push("/notes");
