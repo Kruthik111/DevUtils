@@ -4,6 +4,7 @@ const UserSchema = new Schema({
     email: {
         type: String,
         unique: true,
+        lowercase: true,
         required: [true, 'Email is required'],
         match: [/^\S+@\S+\.\S+$/, 'Please use a valid email address'],
     },
@@ -31,6 +32,15 @@ const UserSchema = new Schema({
     },
     customTheme: {
         type: Schema.Types.Mixed,
+    },
+    role: {
+        type: String,
+        enum: ['admin', 'user'],
+        default: 'user',
+    },
+    hasAccess: {
+        type: [String], // Array of page paths user has access to
+        default: [],
     },
 }, {
     timestamps: true,

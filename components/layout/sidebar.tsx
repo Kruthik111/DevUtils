@@ -7,7 +7,8 @@ import {
   Server,
   Database,
   Puzzle,
-  User
+  User,
+  Code
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -28,9 +29,9 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { id: "notes", label: "Notes", icon: StickyNote, href: "/notes" },
+  { id: "api", label: "API", icon: Code, href: "/api" },
   // { id: "test-tool", label: "Test Tool", icon: FlaskConical, href: "/test-tool" },
   // { id: "handle-server", label: "Handle Server", icon: Server, href: "/handle-server" },
-  // { id: "db-check", label: "Repetitive DB Check", icon: Database, href: "/db-check" },
   // { id: "extension", label: "Extension", icon: Puzzle, href: "/extension" },
   { id: "profile", label: "Profile", icon: User, href: "/profile" },
 ];

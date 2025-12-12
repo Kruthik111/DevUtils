@@ -35,6 +35,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
+        // Set admin role for specific email
+        if (user.email === 'gokruthik2003@gmail.com' && user.role !== 'admin') {
+          await User.findByIdAndUpdate(user._id, { role: 'admin' });
+        }
+
         return {
           id: user._id.toString(),
           email: user.email,
