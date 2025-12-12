@@ -5,6 +5,7 @@ import User from "@/lib/models/User";
 import { compare } from "bcryptjs";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true, // Add this line - allows localhost and other hosts
   providers: [
     Credentials({
       name: "Credentials",
