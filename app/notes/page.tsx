@@ -502,11 +502,11 @@ export default function NotesPage() {
   };
 
   return (
-    <div className="p-8 min-h-screen">
+    <div className="p-2 md:p-8 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Notes</h1>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 md:mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold">Notes</h1>
           <GroupSelector
             groups={data.groups}
             activeGroupId={data.activeGroupId}

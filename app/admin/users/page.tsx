@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Check, X, Ban, CheckCircle } from 'lucide-react';
+import { Check, X, Ban, CheckCircle, Plus, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface User {
@@ -26,6 +26,10 @@ export default function AdminUsersPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [showCreateUser, setShowCreateUser] = useState(false);
+    const [newUser, setNewUser] = useState({ name: '', email: '', password: '' });
+    const [creating, setCreating] = useState(false);
+    const [createError, setCreateError] = useState('');
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -112,6 +116,43 @@ export default function AdminUsersPage() {
         }
     };
 
+    const handleCreateUser = async () => {
+        if (!newUser.name || !newUser.email || !newUser.password) {
+            setCreateError('All fields are required');
+            return;
+        }
+
+        if (newUser.password.length < 6) {
+            setCreateError('Password must be at least 6 characters');
+            return;
+        }
+
+        setCreating(true);
+        setCreateError('');
+
+        try {
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newUser),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                await loadUsers();
+                setShowCreateUser(false);
+                setNewUser({ name: '', email: '', password: '' });
+            } else {
+                setCreateError(data.message || 'Failed to create user');
+            }
+        } catch (error: any) {
+            setCreateError(error.message || 'Failed to create user');
+        } finally {
+            setCreating(false);
+        }
+    };
+
     if (status === 'loading') {
         return (
             <div className="p-8 flex items-center justify-center min-h-screen">
@@ -127,7 +168,21 @@ export default function AdminUsersPage() {
     return (
         <div className="p-8">
             <div className="max-w-7xl mx-auto">
-                <h1 className="text-3xl font-bold mb-6">User Access Management</h1>
+                <div className="flex items-center justify-between mb-6">
+                    <h1 className="text-3xl font-bold">User Access Management</h1>
+                    <button
+                        onClick={() => setShowCreateUser(true)}
+                        className={cn(
+                            "flex items-center gap-2 px-4 py-2 rounded-xl",
+                            "bg-primary text-background",
+                            "hover:bg-primary/90 transition-all",
+                            "font-medium"
+                        )}
+                    >
+                        <Plus className="w-4 h-4" />
+                        Create User
+                    </button>
+                </div>
                 
                 {loading ? (
                     <div className="text-foreground/60">Loading users...</div>
@@ -215,6 +270,85 @@ export default function AdminUsersPage() {
                     </div>
                 )}
             </div>
+
+            {/* Create User Modal */}
+            {showCreateUser && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-background rounded-3xl p-6 max-w-md w-full">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xl font-semibold">Create New User</h2>
+                            <button
+                                onClick={() => {
+                                    setShowCreateUser(false);
+                                    setNewUser({ name: '', email: '', password: '' });
+                                    setCreateError('');
+                                }}
+                                className="p-2 rounded-lg hover:bg-background/80"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-2">Name</label>
+                                <input
+                                    type="text"
+                                    value={newUser.name}
+                                    onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                                    placeholder="John Doe"
+                                    className={cn(
+                                        "w-full px-4 py-2 rounded-xl border border-border/50",
+                                        "bg-background/50 focus:outline-none focus:border-primary"
+                                    )}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-2">Email</label>
+                                <input
+                                    type="email"
+                                    value={newUser.email}
+                                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                                    placeholder="user@example.com"
+                                    className={cn(
+                                        "w-full px-4 py-2 rounded-xl border border-border/50",
+                                        "bg-background/50 focus:outline-none focus:border-primary"
+                                    )}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-2">Password</label>
+                                <input
+                                    type="password"
+                                    value={newUser.password}
+                                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                                    placeholder="Minimum 6 characters"
+                                    className={cn(
+                                        "w-full px-4 py-2 rounded-xl border border-border/50",
+                                        "bg-background/50 focus:outline-none focus:border-primary"
+                                    )}
+                                />
+                            </div>
+                            {createError && (
+                                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+                                    {createError}
+                                </div>
+                            )}
+                            <button
+                                onClick={handleCreateUser}
+                                disabled={creating}
+                                className={cn(
+                                    "w-full px-4 py-2 rounded-xl",
+                                    "bg-primary text-background",
+                                    "hover:bg-primary/90 transition-all",
+                                    "font-medium disabled:opacity-50"
+                                )}
+                            >
+                                {creating ? 'Creating...' : 'Create User'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

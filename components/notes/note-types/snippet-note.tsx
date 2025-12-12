@@ -47,13 +47,13 @@ export function SnippetNote({ content, copyMode }: SnippetNoteProps) {
                 <Code className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
             )
          }   
-            <pre className="flex-1 text-sm font-mono whitespace-pre-wrap break-words text-foreground/90">
+            <pre className="flex-1 text-xs md:text-sm font-mono whitespace-pre-wrap break-words text-foreground/90 min-w-0 overflow-x-auto">
                 {content}
             </pre>
             {copyMode === 'passive' && (
                 <button
                     onClick={handleCopy}
-                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-purple-500/20 transition-all"
+                    className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1.5 rounded-md hover:bg-purple-500/20 transition-all flex-shrink-0"
                     title="Copy snippet"
                 >
                     {copied ? (

@@ -45,14 +45,14 @@ export function LinkNote({ content, copyMode }: LinkNoteProps) {
                 href={content}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 text-sm text-blue-500 truncate"
+                className="flex-1 text-sm text-blue-500 break-all min-w-0"
                 onClick={(e) => e.preventDefault()}
             >
                 {content}
             </a>
                 <button
                     onClick={handleCopy}
-                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-blue-500/20 transition-all"
+                    className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1.5 rounded-md hover:bg-blue-500/20 transition-all flex-shrink-0"
                     title="Copy link"
                 >
                     {copied ? (
