@@ -148,6 +148,12 @@ export default function ApiPage() {
         setError(null);
     };
 
+    const hasEnvironmentVariables = (text: string): boolean => {
+        if (!text) return false;
+        const regex = /\{\{(\w+)\}\}/g;
+        return regex.test(text);
+    };
+
     const substituteVariables = (text: string): string => {
         if (!selectedEnvironment || !text) return text;
         let result = text;
@@ -167,10 +173,10 @@ export default function ApiPage() {
         let match;
 
         while ((match = regex.exec(text)) !== null) {
-            // Add text before match with better color
+            // Add text before match with better color - use full opacity for visibility
             if (match.index > lastIndex) {
                 parts.push(
-                    <span key={`text-${lastIndex}`} className="text-foreground/90">
+                    <span key={`text-${lastIndex}`} className="text-foreground">
                         {text.substring(lastIndex, match.index)}
                     </span>
                 );
@@ -202,16 +208,16 @@ export default function ApiPage() {
             lastIndex = match.index + match[0].length;
         }
         
-        // Add remaining text with better color
+        // Add remaining text with better color - use full opacity for visibility
         if (lastIndex < text.length) {
             parts.push(
-                <span key={`text-${lastIndex}`} className="text-foreground/90">
+                <span key={`text-${lastIndex}`} className="text-foreground">
                     {text.substring(lastIndex)}
                 </span>
             );
         }
         
-        return parts.length > 0 ? parts : [<span key="text" className="text-foreground/90">{text}</span>];
+        return parts.length > 0 ? parts : [<span key="text" className="text-foreground">{text}</span>];
     };
 
     const loadEnvironmentForEdit = (env: Environment) => {
@@ -702,7 +708,7 @@ export default function ApiPage() {
                                         <label className="block text-sm font-medium mb-2">URL</label>
                                         <div className="relative">
                                             {/* Overlay for highlighting - positioned behind input */}
-                                            {selectedEnvironment && url && (
+                                            {selectedEnvironment && url && hasEnvironmentVariables(url) && (
                                                 <div 
                                                     className={cn(
                                                         "absolute inset-0 px-4 py-2 rounded-xl",
@@ -742,14 +748,18 @@ export default function ApiPage() {
                                                 className={cn(
                                                     "w-full px-4 py-2 rounded-xl border border-border/50",
                                                     "bg-background/50 focus:outline-none focus:border-primary",
-                                                    "relative z-10 font-mono text-sm",
-                                                    selectedEnvironment && url && "text-transparent",
-                                                    !selectedEnvironment || !url ? "text-foreground/90" : ""
+                                                    "relative z-10 font-mono text-sm text-foreground"
                                                 )}
-                                                style={{ 
-                                                    caretColor: selectedEnvironment && url ? 'transparent' : 'currentColor',
-                                                    color: selectedEnvironment && url ? 'transparent' : undefined
-                                                }}
+                                                {...(selectedEnvironment && url && hasEnvironmentVariables(url) ? {
+                                                    style: { 
+                                                        color: 'transparent',
+                                                        caretColor: 'transparent'
+                                                    }
+                                                } : {
+                                                    style: {
+                                                        caretColor: 'hsl(var(--foreground))'
+                                                    }
+                                                })}
                                             />
                                         </div>
                                     </div>
@@ -788,7 +798,7 @@ export default function ApiPage() {
                                                 />
                                                 <div className="flex-1 relative">
                                                     {/* Overlay for highlighting in header value */}
-                                                    {selectedEnvironment && row.value && row.enabled && (
+                                                    {selectedEnvironment && row.value && row.enabled && hasEnvironmentVariables(row.value) && (
                                                         <div 
                                                             className="absolute inset-0 px-3 py-2 rounded-lg flex items-center text-sm overflow-hidden font-mono"
                                                             style={{ pointerEvents: 'none' }}
@@ -826,14 +836,18 @@ export default function ApiPage() {
                                                             "w-full px-3 py-2 rounded-lg border border-border/50",
                                                             "bg-background/50 focus:outline-none focus:border-primary text-sm font-mono",
                                                             !row.enabled && "opacity-50",
-                                                            "relative z-10",
-                                                            selectedEnvironment && row.value && row.enabled && "text-transparent",
-                                                            !selectedEnvironment || !row.value || !row.enabled ? "text-foreground/90" : ""
+                                                            "relative z-10 text-foreground"
                                                         )}
-                                                        style={{ 
-                                                            caretColor: selectedEnvironment && row.value && row.enabled ? 'transparent' : 'currentColor',
-                                                            color: selectedEnvironment && row.value && row.enabled ? 'transparent' : undefined
-                                                        }}
+                                                        {...(selectedEnvironment && row.value && row.enabled && hasEnvironmentVariables(row.value) ? {
+                                                            style: { 
+                                                                color: 'transparent',
+                                                                caretColor: 'transparent'
+                                                            }
+                                                        } : {
+                                                            style: {
+                                                                caretColor: 'hsl(var(--foreground))'
+                                                            }
+                                                        })}
                                                     />
                                                 </div>
                                                 <button
@@ -875,7 +889,7 @@ export default function ApiPage() {
                                                 />
                                                 <div className="flex-1 relative">
                                                     {/* Overlay for highlighting in query param value */}
-                                                    {selectedEnvironment && row.value && (
+                                                    {selectedEnvironment && row.value && hasEnvironmentVariables(row.value) && (
                                                         <div 
                                                             className="absolute inset-0 px-3 py-2 rounded-lg flex items-center text-sm overflow-hidden font-mono"
                                                             style={{ pointerEvents: 'none' }}
@@ -911,14 +925,18 @@ export default function ApiPage() {
                                                         className={cn(
                                                             "w-full px-3 py-2 rounded-lg border border-border/50",
                                                             "bg-background/50 focus:outline-none focus:border-primary text-sm font-mono",
-                                                            "relative z-10",
-                                                            selectedEnvironment && row.value && "text-transparent",
-                                                            !selectedEnvironment || !row.value ? "text-foreground/90" : ""
+                                                            "relative z-10 text-foreground"
                                                         )}
-                                                        style={{ 
-                                                            caretColor: selectedEnvironment && row.value ? 'transparent' : 'currentColor',
-                                                            color: selectedEnvironment && row.value ? 'transparent' : undefined
-                                                        }}
+                                                        {...(selectedEnvironment && row.value && hasEnvironmentVariables(row.value) ? {
+                                                            style: { 
+                                                                color: 'transparent',
+                                                                caretColor: 'transparent'
+                                                            }
+                                                        } : {
+                                                            style: {
+                                                                caretColor: 'hsl(var(--foreground))'
+                                                            }
+                                                        })}
                                                     />
                                                 </div>
                                                 <button
