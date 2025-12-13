@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Check, X, Ban, CheckCircle, Plus, Loader2 } from 'lucide-react';
+import { Check, X, Ban, CheckCircle, Plus, Loader2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Loading } from '@/components/ui/loading';
+import { ConfirmDialog } from '@/components/notes/confirm-dialog';
 
 interface User {
     _id: string;
@@ -31,6 +32,8 @@ export default function AdminUsersPage() {
     const [newUser, setNewUser] = useState({ name: '', email: '', password: '' });
     const [creating, setCreating] = useState(false);
     const [createError, setCreateError] = useState('');
+    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -154,6 +157,29 @@ export default function AdminUsersPage() {
         }
     };
 
+    const handleDeleteUser = async () => {
+        if (!deleteConfirm) return;
+
+        setDeleting(true);
+        try {
+            const res = await fetch(`/api/users/delete?userId=${deleteConfirm}`, {
+                method: 'DELETE',
+            });
+
+            if (res.ok) {
+                await loadUsers();
+                setDeleteConfirm(null);
+            } else {
+                const data = await res.json();
+                alert(data.message || 'Failed to delete user');
+            }
+        } catch (error: any) {
+            alert(error.message || 'Failed to delete user');
+        } finally {
+            setDeleting(false);
+        }
+    };
+
     if (status === 'loading') {
         return <Loading fullScreen />;
     }
@@ -196,6 +222,7 @@ export default function AdminUsersPage() {
                                                 {page.label}
                                             </th>
                                         ))}
+                                        <th className="text-center p-3">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -259,6 +286,21 @@ export default function AdminUsersPage() {
                                                     </td>
                                                 );
                                             })}
+                                            <td className="p-3 text-center">
+                                                <button
+                                                    onClick={() => setDeleteConfirm(user._id)}
+                                                    disabled={user.role === 'admin' || deleting}
+                                                    className={cn(
+                                                        "flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-medium transition-all",
+                                                        "bg-red-500/20 text-red-500 hover:bg-red-500/30",
+                                                        (user.role === 'admin' || deleting) && "opacity-50 cursor-not-allowed"
+                                                    )}
+                                                    title={user.role === 'admin' ? "Cannot delete admin users" : "Delete user and all their data"}
+                                                >
+                                                    <Trash2 className="w-3 h-3" />
+                                                    Delete
+                                                </button>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -346,6 +388,18 @@ export default function AdminUsersPage() {
                     </div>
                 </div>
             )}
+
+            {/* Delete User Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={!!deleteConfirm}
+                title="Delete User"
+                message="Are you sure you want to delete this user? This will permanently delete all their notes, groups, API configs, and environments. The user account will be marked as suspended. This action cannot be undone."
+                onConfirm={handleDeleteUser}
+                onCancel={() => setDeleteConfirm(null)}
+                showCancel={true}
+                confirmText="Delete"
+                destructive={true}
+            />
         </div>
     );
 }
