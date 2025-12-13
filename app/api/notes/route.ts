@@ -3,6 +3,20 @@ import { auth } from "@/lib/auth";
 import connectDB from "@/lib/mongodb";
 import Note from "@/lib/models/Note";
 import Group from "@/lib/models/Group";
+import User from "@/lib/models/User";
+
+// Check if user has access to notes page
+async function checkAccess(userId: string): Promise<boolean> {
+    await connectDB();
+    const user = await User.findById(userId);
+    if (!user) return false;
+    
+    // Admin has access to everything
+    if (user.role === 'admin') return true;
+    
+    // Check if user has access to /notes page
+    return user.hasAccess?.includes('/notes') || false;
+}
 
 export async function GET(req: Request) {
     try {
@@ -12,6 +26,12 @@ export async function GET(req: Request) {
         }
 
         await connectDB();
+
+        // Check access
+        const hasAccess = await checkAccess(session.user.id);
+        if (!hasAccess) {
+            return NextResponse.json({ message: "Access denied" }, { status: 403 });
+        }
 
         // Fetch groups and notes for the user (exclude soft-deleted notes)
         const groups = await Group.find({ userId: session.user.id });
@@ -39,10 +59,16 @@ export async function POST(req: Request) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
+        await connectDB();
+
+        // Check access
+        const hasAccess = await checkAccess(session.user.id);
+        if (!hasAccess) {
+            return NextResponse.json({ message: "Access denied" }, { status: 403 });
+        }
+
         const body = await req.json();
         const { type, data } = body; // type: 'note' | 'group' | 'tab' | 'sync'
-
-        await connectDB();
 
         if (type === 'sync') {
             // Full sync - simpler for now given the complex frontend state
@@ -133,14 +159,20 @@ export async function DELETE(req: Request) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
+        await connectDB();
+
+        // Check access
+        const hasAccess = await checkAccess(session.user.id);
+        if (!hasAccess) {
+            return NextResponse.json({ message: "Access denied" }, { status: 403 });
+        }
+
         const { searchParams } = new URL(req.url);
         const noteId = searchParams.get('id');
 
         if (!noteId) {
             return NextResponse.json({ message: "Note ID is required" }, { status: 400 });
         }
-
-        await connectDB();
 
         // Soft delete the note
         const note = await Note.findOneAndUpdate(

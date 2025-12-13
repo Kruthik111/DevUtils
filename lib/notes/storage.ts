@@ -22,9 +22,7 @@ export function createDefaultData(): NotesData {
     // Generate unique IDs to avoid collision with existing data
     const timestamp = Date.now();
     const workGroupId = `work-${timestamp}`;
-    const homeGroupId = `home-${timestamp}`;
     const workTabId = `work-tab-${timestamp}`;
-    const homeTabId = `home-tab-${timestamp}`;
 
     const sampleNote: Note = {
         id: `note-${timestamp}`,
@@ -40,26 +38,14 @@ export function createDefaultData(): NotesData {
         notes: [sampleNote],
     };
 
-    const homeTab: Tab = {
-        id: homeTabId,
-        name: 'Tab 1',
-        notes: [],
-    };
-
     const workGroup: Group = {
         id: workGroupId,
         name: 'Work',
         tabs: [workTab],
     };
 
-    const homeGroup: Group = {
-        id: homeGroupId,
-        name: 'Home',
-        tabs: [homeTab],
-    };
-
     return {
-        groups: [workGroup, homeGroup],
+        groups: [workGroup],
         activeGroupId: workGroupId,
         activeTabId: workTabId,
     };

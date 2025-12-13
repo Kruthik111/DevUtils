@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { SidebarProvider } from "@/components/providers/sidebar-provider";
+import { RefreshProvider } from "@/components/providers/refresh-provider";
 import { Sidebar } from "./sidebar";
 import { Navbar } from "./navbar";
 import { InstallPrompt } from "./install-prompt";
@@ -17,12 +18,14 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
 
   // Show layout for all other pages
   return (
-    <SidebarProvider>
-      <Navbar />
-      <Sidebar />
-      <main className="pt-16 md:pr-20 pr-4 min-h-screen">{children}</main>
-      <InstallPrompt />
-    </SidebarProvider>
+    <RefreshProvider>
+      <SidebarProvider>
+        <Navbar />
+        <Sidebar />
+        <main className="pt-16 md:pr-20 pr-4 min-h-screen">{children}</main>
+        <InstallPrompt />
+      </SidebarProvider>
+    </RefreshProvider>
   );
 }
 

@@ -14,10 +14,14 @@ import { BlockEditModal } from '@/components/notes/block-edit-modal';
 import { ConfirmDialog } from '@/components/notes/confirm-dialog';
 import { ContextMenu } from '@/components/notes/context-menu';
 import { Loading } from '@/components/ui/loading';
+import { useRefresh } from '@/components/providers/refresh-provider';
+import { RefreshCw } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function NotesPage() {
   const router = useRouter();
   const { status } = useSession();
+  const { registerRefresh, unregisterRefresh } = useRefresh();
 
   // All hooks must be called before any conditional returns
   const [data, setData] = useState<NotesData | null>(null);
@@ -26,6 +30,8 @@ export default function NotesPage() {
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
   const [deletingBlock, setDeletingBlock] = useState<{ noteId: string; blockId: string } | null>(null);
   const [tabDeleteWarning, setTabDeleteWarning] = useState(false);
+  const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -33,14 +39,24 @@ export default function NotesPage() {
     block: TextBlock;
   } | null>(null);
 
+  // Load data function
+  const loadData = async () => {
+    const loadedData = await fetchNotesData();
+    setData(loadedData);
+  };
+
   // Load data on mount
   useEffect(() => {
-    const loadData = async () => {
-      const loadedData = await fetchNotesData();
-      setData(loadedData);
-    };
     loadData();
   }, []);
+
+  // Register refresh function
+  useEffect(() => {
+    registerRefresh('notes', loadData);
+    return () => {
+      unregisterRefresh('notes');
+    };
+  }, [registerRefresh, unregisterRefresh]);
 
   // Save data on change
   useEffect(() => {
@@ -86,9 +102,9 @@ export default function NotesPage() {
   };
 
   const handleAddGroup = (name: string) => {
-    // Limit to maximum 3 groups
-    if (data.groups.length >= 3) {
-      alert('You can have at most 3 groups. Please delete a group before creating a new one.');
+    // Limit to maximum 2 groups
+    if (data.groups.length >= 2) {
+      alert('You can have at most 2 groups. Please delete a group before creating a new one.');
       return;
     }
 
@@ -112,15 +128,52 @@ export default function NotesPage() {
     });
   };
 
-  const handleDeleteGroup = (groupId: string) => {
-    const filteredGroups = data.groups.filter((g) => g.id !== groupId);
-    if (filteredGroups.length === 0) return;
+  const handleDeleteGroup = async (groupId: string) => {
+    // Prevent deletion of work group
+    if (groupId.startsWith('work-')) {
+      alert('The "Work" group cannot be deleted.');
+      return;
+    }
+
+    try {
+      // Call API to delete group and all its notes
+      const response = await fetch(`/api/notes/group?id=${groupId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Failed to delete group:', error);
+        alert('Failed to delete group. Please try again.');
+        return;
+      }
+
+      // Update local state
+      const filteredGroups = data.groups.filter((g) => g.id !== groupId);
+      if (filteredGroups.length === 0) return;
+
+      setData({
+        ...data,
+        groups: filteredGroups,
+        activeGroupId: filteredGroups[0].id,
+        activeTabId: filteredGroups[0].tabs[0].id,
+      });
+
+      setDeletingGroupId(null);
+    } catch (error) {
+      console.error('Error deleting group:', error);
+      alert('Failed to delete group. Please try again.');
+    }
+  };
+
+  const handleUpdateGroupName = (groupId: string, newName: string) => {
+    const updatedGroups = data.groups.map((g) =>
+      g.id === groupId ? { ...g, name: newName } : g
+    );
 
     setData({
       ...data,
-      groups: filteredGroups,
-      activeGroupId: filteredGroups[0].id,
-      activeTabId: filteredGroups[0].tabs[0].id,
+      groups: updatedGroups,
     });
   };
 
@@ -173,6 +226,22 @@ export default function NotesPage() {
       ...data,
       groups: updatedGroups,
       activeTabId: updatedTabs[0].id,
+    });
+  };
+
+  const handleUpdateTabName = (tabId: string, newName: string) => {
+    if (!activeGroup) return;
+
+    const updatedTabs = activeGroup.tabs.map((t) =>
+      t.id === tabId ? { ...t, name: newName } : t
+    );
+    const updatedGroups = data.groups.map((g) =>
+      g.id === data.activeGroupId ? { ...g, tabs: updatedTabs } : g
+    );
+
+    setData({
+      ...data,
+      groups: updatedGroups,
     });
   };
 
@@ -506,13 +575,37 @@ export default function NotesPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 md:mb-6">
           <h1 className="text-2xl md:text-3xl font-bold">Notes</h1>
-          <GroupSelector
-            groups={data.groups}
-            activeGroupId={data.activeGroupId}
-            onGroupChange={handleGroupChange}
-            onAddGroup={handleAddGroup}
-            onDeleteGroup={handleDeleteGroup}
-          />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={async () => {
+                setIsRefreshing(true);
+                try {
+                  await loadData();
+                } finally {
+                  setIsRefreshing(false);
+                }
+              }}
+              disabled={isRefreshing}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-xl",
+                "bg-background/50 border border-border/50",
+                "hover:bg-primary/10 hover:border-primary/50",
+                "transition-all font-medium",
+                "disabled:opacity-50"
+              )}
+            >
+              <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
+              Refresh
+            </button>
+            <GroupSelector
+              groups={data.groups}
+              activeGroupId={data.activeGroupId}
+              onGroupChange={handleGroupChange}
+              onAddGroup={handleAddGroup}
+              onDeleteGroup={(groupId) => setDeletingGroupId(groupId)}
+              onUpdateGroupName={handleUpdateGroupName}
+            />
+          </div>
         </div>
 
         {/* Tab Bar */}
@@ -523,6 +616,7 @@ export default function NotesPage() {
             onTabChange={handleTabChange}
             onAddTab={handleAddTab}
             onDeleteTab={handleDeleteTab}
+            onUpdateTabName={handleUpdateTabName}
           />
         )}
 
@@ -600,6 +694,18 @@ export default function NotesPage() {
             onClose={() => setContextMenu(null)}
           />
         )}
+
+        {/* Delete Group Confirmation Dialog */}
+        <ConfirmDialog
+          isOpen={!!deletingGroupId}
+          title="Delete Group"
+          message="Are you sure you want to delete this group? All notes in this group will be permanently deleted. This action cannot be undone."
+          onConfirm={() => deletingGroupId && handleDeleteGroup(deletingGroupId)}
+          onCancel={() => setDeletingGroupId(null)}
+          showCancel={true}
+          confirmText="Delete"
+          destructive={true}
+        />
       </div>
     </div>
   );

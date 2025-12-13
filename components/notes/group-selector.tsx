@@ -11,6 +11,7 @@ interface GroupSelectorProps {
     onGroupChange: (groupId: string) => void;
     onAddGroup: (name: string) => void;
     onDeleteGroup: (groupId: string) => void;
+    onUpdateGroupName: (groupId: string, newName: string) => void;
 }
 
 export function GroupSelector({
@@ -19,14 +20,17 @@ export function GroupSelector({
     onGroupChange,
     onAddGroup,
     onDeleteGroup,
+    onUpdateGroupName,
 }: GroupSelectorProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [isAdding, setIsAdding] = useState(false);
     const [newGroupName, setNewGroupName] = useState('');
+    const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+    const [editValue, setEditValue] = useState('');
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const activeGroup = groups.find((g) => g.id === activeGroupId);
-    const isPermanentGroup = (groupId: string) => ['work', 'home'].includes(groupId);
+    const isPermanentGroup = (groupId: string) => groupId.startsWith('work-');
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -54,6 +58,25 @@ export function GroupSelector({
         }
     };
 
+    const startEditing = (group: Group, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setEditingGroupId(group.id);
+        setEditValue(group.name);
+    };
+
+    const saveEdit = (groupId: string) => {
+        if (editValue.trim()) {
+            onUpdateGroupName(groupId, editValue.trim());
+        }
+        setEditingGroupId(null);
+        setEditValue('');
+    };
+
+    const cancelEdit = () => {
+        setEditingGroupId(null);
+        setEditValue('');
+    };
+
     return (
         <div className="relative" ref={dropdownRef}>
             <button
@@ -71,25 +94,49 @@ export function GroupSelector({
                             key={group.id}
                             className="group flex items-center justify-between px-4 py-2 hover:bg-foreground/5 transition-colors"
                         >
-                            <button
-                                onClick={() => {
-                                    onGroupChange(group.id);
-                                    setIsOpen(false);
-                                }}
-                                className="flex-1 text-left"
-                            >
-                                {group.name}
-                            </button>
-                            {!isPermanentGroup(group.id) && (
-                                <button
-                                    onClick={() => {
-                                        onDeleteGroup(group.id);
+                            {editingGroupId === group.id ? (
+                                <input
+                                    type="text"
+                                    value={editValue}
+                                    onChange={(e) => setEditValue(e.target.value)}
+                                    onBlur={() => saveEdit(group.id)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            saveEdit(group.id);
+                                        } else if (e.key === 'Escape') {
+                                            cancelEdit();
+                                        }
                                     }}
-                                    className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-500/20 transition-all"
-                                    title="Delete group"
-                                >
-                                    <Trash2 className="w-4 h-4 text-red-500" />
-                                </button>
+                                    className="flex-1 text-sm bg-background border border-primary rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                    autoFocus
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={() => {
+                                            onGroupChange(group.id);
+                                            setIsOpen(false);
+                                        }}
+                                        onDoubleClick={(e) => startEditing(group, e)}
+                                        className="flex-1 text-left"
+                                        title="Double-click to edit"
+                                    >
+                                        {group.name}
+                                    </button>
+                                    {!isPermanentGroup(group.id) && (
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onDeleteGroup(group.id);
+                                            }}
+                                            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-500/20 transition-all"
+                                            title="Delete group"
+                                        >
+                                            <Trash2 className="w-4 h-4 text-red-500" />
+                                        </button>
+                                    )}
+                                </>
                             )}
                         </div>
                     ))}
@@ -122,19 +169,19 @@ export function GroupSelector({
                         ) : (
                             <button
                                 onClick={() => setIsAdding(true)}
-                                disabled={groups.length >= 3}
+                                disabled={groups.length >= 2}
                                 className={cn(
                                     "flex items-center gap-2 text-sm transition-colors w-full",
-                                    groups.length >= 3
+                                    groups.length >= 2
                                         ? "text-foreground/30 cursor-not-allowed"
                                         : "text-foreground/60 hover:text-primary"
                                 )}
-                                title={groups.length >= 3 ? "Maximum 3 groups allowed. Delete a group to create a new one." : "Create a new group"}
+                                title={groups.length >= 2 ? "Maximum 2 groups allowed. Delete a group to create a new one." : "Create a new group"}
                             >
                                 <Plus className="w-4 h-4" />
                                 New Group
-                                {groups.length >= 3 && (
-                                    <span className="text-xs ml-auto">(Max 3)</span>
+                                {groups.length >= 2 && (
+                                    <span className="text-xs ml-auto">(Max 2)</span>
                                 )}
                             </button>
                         )}

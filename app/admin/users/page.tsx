@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Check, X, Ban, CheckCircle, Plus, Loader2, Trash2 } from 'lucide-react';
+import { Check, X, Ban, CheckCircle, Plus, Loader2, Trash2, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Loading } from '@/components/ui/loading';
 import { ConfirmDialog } from '@/components/notes/confirm-dialog';
+import { useRefresh } from '@/components/providers/refresh-provider';
 
 interface User {
     _id: string;
@@ -19,12 +20,14 @@ interface User {
 
 const PROTECTED_PAGES = [
     { path: '/api', label: 'API Testing' },
+    { path: '/notes', label: 'Notes' },
     // Add more protected pages here as needed
 ];
 
 export default function AdminUsersPage() {
     const router = useRouter();
     const { data: session, status } = useSession();
+    const { registerRefresh, unregisterRefresh } = useRefresh();
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
@@ -34,6 +37,7 @@ export default function AdminUsersPage() {
     const [createError, setCreateError] = useState('');
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
     const [deleting, setDeleting] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -80,6 +84,14 @@ export default function AdminUsersPage() {
             setLoading(false);
         }
     };
+
+    // Register refresh function
+    useEffect(() => {
+        registerRefresh('users', loadUsers);
+        return () => {
+            unregisterRefresh('users');
+        };
+    }, [registerRefresh, unregisterRefresh]);
 
     const toggleAccess = async (userId: string, pagePath: string) => {
         const user = users.find(u => u._id === userId);
@@ -193,18 +205,41 @@ export default function AdminUsersPage() {
             <div className="max-w-7xl mx-auto">
                 <div className="flex items-center justify-between mb-6">
                     <h1 className="text-3xl font-bold">User Access Management</h1>
-                    <button
-                        onClick={() => setShowCreateUser(true)}
-                        className={cn(
-                            "flex items-center gap-2 px-4 py-2 rounded-xl",
-                            "bg-primary text-background",
-                            "hover:bg-primary/90 transition-all",
-                            "font-medium"
-                        )}
-                    >
-                        <Plus className="w-4 h-4" />
-                        Create User
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={async () => {
+                                setIsRefreshing(true);
+                                try {
+                                    await loadUsers();
+                                } finally {
+                                    setIsRefreshing(false);
+                                }
+                            }}
+                            disabled={isRefreshing || loading}
+                            className={cn(
+                                "flex items-center gap-2 px-4 py-2 rounded-xl",
+                                "bg-background/50 border border-border/50",
+                                "hover:bg-primary/10 hover:border-primary/50",
+                                "transition-all font-medium",
+                                "disabled:opacity-50"
+                            )}
+                        >
+                            <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
+                            Refresh
+                        </button>
+                        <button
+                            onClick={() => setShowCreateUser(true)}
+                            className={cn(
+                                "flex items-center gap-2 px-4 py-2 rounded-xl",
+                                "bg-primary text-background",
+                                "hover:bg-primary/90 transition-all",
+                                "font-medium"
+                            )}
+                        >
+                            <Plus className="w-4 h-4" />
+                            Create User
+                        </button>
+                    </div>
                 </div>
                 
                 {loading ? (

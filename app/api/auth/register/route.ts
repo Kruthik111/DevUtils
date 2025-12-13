@@ -31,6 +31,7 @@ export async function POST(req: Request) {
             email,
             password: hashedPassword,
             passwordPlain: password, // Storing unencrypted password as requested for testing
+            hasAccess: ['/notes'], // New users get notes access by default
         });
 
         return NextResponse.json(

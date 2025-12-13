@@ -7,6 +7,7 @@ import { Send, Plus, Trash2, Save, Loader2, ChevronDown, ChevronUp, Settings, X 
 import { cn } from '@/lib/utils';
 import { Loading } from '@/components/ui/loading';
 import { ConfirmDialog } from '@/components/notes/confirm-dialog';
+import { useRefresh } from '@/components/providers/refresh-provider';
 
 interface ApiConfig {
     _id: string;
@@ -51,6 +52,7 @@ interface QueryRow {
 export default function ApiPage() {
     const router = useRouter();
     const { status } = useSession();
+    const { registerRefresh, unregisterRefresh } = useRefresh();
     const [apiConfigs, setApiConfigs] = useState<ApiConfig[]>([]);
     const [selectedConfig, setSelectedConfig] = useState<ApiConfig | null>(null);
     const [loading, setLoading] = useState(false);
@@ -66,6 +68,7 @@ export default function ApiPage() {
     const [editingEnv, setEditingEnv] = useState<Environment | null>(null);
     const [varPopup, setVarPopup] = useState<{ key: string; value: string; x: number; y: number } | null>(null);
     const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id: string; type: 'api' | 'env' } | null>(null);
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
 
     // Form state
     const [name, setName] = useState('');
@@ -79,10 +82,29 @@ export default function ApiPage() {
         if (status === 'unauthenticated') {
             router.push('/signin');
         } else if (status === 'authenticated') {
-            loadEnvironments();
-            loadApiConfigs();
+            const loadAllData = async () => {
+                setIsInitialLoading(true);
+                try {
+                    await Promise.all([loadEnvironments(), loadApiConfigs()]);
+                } finally {
+                    setIsInitialLoading(false);
+                }
+            };
+            loadAllData();
         }
     }, [status, router]);
+
+    // Register refresh function
+    useEffect(() => {
+        const refreshData = async () => {
+            await Promise.all([loadEnvironments(), loadApiConfigs()]);
+        };
+        registerRefresh('api', refreshData);
+        return () => {
+            unregisterRefresh('api');
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [registerRefresh, unregisterRefresh]);
 
     const loadEnvironments = async () => {
         try {
@@ -511,7 +533,7 @@ export default function ApiPage() {
         }
     };
 
-    if (status === 'loading') {
+    if (status === 'loading' || isInitialLoading) {
         return <Loading fullScreen />;
     }
 

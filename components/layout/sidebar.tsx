@@ -47,11 +47,13 @@ export function Sidebar() {
   const { data: session } = useSession();
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasApiAccess, setHasApiAccess] = useState(false);
+  const [hasNotesAccess, setHasNotesAccess] = useState(false);
 
   useEffect(() => {
     if (session?.user?.email === 'gokruthik2003@gmail.com') {
       setIsAdmin(true);
       setHasApiAccess(true); // Admin has access to everything
+      setHasNotesAccess(true);
     } else if (session?.user?.email) {
       // Check admin access
       fetch('/api/users/access')
@@ -69,8 +71,18 @@ export function Sidebar() {
         .catch(() => {
           setHasApiAccess(false);
         });
+
+      // Check Notes access by trying to fetch notes
+      fetch('/api/notes')
+        .then(res => {
+          setHasNotesAccess(res.ok); // 200-299 means access granted
+        })
+        .catch(() => {
+          setHasNotesAccess(false);
+        });
     } else {
       setHasApiAccess(false);
+      setHasNotesAccess(false);
     }
   }, [session]);
 
@@ -89,6 +101,8 @@ export function Sidebar() {
             if (item.adminOnly && !isAdmin) return null;
             // Hide API icon if user doesn't have API access
             if (item.id === 'api' && !hasApiAccess) return null;
+            // Hide Notes icon if user doesn't have notes access
+            if (item.id === 'notes' && !hasNotesAccess) return null;
             
             const Icon = item.icon;
             const isActive = pathname === item.href;

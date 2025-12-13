@@ -11,6 +11,7 @@ import { PulseDot } from "@/components/ui/pulse-dot";
 import { BackgroundUpload } from "./background-upload";
 import { useSidebar } from "@/components/providers/sidebar-provider";
 import { useSession, signOut } from "next-auth/react";
+import { ConfirmDialog } from "@/components/notes/confirm-dialog";
 import {
   Tooltip,
   TooltipContent,
@@ -27,6 +28,7 @@ export function Navbar() {
   const [isOnline, setIsOnline] = useState(true);
   const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
   const { isMobileSidebarOpen, setIsMobileSidebarOpen } = useSidebar();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,7 +74,7 @@ export function Navbar() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    onClick={() => signOut({ callbackUrl: "/login" })}
+                    onClick={() => setShowLogoutConfirm(true)}
                     className="flex items-center justify-center w-10 h-10 rounded-xl bg-background/50 hover:bg-red-500/10 border border-border/50 hover:border-red-500/50 transition-all duration-200 hover:scale-105 active:scale-95 group"
                   >
                     <LogOut className="w-4 h-4 text-foreground group-hover:text-red-500" />
@@ -231,6 +233,21 @@ export function Navbar() {
           onClose={() => setShowCustomTheme(false)}
         />
       )}
+
+      {/* Logout Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        title="Sign Out"
+        message="Are you sure you want to sign out?"
+        onConfirm={() => {
+          signOut({ callbackUrl: "/login" });
+          setShowLogoutConfirm(false);
+        }}
+        onCancel={() => setShowLogoutConfirm(false)}
+        showCancel={true}
+        confirmText="Sign Out"
+        destructive={false}
+      />
     </TooltipProvider>
   );
 }
