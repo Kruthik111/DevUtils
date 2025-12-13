@@ -32,6 +32,7 @@ export default function NotesPage() {
   const [tabDeleteWarning, setTabDeleteWarning] = useState(false);
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -45,26 +46,6 @@ export default function NotesPage() {
     setData(loadedData);
   };
 
-  // Load data on mount
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Register refresh function
-  useEffect(() => {
-    registerRefresh('notes', loadData);
-    return () => {
-      unregisterRefresh('notes');
-    };
-  }, [registerRefresh, unregisterRefresh]);
-
-  // Save data on change
-  useEffect(() => {
-    if (data) {
-      persistNotesData(data);
-    }
-  }, [data]);
-
   // Redirect to login if not authenticated
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -72,13 +53,61 @@ export default function NotesPage() {
     }
   }, [status, router]);
 
-  // Show loading while checking auth
-  if (status === 'loading') {
+  // Check access to notes page
+  useEffect(() => {
+    if (status === 'authenticated') {
+      // Check notes access
+      fetch('/api/notes')
+        .then(async (res) => {
+          if (!res.ok) {
+            // Notes access denied, check API access
+            setHasAccess(false);
+            const apiRes = await fetch('/api/api-configs');
+            if (apiRes.ok) {
+              // Has API access, redirect to API page
+              router.push('/api');
+            } else {
+              // No API access either, redirect to profile
+              router.push('/profile');
+            }
+          } else {
+            // Has access, load data
+            setHasAccess(true);
+            loadData();
+          }
+        })
+        .catch(() => {
+          // On error, redirect to profile as fallback
+          setHasAccess(false);
+          router.push('/profile');
+        });
+    }
+  }, [status, router]);
+
+  // Register refresh function
+  useEffect(() => {
+    if (hasAccess) {
+      registerRefresh('notes', loadData);
+      return () => {
+        unregisterRefresh('notes');
+      };
+    }
+  }, [hasAccess, registerRefresh, unregisterRefresh]);
+
+  // Save data on change
+  useEffect(() => {
+    if (data && hasAccess) {
+      persistNotesData(data);
+    }
+  }, [data, hasAccess]);
+
+  // Show loading while checking auth or access
+  if (status === 'loading' || hasAccess === null) {
     return <Loading fullScreen />;
   }
 
-  // Don't render if not authenticated
-  if (status === 'unauthenticated') {
+  // Don't render if not authenticated or no access
+  if (status === 'unauthenticated' || hasAccess === false) {
     return null;
   }
 
