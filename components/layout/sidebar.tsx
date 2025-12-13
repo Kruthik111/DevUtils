@@ -46,17 +46,31 @@ export function Sidebar() {
   const { isMobileSidebarOpen, setIsMobileSidebarOpen } = useSidebar();
   const { data: session } = useSession();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [hasApiAccess, setHasApiAccess] = useState(false);
 
   useEffect(() => {
     if (session?.user?.email === 'gokruthik2003@gmail.com') {
       setIsAdmin(true);
+      setHasApiAccess(true); // Admin has access to everything
     } else if (session?.user?.email) {
-      // Check from API
+      // Check admin access
       fetch('/api/users/access')
         .then(res => {
           if (res.ok) setIsAdmin(true);
         })
         .catch(() => {});
+      
+      // Check API access by trying to fetch API configs
+      // This will return 403 if user doesn't have access
+      fetch('/api/api-configs')
+        .then(res => {
+          setHasApiAccess(res.ok); // 200-299 means access granted
+        })
+        .catch(() => {
+          setHasApiAccess(false);
+        });
+    } else {
+      setHasApiAccess(false);
     }
   }, [session]);
 
@@ -73,6 +87,8 @@ export function Sidebar() {
         <div className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-3xl p-3 shadow-xl flex flex-col gap-2">
           {navItems.map((item) => {
             if (item.adminOnly && !isAdmin) return null;
+            // Hide API icon if user doesn't have API access
+            if (item.id === 'api' && !hasApiAccess) return null;
             
             const Icon = item.icon;
             const isActive = pathname === item.href;
