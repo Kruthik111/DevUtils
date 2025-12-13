@@ -174,6 +174,8 @@ export default function LoginPage() {
                     Sign in with Google
                 </button>
 
+                {/*
+                //No need to show this for now, let admin create users
                 <div className="text-center text-sm">
                     {isRegistering ? (
                         <p>
@@ -197,6 +199,7 @@ export default function LoginPage() {
                         </p>
                     )}
                 </div>
+                */}
             </div>
         </div>
     );
