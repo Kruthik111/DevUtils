@@ -86,6 +86,12 @@ export default function NotesPage() {
   };
 
   const handleAddGroup = (name: string) => {
+    // Limit to maximum 3 groups
+    if (data.groups.length >= 3) {
+      alert('You can have at most 3 groups. Please delete a group before creating a new one.');
+      return;
+    }
+
     const newGroup: Group = {
       id: `group-${Date.now()}`,
       name,

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ChevronDown, Plus, Trash2 } from 'lucide-react';
 import { Group } from '@/lib/notes/types';
+import { cn } from '@/lib/utils';
 
 interface GroupSelectorProps {
     groups: Group[];
@@ -121,10 +122,20 @@ export function GroupSelector({
                         ) : (
                             <button
                                 onClick={() => setIsAdding(true)}
-                                className="flex items-center gap-2 text-sm text-foreground/60 hover:text-primary transition-colors"
+                                disabled={groups.length >= 3}
+                                className={cn(
+                                    "flex items-center gap-2 text-sm transition-colors w-full",
+                                    groups.length >= 3
+                                        ? "text-foreground/30 cursor-not-allowed"
+                                        : "text-foreground/60 hover:text-primary"
+                                )}
+                                title={groups.length >= 3 ? "Maximum 3 groups allowed. Delete a group to create a new one." : "Create a new group"}
                             >
                                 <Plus className="w-4 h-4" />
                                 New Group
+                                {groups.length >= 3 && (
+                                    <span className="text-xs ml-auto">(Max 3)</span>
+                                )}
                             </button>
                         )}
                     </div>
