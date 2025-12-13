@@ -13,6 +13,7 @@ import { NoteEditModal } from '@/components/notes/note-edit-modal';
 import { BlockEditModal } from '@/components/notes/block-edit-modal';
 import { ConfirmDialog } from '@/components/notes/confirm-dialog';
 import { ContextMenu } from '@/components/notes/context-menu';
+import { Loading } from '@/components/ui/loading';
 
 export default function NotesPage() {
   const router = useRouter();
@@ -57,11 +58,7 @@ export default function NotesPage() {
 
   // Show loading while checking auth
   if (status === 'loading') {
-    return (
-      <div className="p-8 flex items-center justify-center min-h-screen">
-        <div className="text-foreground/60">Loading...</div>
-      </div>
-    );
+    return <Loading fullScreen />;
   }
 
   // Don't render if not authenticated
@@ -70,11 +67,7 @@ export default function NotesPage() {
   }
 
   if (!data) {
-    return (
-      <div className="p-8 flex items-center justify-center min-h-screen">
-        <div className="text-foreground/60">Loading...</div>
-      </div>
-    );
+    return <Loading fullScreen />;
   }
 
   const activeGroup = data.groups.find((g) => g.id === data.activeGroupId);

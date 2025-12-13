@@ -8,6 +8,23 @@ interface ConfirmDialogProps {
     message: string;
     onConfirm: () => void;
     onCancel: () => void;
+    /**
+     * If true, shows Cancel and Confirm buttons (for delete actions)
+     * If false, shows only OK button (for info/acknowledgment)
+     */
+    showCancel?: boolean;
+    /**
+     * Custom text for confirm button (default: "OK" or "Confirm")
+     */
+    confirmText?: string;
+    /**
+     * Custom text for cancel button (default: "Cancel")
+     */
+    cancelText?: string;
+    /**
+     * If true, confirm button will be red (for destructive actions)
+     */
+    destructive?: boolean;
 }
 
 export function ConfirmDialog({
@@ -16,8 +33,17 @@ export function ConfirmDialog({
     message,
     onConfirm,
     onCancel,
+    showCancel = false,
+    confirmText,
+    cancelText = "Cancel",
+    destructive = false,
 }: ConfirmDialogProps) {
     if (!isOpen) return null;
+
+    const defaultConfirmText = showCancel ? (confirmText || "Confirm") : (confirmText || "OK");
+    const confirmButtonClass = destructive
+        ? "px-6 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-all font-medium"
+        : "px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all font-medium";
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -45,13 +71,21 @@ export function ConfirmDialog({
                     <p className="text-foreground/80">{message}</p>
                 </div>
 
-                {/* Footer with single OK button */}
-                <div className="flex justify-end px-6 py-4 border-t border-border/30">
+                {/* Footer with buttons */}
+                <div className={`flex ${showCancel ? 'justify-end gap-3' : 'justify-end'} px-6 py-4 border-t border-border/30`}>
+                    {showCancel && (
+                        <button
+                            onClick={onCancel}
+                            className="px-6 py-2 rounded-lg bg-background border border-border/50 text-foreground hover:bg-foreground/5 transition-all font-medium"
+                        >
+                            {cancelText}
+                        </button>
+                    )}
                     <button
                         onClick={onConfirm}
-                        className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all font-medium"
+                        className={confirmButtonClass}
                     >
-                        OK
+                        {defaultConfirmText}
                     </button>
                 </div>
             </div>

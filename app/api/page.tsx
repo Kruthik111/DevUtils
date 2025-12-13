@@ -5,6 +5,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Send, Plus, Trash2, Save, Loader2, ChevronDown, ChevronUp, Settings, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Loading } from '@/components/ui/loading';
+import { ConfirmDialog } from '@/components/notes/confirm-dialog';
 
 interface ApiConfig {
     _id: string;
@@ -55,7 +57,6 @@ export default function ApiPage() {
     const [saving, setSaving] = useState(false);
     const [response, setResponse] = useState<ApiResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [environments, setEnvironments] = useState<Environment[]>([]);
     const [selectedEnvironment, setSelectedEnvironment] = useState<Environment | null>(null);
     const [showEnvModal, setShowEnvModal] = useState(false);
@@ -158,7 +159,7 @@ export default function ApiPage() {
     };
 
     const highlightVariables = (text: string): React.ReactElement[] => {
-        if (!selectedEnvironment || !text) return [<span key="text">{text}</span>];
+        if (!selectedEnvironment || !text) return [<span key="text" className="text-foreground">{text}</span>];
         
         const parts: React.ReactElement[] = [];
         let lastIndex = 0;
@@ -166,9 +167,13 @@ export default function ApiPage() {
         let match;
 
         while ((match = regex.exec(text)) !== null) {
-            // Add text before match
+            // Add text before match with better color
             if (match.index > lastIndex) {
-                parts.push(<span key={`text-${lastIndex}`}>{text.substring(lastIndex, match.index)}</span>);
+                parts.push(
+                    <span key={`text-${lastIndex}`} className="text-foreground/90">
+                        {text.substring(lastIndex, match.index)}
+                    </span>
+                );
             }
             
             // Add highlighted variable
@@ -177,16 +182,18 @@ export default function ApiPage() {
             parts.push(
                 <span
                     key={`var-${match.index}`}
-                    className="bg-primary/20 text-primary px-1 rounded cursor-pointer border border-primary/30"
+                    className="bg-primary/20 text-primary font-medium px-1.5 py-0.5 rounded cursor-pointer border border-primary/40 hover:bg-primary/30 transition-colors"
                     onClick={(e) => {
+                        e.stopPropagation();
                         const rect = e.currentTarget.getBoundingClientRect();
                         setVarPopup({
                             key: varName,
                             value: varValue,
-                            x: rect.left,
-                            y: rect.top - 40,
+                            x: rect.left + rect.width / 2,
+                            y: rect.top - 10,
                         });
                     }}
+                    title={`Click to see value: ${varValue || '(empty)'}`}
                 >
                     {match[0]}
                 </span>
@@ -195,12 +202,16 @@ export default function ApiPage() {
             lastIndex = match.index + match[0].length;
         }
         
-        // Add remaining text
+        // Add remaining text with better color
         if (lastIndex < text.length) {
-            parts.push(<span key={`text-${lastIndex}`}>{text.substring(lastIndex)}</span>);
+            parts.push(
+                <span key={`text-${lastIndex}`} className="text-foreground/90">
+                    {text.substring(lastIndex)}
+                </span>
+            );
         }
         
-        return parts.length > 0 ? parts : [<span key="text">{text}</span>];
+        return parts.length > 0 ? parts : [<span key="text" className="text-foreground/90">{text}</span>];
     };
 
     const loadEnvironmentForEdit = (env: Environment) => {
@@ -354,6 +365,7 @@ export default function ApiPage() {
             setDeleteConfirm(null);
         }
     };
+    
 
     const handleSend = async () => {
         if (!url.trim()) {
@@ -494,11 +506,7 @@ export default function ApiPage() {
     };
 
     if (status === 'loading') {
-        return (
-            <div className="p-8 flex items-center justify-center min-h-screen">
-                <div className="text-foreground/60">Loading...</div>
-            </div>
-        );
+        return <Loading fullScreen />;
     }
 
     if (status === 'unauthenticated') {
@@ -698,7 +706,7 @@ export default function ApiPage() {
                                                 <div 
                                                     className={cn(
                                                         "absolute inset-0 px-4 py-2 rounded-xl",
-                                                        "flex items-center text-sm overflow-hidden"
+                                                        "flex items-center text-sm overflow-hidden font-mono"
                                                     )}
                                                     style={{ pointerEvents: 'none' }}
                                                 >
@@ -709,14 +717,19 @@ export default function ApiPage() {
                                                                 <span
                                                                     key={idx}
                                                                     className={props.className}
-                                                                    style={{ pointerEvents: 'auto' }}
-                                                                    onClick={props.onClick}
+                                                                    style={{ pointerEvents: 'auto', zIndex: 20 }}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        if (props.onClick) {
+                                                                            props.onClick(e);
+                                                                        }
+                                                                    }}
                                                                 >
                                                                     {props.children}
                                                                 </span>
                                                             );
                                                         }
-                                                        return el;
+                                                        return <span key={idx} style={{ pointerEvents: 'auto' }}>{el}</span>;
                                                     })}
                                                 </div>
                                             )}
@@ -729,11 +742,12 @@ export default function ApiPage() {
                                                 className={cn(
                                                     "w-full px-4 py-2 rounded-xl border border-border/50",
                                                     "bg-background/50 focus:outline-none focus:border-primary",
-                                                    "relative z-10",
-                                                    selectedEnvironment && url && "text-transparent"
+                                                    "relative z-10 font-mono text-sm",
+                                                    selectedEnvironment && url && "text-transparent",
+                                                    !selectedEnvironment || !url ? "text-foreground/90" : ""
                                                 )}
                                                 style={{ 
-                                                    caretColor: 'currentColor',
+                                                    caretColor: selectedEnvironment && url ? 'transparent' : 'currentColor',
                                                     color: selectedEnvironment && url ? 'transparent' : undefined
                                                 }}
                                             />
@@ -776,7 +790,7 @@ export default function ApiPage() {
                                                     {/* Overlay for highlighting in header value */}
                                                     {selectedEnvironment && row.value && row.enabled && (
                                                         <div 
-                                                            className="absolute inset-0 px-3 py-2 rounded-lg flex items-center text-sm overflow-hidden"
+                                                            className="absolute inset-0 px-3 py-2 rounded-lg flex items-center text-sm overflow-hidden font-mono"
                                                             style={{ pointerEvents: 'none' }}
                                                         >
                                                             {highlightVariables(row.value).map((el, idx) => {
@@ -786,14 +800,19 @@ export default function ApiPage() {
                                                                         <span
                                                                             key={idx}
                                                                             className={props.className}
-                                                                            style={{ pointerEvents: 'auto' }}
-                                                                            onClick={props.onClick}
+                                                                            style={{ pointerEvents: 'auto', zIndex: 20 }}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                if (props.onClick) {
+                                                                                    props.onClick(e);
+                                                                                }
+                                                                            }}
                                                                         >
                                                                             {props.children}
                                                                         </span>
                                                                     );
                                                                 }
-                                                                return el;
+                                                                return <span key={idx} style={{ pointerEvents: 'auto' }}>{el}</span>;
                                                             })}
                                                         </div>
                                                     )}
@@ -805,13 +824,14 @@ export default function ApiPage() {
                                                         disabled={!row.enabled}
                                                         className={cn(
                                                             "w-full px-3 py-2 rounded-lg border border-border/50",
-                                                            "bg-background/50 focus:outline-none focus:border-primary text-sm",
+                                                            "bg-background/50 focus:outline-none focus:border-primary text-sm font-mono",
                                                             !row.enabled && "opacity-50",
                                                             "relative z-10",
-                                                            selectedEnvironment && row.value && row.enabled && "text-transparent"
+                                                            selectedEnvironment && row.value && row.enabled && "text-transparent",
+                                                            !selectedEnvironment || !row.value || !row.enabled ? "text-foreground/90" : ""
                                                         )}
                                                         style={{ 
-                                                            caretColor: 'currentColor',
+                                                            caretColor: selectedEnvironment && row.value && row.enabled ? 'transparent' : 'currentColor',
                                                             color: selectedEnvironment && row.value && row.enabled ? 'transparent' : undefined
                                                         }}
                                                     />
@@ -857,7 +877,7 @@ export default function ApiPage() {
                                                     {/* Overlay for highlighting in query param value */}
                                                     {selectedEnvironment && row.value && (
                                                         <div 
-                                                            className="absolute inset-0 px-3 py-2 rounded-lg flex items-center text-sm overflow-hidden"
+                                                            className="absolute inset-0 px-3 py-2 rounded-lg flex items-center text-sm overflow-hidden font-mono"
                                                             style={{ pointerEvents: 'none' }}
                                                         >
                                                             {highlightVariables(row.value).map((el, idx) => {
@@ -867,14 +887,19 @@ export default function ApiPage() {
                                                                         <span
                                                                             key={idx}
                                                                             className={props.className}
-                                                                            style={{ pointerEvents: 'auto' }}
-                                                                            onClick={props.onClick}
+                                                                            style={{ pointerEvents: 'auto', zIndex: 20 }}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                if (props.onClick) {
+                                                                                    props.onClick(e);
+                                                                                }
+                                                                            }}
                                                                         >
                                                                             {props.children}
                                                                         </span>
                                                                     );
                                                                 }
-                                                                return el;
+                                                                return <span key={idx} style={{ pointerEvents: 'auto' }}>{el}</span>;
                                                             })}
                                                         </div>
                                                     )}
@@ -885,12 +910,13 @@ export default function ApiPage() {
                                                         placeholder="Param Value or {{variable}}"
                                                         className={cn(
                                                             "w-full px-3 py-2 rounded-lg border border-border/50",
-                                                            "bg-background/50 focus:outline-none focus:border-primary text-sm",
+                                                            "bg-background/50 focus:outline-none focus:border-primary text-sm font-mono",
                                                             "relative z-10",
-                                                            selectedEnvironment && row.value && "text-transparent"
+                                                            selectedEnvironment && row.value && "text-transparent",
+                                                            !selectedEnvironment || !row.value ? "text-foreground/90" : ""
                                                         )}
                                                         style={{ 
-                                                            caretColor: 'currentColor',
+                                                            caretColor: selectedEnvironment && row.value ? 'transparent' : 'currentColor',
                                                             color: selectedEnvironment && row.value ? 'transparent' : undefined
                                                         }}
                                                     />
@@ -944,9 +970,7 @@ export default function ApiPage() {
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 md:p-6">
                             {loading ? (
-                                <div className="flex items-center justify-center h-full">
-                                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                                </div>
+                                <Loading text="" className="h-full" />
                             ) : response ? (
                                 <div className="space-y-4">
                                     <div>
@@ -1197,20 +1221,61 @@ export default function ApiPage() {
 
             {/* Variable Popup */}
             {varPopup && (
-                <div
-                    className="fixed z-50 bg-background border border-border/50 rounded-xl p-3 shadow-xl"
-                    style={{
-                        left: `${varPopup.x}px`,
-                        top: `${varPopup.y}px`,
-                    }}
-                    onMouseLeave={() => setVarPopup(null)}
-                >
-                    <div className="text-sm font-medium mb-1">{varPopup.key}</div>
-                    <div className="text-xs text-foreground/60 font-mono break-all max-w-xs">
-                        {varPopup.value || '(empty)'}
+                <>
+                    <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setVarPopup(null)}
+                        style={{ backgroundColor: 'transparent' }}
+                    />
+                    <div
+                        className="fixed z-50 bg-background border border-primary/30 rounded-xl p-4 shadow-2xl max-w-sm"
+                        style={{
+                            left: `${varPopup.x}px`,
+                            top: `${varPopup.y}px`,
+                            transform: 'translate(-50%, -100%)',
+                            marginTop: '-8px',
+                        }}
+                        onMouseEnter={() => {}} // Keep popup open when hovering
+                        onMouseLeave={(e) => {
+                            // Only close if mouse leaves the popup area
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const x = e.clientX;
+                            const y = e.clientY;
+                            if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+                                setVarPopup(null);
+                            }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="text-xs font-semibold text-primary bg-primary/10 px-2 py-1 rounded">
+                                {varPopup.key}
+                            </div>
+                            <div className="text-xs text-foreground/50">Environment Variable</div>
+                        </div>
+                        <div className="text-sm font-mono text-foreground/90 break-all bg-background/50 p-2 rounded border border-border/30">
+                            {varPopup.value || <span className="text-foreground/50 italic">(empty)</span>}
+                        </div>
+                        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-primary/30"></div>
                     </div>
-                </div>
+                </>
             )}
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={!!deleteConfirm}
+                title={deleteConfirm?.type === 'api' ? 'Delete API Configuration' : 'Delete Environment'}
+                message={
+                    deleteConfirm?.type === 'api'
+                        ? 'Are you sure you want to delete this API configuration? This action cannot be undone.'
+                        : 'Are you sure you want to delete this environment? This action cannot be undone.'
+                }
+                onConfirm={confirmDelete}
+                onCancel={() => setDeleteConfirm(null)}
+                showCancel={true}
+                confirmText="Delete"
+                destructive={true}
+            />
         </div>
     );
 }

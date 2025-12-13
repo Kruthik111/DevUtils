@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Check, X, Ban, CheckCircle, Plus, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Loading } from '@/components/ui/loading';
 
 interface User {
     _id: string;
@@ -154,11 +155,7 @@ export default function AdminUsersPage() {
     };
 
     if (status === 'loading') {
-        return (
-            <div className="p-8 flex items-center justify-center min-h-screen">
-                <div className="text-foreground/60">Loading...</div>
-            </div>
-        );
+        return <Loading fullScreen />;
     }
 
     if (status === 'unauthenticated' || !isAdmin) {
@@ -185,7 +182,7 @@ export default function AdminUsersPage() {
                 </div>
                 
                 {loading ? (
-                    <div className="text-foreground/60">Loading users...</div>
+                    <Loading text="Loading users..." fullScreen={false} />
                 ) : (
                     <div className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 shadow-xl">
                         <div className="overflow-x-auto">

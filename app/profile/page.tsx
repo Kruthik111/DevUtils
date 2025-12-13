@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Download, Upload, Trash2, User, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/notes/confirm-dialog";
+import { Loading } from "@/components/ui/loading";
 
 const PROFILE_KEY = "devutils-profile";
 
@@ -67,11 +68,7 @@ export default function ProfilePage() {
 
   // Show loading while checking auth
   if (status === 'loading') {
-    return (
-      <div className="p-8 flex items-center justify-center min-h-screen">
-        <div className="text-foreground/60">Loading...</div>
-      </div>
-    );
+    return <Loading fullScreen />;
   }
 
   // Don't render if not authenticated

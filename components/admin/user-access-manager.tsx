@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Loading } from '@/components/ui/loading';
 
 interface User {
     _id: string;
@@ -82,7 +83,7 @@ export function UserAccessManager() {
         <div className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 shadow-xl">
             <h2 className="text-xl font-semibold mb-4">User Access Management</h2>
             {loading ? (
-                <div className="text-foreground/60">Loading users...</div>
+                <Loading text="Loading users..." fullScreen={false} />
             ) : (
                 <div className="space-y-4">
                     <div className="overflow-x-auto">
