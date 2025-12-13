@@ -30,8 +30,8 @@ export function AddBlockForm({ onAdd, onCancel }: AddBlockFormProps) {
                         key={type}
                         onClick={() => setBlockType(type)}
                         className={`px-3 py-1.5 text-sm rounded-lg border transition-colors capitalize font-medium ${blockType === type
-                                ? 'bg-blue-600 text-white border-blue-600'
-                                : 'border-border/50 hover:bg-foreground/5 text-foreground'
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'border-border/50 hover:bg-foreground/5 text-foreground'
                             }`}
                     >
                         {type}
@@ -56,20 +56,23 @@ export function AddBlockForm({ onAdd, onCancel }: AddBlockFormProps) {
             />
 
             {/* Copy Mode */}
-            <div className="flex gap-2">
-                {(['active', 'passive'] as CopyMode[]).map((mode) => (
-                    <button
-                        key={mode}
-                        onClick={() => setCopyMode(mode)}
-                        className={`px-3 py-1.5 text-xs rounded-lg border transition-colors capitalize font-medium ${copyMode === mode
+            {blockType === 'snippet' && (
+                < div className="flex gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {(['active', 'passive'] as CopyMode[]).map((mode) => (
+                        <button
+                            key={mode}
+                            onClick={() => setCopyMode(mode)}
+                            className={`px-3 py-1.5 text-xs rounded-lg border transition-colors capitalize font-medium ${copyMode === mode
                                 ? 'bg-blue-600 text-white border-blue-600'
                                 : 'border-border/50 hover:bg-foreground/5 text-foreground'
-                            }`}
-                    >
-                        {mode}
-                    </button>
-                ))}
-            </div>
+                                }`}
+                        >
+                            {mode}
+                        </button>
+                    ))}
+                </div>
+            )
+            }
 
             {/* Actions */}
             <div className="flex gap-2">

@@ -34,7 +34,7 @@ export function TodoNote({ content, completed, copyMode, onToggle }: TodoNotePro
         }
     };
 
-    const handleDoubleClick = (e: React.MouseEvent) => {
+    const handleToggle = (e: React.MouseEvent) => {
         e.stopPropagation();
         onToggle();
     };
@@ -46,13 +46,15 @@ export function TodoNote({ content, completed, copyMode, onToggle }: TodoNotePro
                     : 'border-green-500/20 hover:border-green-500/40'
                 } ${copyMode === 'active' && !completed ? 'cursor-pointer' : ''}`}
             onClick={handleClick}
-            onDoubleClick={handleDoubleClick}
+            onDoubleClick={handleToggle}
         >
+            <span onClick={handleToggle}>
             {completed ? (
                 <CheckSquare className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
             ) : (
                 <Square className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
             )}
+            </span>
             <span
                 className={`flex-1 text-sm ${completed ? 'line-through text-foreground/50' : 'text-foreground/90'
                     }`}
