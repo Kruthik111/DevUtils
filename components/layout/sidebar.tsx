@@ -62,8 +62,8 @@ export function Sidebar() {
         .then(res => {
           if (res.ok) setIsAdmin(true);
         })
-        .catch(() => {});
-      
+        .catch(() => { });
+
       // Check API access by trying to fetch API configs
       // This will return 403 if user doesn't have access
       fetch('/api/api-configs')
@@ -97,14 +97,14 @@ export function Sidebar() {
           onClick={() => setIsMobileSidebarOpen(false)}
         />
       )}
-      
+
       {/* Desktop Sidebar - Left side, collapsible */}
       <aside
         className={cn(
           "hidden md:flex fixed left-0 top-0 h-screen transition-all duration-500 ease-in-out",
           isCollapsed ? "w-16" : "w-64"
         )}
-        style={{ 
+        style={{
           zIndex: 10
         }}
       >
@@ -116,10 +116,10 @@ export function Sidebar() {
           <div className="flex items-center justify-between p-2  transition-all duration-500 ease-in-out">
             {!isCollapsed && (
               <span className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
-              D
-            </div>
-              <h2 className="text-lg font-bold text-foreground px-2 transition-opacity duration-500 ease-in-out">DevUtils</h2>
+                <div className="w-7 h-7 rounded bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
+                  D
+                </div>
+                <h2 className="text-lg font-bold text-foreground px-2 transition-opacity duration-500 ease-in-out">DevUtils</h2>
               </span>
             )}
             <button
@@ -141,7 +141,7 @@ export function Sidebar() {
               if (item.adminOnly && !isAdmin) return null;
               if (item.id === 'api' && !hasApiAccess) return null;
               if (item.id === 'notes' && !hasNotesAccess) return null;
-              
+
               const Icon = item.icon;
               const isActive = pathname === item.href;
 
@@ -171,6 +171,19 @@ export function Sidebar() {
                 </Tooltip>
               );
             })}
+          </div>
+          <div className="p-4 border-t border-border/50 bg-background/95 backdrop-blur-sm flex-shrink-0 mt-auto">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-semibold">
+                {session?.user?.name?.charAt(0) || 'U'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-foreground truncate">
+                  {session?.user?.name || 'User'}
+                </div>
+                <div className="text-xs text-foreground/60 truncate">gokruthik2003@gmail.com</div>
+              </div>
+            </div>
           </div>
         </div>
       </aside>
@@ -214,7 +227,7 @@ export function Sidebar() {
                   if (item.adminOnly && !isAdmin) return null;
                   if (item.id === 'api' && !hasApiAccess) return null;
                   if (item.id === 'notes' && !hasNotesAccess) return null;
-                  
+
                   const Icon = item.icon;
                   const isActive = pathname === item.href;
 
