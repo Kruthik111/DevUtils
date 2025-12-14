@@ -113,9 +113,14 @@ export function Sidebar() {
           "shadow-xl"
         )}>
           {/* Hamburger Menu Button */}
-          <div className="flex items-center justify-between p-3 border-b border-border/50 transition-all duration-500 ease-in-out">
+          <div className="flex items-center justify-between p-2 border-b border-border/50 transition-all duration-500 ease-in-out">
             {!isCollapsed && (
-              <h2 className="text-lg font-bold text-foreground px-2 transition-opacity duration-500 ease-in-out">Utils</h2>
+              <span className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
+              D
+            </div>
+              <h2 className="text-lg font-bold text-foreground px-2 transition-opacity duration-500 ease-in-out">DevUtils</h2>
+              </span>
             )}
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}

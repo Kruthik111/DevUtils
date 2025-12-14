@@ -10,7 +10,7 @@ const SidebarContext = createContext<{
 }>({
   isMobileSidebarOpen: false,
   setIsMobileSidebarOpen: () => {},
-  isCollapsed: true,
+  isCollapsed: false,
   setIsCollapsed: () => {},
 });
 
@@ -18,7 +18,7 @@ export const useSidebar = () => useContext(SidebarContext);
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
     <SidebarContext.Provider value={{ isMobileSidebarOpen, setIsMobileSidebarOpen, isCollapsed, setIsCollapsed }}>

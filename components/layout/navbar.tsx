@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "@/components/providers/theme-provider";
-import { Palette, Menu, X, LogOut, Bell, Plus } from "lucide-react";
+import { Palette, Menu, X, LogOut, Bell, Plus, User, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { themes, type Theme } from "@/lib/theme-config";
@@ -30,7 +30,9 @@ export function Navbar() {
   const [isOnline, setIsOnline] = useState(true);
   const { isMobileSidebarOpen, setIsMobileSidebarOpen, isCollapsed } = useSidebar();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -47,6 +49,23 @@ export function Navbar() {
       window.removeEventListener("offline", handleOffline);
     };
   }, []);
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setShowProfileMenu(false);
+      }
+    };
+
+    if (showProfileMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showProfileMenu]);
 
   if (!mounted) {
     return null;
@@ -80,10 +99,10 @@ export function Navbar() {
           
           {/* DevUtils */}
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+            <div className="w-7 h-7 rounded bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
               D
             </div>
-            <span className="text-sm font-medium text-foreground">DevUtils</span>
+            <span className="text-lg font-bold text-foreground">DevUtils</span>
           </div>
         </div>
 
@@ -132,22 +151,42 @@ export function Navbar() {
             </TooltipContent>
           </Tooltip>
 
-          {/* User Avatar */}
+          {/* User Avatar with Dropdown */}
           {session?.user && (
-            <button
-              onClick={() => router.push('/profile')}
-              className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-semibold cursor-pointer hover:ring-2 hover:ring-foreground/20 transition-all"
-            >
-              {session.user.name?.charAt(0) || 'U'}
-            </button>
+            <div className="relative" ref={profileMenuRef}>
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-semibold cursor-pointer hover:ring-2 hover:ring-foreground/20 transition-all"
+              >
+                {session.user.name?.charAt(0) || 'U'}
+              </button>
+              
+              {showProfileMenu && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-background border border-border/50 rounded-lg shadow-xl z-50 py-2 animate-in fade-in zoom-in duration-100">
+                  <button
+                    onClick={() => {
+                      router.push('/profile');
+                      setShowProfileMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-2 hover:bg-foreground/5 transition-colors text-left"
+                  >
+                    <User className="w-4 h-4 text-foreground/70" />
+                    <span className="text-sm text-foreground">Profile</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowLogoutConfirm(true);
+                      setShowProfileMenu(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-2 hover:bg-foreground/5 transition-colors text-left text-red-500"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span className="text-sm">Sign Out</span>
+                  </button>
+                </div>
+              )}
+            </div>
           )}
-
-          {/* Add New button - Hidden on mobile */}
-          <button className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-foreground/10 hover:bg-foreground/15 transition-colors text-sm font-medium text-foreground">
-            <Plus className="w-3.5 h-3.5" />
-            Add New...
-            <span className="text-xs text-foreground/50 ml-1">^N</span>
-          </button>
 
           {/* Theme Menu Modal */}
           {showThemeMenu && (
