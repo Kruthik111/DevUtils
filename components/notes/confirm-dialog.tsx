@@ -46,10 +46,10 @@ export function ConfirmDialog({
         : "px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all font-medium";
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/50 backdrop-blur-md"
                 onClick={onCancel}
             />
 

@@ -11,7 +11,7 @@ import {
 interface ThemeSwatchProps {
   themeKey: Theme;
   isActive: boolean;
-  onClick: () => void;
+  onClick: (e?: React.MouseEvent) => void;
 }
 
 export function ThemeSwatch({ themeKey, isActive, onClick }: ThemeSwatchProps) {
@@ -20,7 +20,10 @@ export function ThemeSwatch({ themeKey, isActive, onClick }: ThemeSwatchProps) {
       <Tooltip>
         <TooltipTrigger asChild>
           <button
-            onClick={onClick}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick(e);
+            }}
             className={cn(
               "relative w-12 h-12 rounded-xl border-2 transition-all",
               "hover:scale-110 active:scale-95",
@@ -47,7 +50,10 @@ export function ThemeSwatch({ themeKey, isActive, onClick }: ThemeSwatchProps) {
     <Tooltip>
       <TooltipTrigger asChild>
         <button
-          onClick={onClick}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick(e);
+          }}
           className={cn(
             "relative w-12 h-12 rounded-xl border-2 transition-all",
             "hover:scale-110 active:scale-95",

@@ -188,74 +188,70 @@ export function Navbar() {
             </div>
           )}
 
-          {/* Theme Menu Modal */}
-          {showThemeMenu && (
+        </div>
+      </nav>
+
+      {/* Theme Menu Modal - Rendered outside nav */}
+      {showThemeMenu && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-md z-[100]"
+            onClick={() => setShowThemeMenu(false)}
+          />
+          {/* Modal Content */}
+          <div className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none z-[101]">
             <div
-              className="fixed h-screen inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 z-50"
-              style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
-              onClick={(e) => {
-                if (e.target === e.currentTarget) {
-                  setShowThemeMenu(false);
-                }
+              className="bg-background/95 backdrop-blur-xl border border-border/50 rounded-3xl shadow-2xl w-full max-w-md max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden pointer-events-auto"
+              style={{
+                maxHeight: 'calc(100vh - 2rem)',
+                margin: 'auto'
               }}
             >
-              <div
-                className="bg-background/95 backdrop-blur-xl border border-border/50 rounded-3xl shadow-2xl w-full max-w-md max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden relative z-50"
-                style={{
-                  maxHeight: 'calc(100vh - 2rem)',
-                  margin: 'auto'
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                }}
+              <div className="flex items-center justify-between p-6 border-b border-border/50">
+                <h3 className="text-lg font-bold">Theme</h3>
+                <button
+                  onClick={() => setShowThemeMenu(false)}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-background/80 transition-all"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div 
+                className="overflow-y-auto p-6 space-y-4 flex-1 min-h-0"
               >
-                <div className="flex items-center justify-between p-6 border-b border-border/50">
-                  <h3 className="text-lg font-bold">Theme</h3>
-                  <button
-                    onClick={() => setShowThemeMenu(false)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-background/80 transition-all"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="overflow-y-auto p-6 space-y-4 flex-1 min-h-0">
-                  <div className="grid grid-cols-4 gap-3" onClick={(e) => e.stopPropagation()}>
-                    {presetThemes.map((themeOption) => (
-                      <ThemeSwatch
-                        key={themeOption}
-                        themeKey={themeOption}
-                        isActive={theme === themeOption}
-                        onClick={async () => {
-                          await new Promise(resolve => setTimeout(resolve, 100));
-                          setTheme(themeOption);
-                          setShowThemeMenu(false);
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <div className="pt-4 border-t border-border/50" onClick={(e) => e.stopPropagation()}>
-                    <ThemeCustomizer
-                      onOpen={() => {
+                <div className="grid grid-cols-4 gap-3">
+                  {presetThemes.map((themeOption) => (
+                    <ThemeSwatch
+                      key={themeOption}
+                      themeKey={themeOption}
+                      isActive={theme === themeOption}
+                      onClick={(e) => {
+                        e?.stopPropagation();
+                        setTheme(themeOption);
                         setShowThemeMenu(false);
-                        setShowCustomTheme(true);
                       }}
-                      isOpen={showCustomTheme}
-                      onClose={() => setShowCustomTheme(false)}
                     />
-                  </div>
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <BackgroundUpload />
-                  </div>
+                  ))}
+                </div>
+                <div className="pt-4 border-t border-border/50">
+                  <ThemeCustomizer
+                    onOpen={() => {
+                      setShowThemeMenu(false);
+                      setShowCustomTheme(true);
+                    }}
+                    isOpen={showCustomTheme}
+                    onClose={() => setShowCustomTheme(false)}
+                  />
+                </div>
+                <div>
+                  <BackgroundUpload />
                 </div>
               </div>
             </div>
-          )}
-
-        </div>
-      </nav>
+          </div>
+        </>
+      )}
 
       {/* Render custom theme modal outside dropdown so it persists */}
       {showCustomTheme && (
