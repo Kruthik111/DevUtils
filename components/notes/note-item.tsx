@@ -124,26 +124,27 @@ export function NoteItem({
                             </h3>
                         )}
                     </div>
-                    <div className="flex gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                    {/* Edit/Delete buttons - visible in header on mobile, below on desktop */}
+                    <div className="flex gap-2 md:hidden">
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onEdit();
                             }}
-                            className="p-1.5 md:p-2 rounded-md hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors touch-manipulation"
+                            className="p-1.5 rounded-md hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors touch-manipulation"
                             title="Edit note"
                         >
-                            <Edit2 className="w-4 h-4 md:w-4 md:h-4 text-blue-500" />
+                            <Edit2 className="w-4 h-4 text-blue-500" />
                         </button>
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onDelete();
                             }}
-                            className="p-1.5 md:p-2 rounded-md hover:bg-red-500/20 active:bg-red-500/30 transition-colors touch-manipulation"
+                            className="p-1.5 rounded-md hover:bg-red-500/20 active:bg-red-500/30 transition-colors touch-manipulation"
                             title="Delete note"
                         >
-                            <Trash2 className="w-4 h-4 md:w-4 md:h-4 text-red-500" />
+                            <Trash2 className="w-4 h-4 text-red-500" />
                         </button>
                     </div>
                 </div>
@@ -162,6 +163,30 @@ export function NoteItem({
                             onContextMenu={(e) => onBlockContextMenu(e, block)}
                         />
                     ))}
+                </div>
+
+                {/* Edit/Delete buttons - visible below note on desktop */}
+                <div className="hidden md:flex items-center justify-end gap-2 px-3 py-2 border-t border-border/30">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit();
+                        }}
+                        className="p-2 rounded-md hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors"
+                        title="Edit note"
+                    >
+                        <Edit2 className="w-4 h-4 text-blue-500" />
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete();
+                        }}
+                        className="p-2 rounded-md hover:bg-red-500/20 active:bg-red-500/30 transition-colors"
+                        title="Delete note"
+                    >
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                    </button>
                 </div>
 
                 {/* Add Block Section - Collapsible on mobile/tablet */}
