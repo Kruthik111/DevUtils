@@ -101,19 +101,6 @@ export default function NotesPage() {
     }
   }, [hasAccess, registerRefresh, unregisterRefresh]);
 
-  // Keyboard shortcut for Add New (Ctrl+N or Cmd+N)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-        e.preventDefault();
-        setShowAddNoteModal(true);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
   // Note: We no longer auto-save all data on change
   // Individual note operations (create, update, delete) now use dedicated API endpoints
   // This useEffect is kept for backward compatibility but can be removed if not needed
@@ -126,6 +113,29 @@ export default function NotesPage() {
   // Calculate active group and tab (before conditional returns)
   const activeGroup = data?.groups.find((g) => g.id === data?.activeGroupId);
   const activeTab = activeGroup?.tabs.find((t) => t.id === data?.activeTabId);
+
+  // Check if note limit reached (9 notes per tab)
+  const isNoteLimitReached = useMemo(() => {
+    if (!activeTab) return false;
+    return activeTab.notes.length >= 9;
+  }, [activeTab]);
+
+  // Keyboard shortcut for Add New (Ctrl+N or Cmd+N)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        if (isNoteLimitReached) {
+          toast.error('You can only create 9 notes per tab. Please delete a note before adding a new one.');
+          return;
+        }
+        setShowAddNoteModal(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isNoteLimitReached]);
 
   // Sort and filter notes based on sortMode and search (must be before conditional returns)
   // Pinned notes always appear first, sorted by pin number, then unpinned notes
@@ -353,6 +363,12 @@ export default function NotesPage() {
   const handleAddNote = async (title: string, blocks: TextBlock[]) => {
     if (!activeGroup || !activeTab) return;
 
+    // Check note limit
+    if (activeTab.notes.length >= 9) {
+      toast.error('You can only create 9 notes per tab. Please delete a note before adding a new one.');
+      return;
+    }
+
     const newNote: Note = {
       id: `note-${Date.now()}`,
       title,
@@ -412,6 +428,12 @@ export default function NotesPage() {
 
   const handleQuickAdd = async () => {
     if (!activeGroup || !activeTab) return;
+
+    // Check note limit
+    if (activeTab.notes.length >= 9) {
+      toast.error('You can only create 9 notes per tab. Please delete a note before adding a new one.');
+      return;
+    }
 
     try {
       const clipboardText = await navigator.clipboard.readText();
@@ -1051,13 +1073,21 @@ export default function NotesPage() {
           </button>
           {/* Add New Button */}
           <button
-            onClick={() => setShowAddNoteModal(true)}
+            onClick={() => {
+              if (isNoteLimitReached) {
+                toast.error('You can only create 9 notes per tab. Please delete a note before adding a new one.');
+                return;
+              }
+              setShowAddNoteModal(true);
+            }}
+            disabled={isNoteLimitReached}
             className={cn(
               "flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border",
               "bg-background/50 hover:bg-foreground/10 transition-all font-medium text-sm flex-shrink-0",
-              "hidden sm:flex"
+              "hidden sm:flex",
+              isNoteLimitReached && "opacity-50 cursor-not-allowed"
             )}
-            title="Add New Note (Ctrl+N)"
+            title={isNoteLimitReached ? "Note limit reached (9 notes per tab)" : "Add New Note (Ctrl+N)"}
           >
             <Plus className="w-4 h-4" />
             <span className="hidden md:inline">Add New...</span>

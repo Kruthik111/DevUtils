@@ -39,7 +39,13 @@ export default function AdminUsersPage() {
     const [deleting, setDeleting] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+        // Set initial view mode based on screen size (grid for mobile, list for desktop)
+        if (typeof window !== 'undefined') {
+            return window.innerWidth < 768 ? 'grid' : 'list'; // md breakpoint
+        }
+        return 'list'; // Default fallback
+    });
     const [showAccessModal, setShowAccessModal] = useState<{ userId: string; userName: string } | null>(null);
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [filters, setFilters] = useState({
