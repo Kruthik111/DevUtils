@@ -60,7 +60,7 @@ export default function RootLayout({
             <LayoutWrapper>{children}</LayoutWrapper>
           </AuthProvider>
         </ThemeProvider>
-        <Toaster />
+        <Toaster position="top-right" richColors closeButton />
         <Script id="register-sw" strategy="afterInteractive">
           {`
             if ('serviceWorker' in navigator) {

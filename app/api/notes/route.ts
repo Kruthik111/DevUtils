@@ -68,6 +68,33 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
+        
+        // Check if this is a single note creation or full sync
+        if (body.title && body.blocks) {
+            // Single note creation
+            const { title, blocks, groupId, tabId, pin } = body;
+            
+            const newNote = new Note({
+                userId: session.user.id,
+                id: body.id || `note-${Date.now()}`,
+                title,
+                blocks,
+                groupId: groupId || null,
+                tabId: tabId || null,
+                pin: (pin != null && pin > 0) ? pin : null,
+                createdAt: body.createdAt ? new Date(body.createdAt) : new Date(),
+                updatedAt: body.updatedAt ? new Date(body.updatedAt) : new Date(),
+            });
+            
+            await newNote.save();
+            
+            return NextResponse.json({ 
+                success: true, 
+                note: newNote 
+            });
+        }
+        
+        // Full sync (legacy - for backward compatibility)
         const { type, data } = body; // type: 'note' | 'group' | 'tab' | 'sync'
 
         if (type === 'sync') {
@@ -126,10 +153,54 @@ export async function POST(req: Request) {
             }
 
             for (const note of allNotes) {
+                // Build update object with all fields - explicitly include pin
+                const updateData: any = {
+                    userId: session.user.id,
+                    id: note.id,
+                    title: note.title,
+                    blocks: note.blocks,
+                    groupId: note.groupId || null,
+                    tabId: note.tabId || null,
+                    deleted: note.deleted || false,
+                };
+                
+                // Handle date fields - convert timestamps to Date objects if needed
+                if (note.createdAt) {
+                    updateData.createdAt = typeof note.createdAt === 'number' 
+                        ? new Date(note.createdAt) 
+                        : note.createdAt;
+                }
+                if (note.updatedAt) {
+                    updateData.updatedAt = typeof note.updatedAt === 'number' 
+                        ? new Date(note.updatedAt) 
+                        : note.updatedAt;
+                }
+                
+                // CRITICAL: Explicitly set pin field - always include it
+                // Check if pin exists in the note object (could be number, null, or undefined)
+                const pinValue = note.pin;
+                if (pinValue != null && typeof pinValue === 'number' && pinValue > 0) {
+                    updateData.pin = pinValue;
+                } else {
+                    // Explicitly set to null to remove pin or ensure field exists
+                    updateData.pin = null;
+                }
+                
+                // Debug log to verify pin is being set
+                console.log(`Saving note ${note.id} with pin:`, updateData.pin, 'original pin:', note.pin);
+                
+                // Set deletedAt if present
+                if (note.deletedAt) {
+                    updateData.deletedAt = typeof note.deletedAt === 'number' 
+                        ? new Date(note.deletedAt) 
+                        : note.deletedAt;
+                }
+                
+                // Use $set to ensure all fields including null values are updated
                 await Note.findOneAndUpdate(
                     { id: note.id, userId: session.user.id },
-                    note,
-                    { upsert: true, new: true }
+                    { $set: updateData },
+                    { upsert: true, new: true, setDefaultsOnInsert: true }
                 );
             }
 

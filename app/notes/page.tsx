@@ -18,6 +18,7 @@ import { useRefresh } from '@/components/providers/refresh-provider';
 import { RefreshCw, ArrowUpDown, ArrowDownUp, ArrowUp, ArrowDown, Search, Filter, Grid3x3, List, ChevronDown, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
+import { toast } from 'sonner';
 
 export default function NotesPage() {
   const router = useRouter();
@@ -113,32 +114,27 @@ export default function NotesPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Save data on change
-  useEffect(() => {
-    if (data && hasAccess) {
-      persistNotesData(data);
-    }
-  }, [data, hasAccess]);
+  // Note: We no longer auto-save all data on change
+  // Individual note operations (create, update, delete) now use dedicated API endpoints
+  // This useEffect is kept for backward compatibility but can be removed if not needed
+  // useEffect(() => {
+  //   if (data && hasAccess) {
+  //     persistNotesData(data);
+  //   }
+  // }, [data, hasAccess]);
 
   // Calculate active group and tab (before conditional returns)
   const activeGroup = data?.groups.find((g) => g.id === data?.activeGroupId);
   const activeTab = activeGroup?.tabs.find((t) => t.id === data?.activeTabId);
 
   // Sort and filter notes based on sortMode and search (must be before conditional returns)
+  // Pinned notes always appear first, sorted by pin number, then unpinned notes
   const sortedNotes = useMemo(() => {
     if (!activeTab) return [];
     
-    let notes = [...activeTab.notes];
+    let notes = [...activeTab.notes]; // Create a copy to avoid mutating original
     
-    // Ensure all notes have order field for custom sort
-    if (sortMode === 'custom') {
-      notes = notes.map((note, index) => ({
-        ...note,
-        order: note.order !== undefined ? note.order : index
-      }));
-    }
-    
-    // Apply search filter
+    // Apply search filter first
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       notes = notes.filter(note => 
@@ -147,14 +143,40 @@ export default function NotesPage() {
       );
     }
     
-    // Apply sorting
-    if (sortMode === 'custom') {
-      return notes.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    } else if (sortMode === 'latest') {
-      return notes.sort((a, b) => b.updatedAt - a.updatedAt);
+    // Separate pinned and unpinned notes
+    const pinnedNotes = notes.filter(note => note.pin != null && note.pin > 0);
+    const unpinnedNotes = notes.filter(note => !note.pin || note.pin <= 0);
+    
+    // Sort pinned notes by pin number (ascending: pin1, pin2, pin3...)
+    pinnedNotes.sort((a, b) => (a.pin ?? 0) - (b.pin ?? 0));
+    
+    // Sort unpinned notes based on sortMode
+    if (sortMode === 'latest') {
+      // Sort by updatedAt descending (newest first)
+      // Fallback to createdAt if updatedAt is missing
+      unpinnedNotes.sort((a, b) => {
+        const aTime = a.updatedAt || a.createdAt || 0;
+        const bTime = b.updatedAt || b.createdAt || 0;
+        return bTime - aTime; // Descending (newest first)
+      });
+    } else if (sortMode === 'oldest') {
+      // Sort by createdAt ascending (oldest first)
+      unpinnedNotes.sort((a, b) => {
+        const aTime = a.createdAt || a.updatedAt || 0;
+        const bTime = b.createdAt || b.updatedAt || 0;
+        return aTime - bTime; // Ascending (oldest first)
+      });
     } else {
-      return notes.sort((a, b) => a.createdAt - b.createdAt);
+      // Custom sort: by createdAt descending (newest first as default)
+      unpinnedNotes.sort((a, b) => {
+        const aTime = a.createdAt || a.updatedAt || 0;
+        const bTime = b.createdAt || b.updatedAt || 0;
+        return bTime - aTime; // Descending (newest first)
+      });
     }
+    
+    // Return pinned notes first, then unpinned notes
+    return [...pinnedNotes, ...unpinnedNotes];
   }, [activeTab, sortMode, searchQuery]);
 
   // Show loading while checking auth or access
@@ -213,7 +235,7 @@ export default function NotesPage() {
   const handleDeleteGroup = async (groupId: string) => {
     // Prevent deletion of work group
     if (groupId.startsWith('work-')) {
-      alert('The "Work" group cannot be deleted.');
+      toast.error('The "Work" group cannot be deleted.');
       return;
     }
 
@@ -226,7 +248,7 @@ export default function NotesPage() {
       if (!response.ok) {
         const error = await response.json();
         console.error('Failed to delete group:', error);
-        alert('Failed to delete group. Please try again.');
+        toast.error('Failed to delete group. Please try again.');
         return;
       }
 
@@ -328,7 +350,7 @@ export default function NotesPage() {
   };
 
   // Note Management
-  const handleAddNote = (title: string, blocks: TextBlock[]) => {
+  const handleAddNote = async (title: string, blocks: TextBlock[]) => {
     if (!activeGroup || !activeTab) return;
 
     const newNote: Note = {
@@ -337,26 +359,55 @@ export default function NotesPage() {
       blocks,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      order: activeTab.notes.length, // Assign order based on current length
     };
 
-    const updatedGroups = data.groups.map((g) =>
-      g.id === data.activeGroupId
-        ? {
-          ...g,
-          tabs: g.tabs.map((t) =>
-            t.id === data.activeTabId
-              ? { ...t, notes: [...t.notes, newNote] }
-              : t
-          ),
-        }
-        : g
-    );
+    try {
+      // Create note via API
+      const response = await fetch('/api/notes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: newNote.id,
+          title: newNote.title,
+          blocks: newNote.blocks,
+          groupId: activeGroup.id,
+          tabId: activeTab.id,
+          createdAt: newNote.createdAt,
+          updatedAt: newNote.updatedAt,
+        }),
+      });
 
-    setData({
-      ...data,
-      groups: updatedGroups,
-    });
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Failed to create note:', error);
+        toast.error('Failed to create note. Please try again.');
+        return;
+      }
+
+      // Update local state
+      const updatedGroups = data.groups.map((g) =>
+        g.id === data.activeGroupId
+          ? {
+            ...g,
+            tabs: g.tabs.map((t) =>
+              t.id === data.activeTabId
+                ? { ...t, notes: [...t.notes, newNote] }
+                : t
+            ),
+          }
+          : g
+      );
+
+      setData({
+        ...data,
+        groups: updatedGroups,
+      });
+    } catch (error) {
+      console.error('Error creating note:', error);
+      toast.error('Failed to create note. Please try again.');
+    }
   };
 
   const handleQuickAdd = async () => {
@@ -389,9 +440,33 @@ export default function NotesPage() {
         blocks: [block],
         createdAt: Date.now(),
         updatedAt: Date.now(),
-        order: activeTab.notes.length, // Assign order based on current length
       };
 
+      // Create note via API
+      const response = await fetch('/api/notes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: newNote.id,
+          title: newNote.title,
+          blocks: newNote.blocks,
+          groupId: activeGroup.id,
+          tabId: activeTab.id,
+          createdAt: newNote.createdAt,
+          updatedAt: newNote.updatedAt,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Failed to create note:', error);
+        toast.error('Failed to create note. Please try again.');
+        return;
+      }
+
+      // Update local state
       const updatedGroups = data.groups.map((g) =>
         g.id === data.activeGroupId
           ? {
@@ -416,7 +491,7 @@ export default function NotesPage() {
     }
   };
 
-  const handleAddBlock = (noteId: string, type: NoteType, content: string, copyMode: CopyMode) => {
+  const handleAddBlock = async (noteId: string, type: NoteType, content: string, copyMode: CopyMode) => {
     const newBlock: TextBlock = {
       id: `block-${Date.now()}`,
       type,
@@ -425,84 +500,217 @@ export default function NotesPage() {
       completed: type === 'todo' ? false : undefined,
     };
 
-    const updatedGroups = data.groups.map((g) =>
-      g.id === data.activeGroupId
-        ? {
-          ...g,
-          tabs: g.tabs.map((t) =>
-            t.id === data.activeTabId
-              ? {
-                ...t,
-                notes: t.notes.map((n) =>
-                  n.id === noteId
-                    ? { ...n, blocks: [...n.blocks, newBlock], updatedAt: Date.now() }
-                    : n
-                ),
-              }
-              : t
-          ),
-        }
-        : g
-    );
+    // Find the note to update
+    const noteToUpdate = activeTab?.notes.find(n => n.id === noteId);
+    if (!noteToUpdate) return;
 
-    setData({
-      ...data,
-      groups: updatedGroups,
-    });
+    const updatedNote: Note = {
+      ...noteToUpdate,
+      blocks: [...noteToUpdate.blocks, newBlock],
+      updatedAt: Date.now(),
+    };
+
+    try {
+      // Update note via API
+      const response = await fetch(`/api/notes/${noteId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: updatedNote.title,
+          blocks: updatedNote.blocks,
+          pin: updatedNote.pin,
+          groupId: activeGroup?.id,
+          tabId: activeTab?.id,
+          createdAt: updatedNote.createdAt,
+          updatedAt: updatedNote.updatedAt,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Failed to update note:', error);
+        toast.error('Failed to add block. Please try again.');
+        return;
+      }
+
+      // Update local state
+      const updatedGroups = data.groups.map((g) =>
+        g.id === data.activeGroupId
+          ? {
+            ...g,
+            tabs: g.tabs.map((t) =>
+              t.id === data.activeTabId
+                ? {
+                  ...t,
+                  notes: t.notes.map((n) =>
+                    n.id === noteId ? updatedNote : n
+                  ),
+                }
+                : t
+            ),
+          }
+          : g
+      );
+
+      setData({
+        ...data,
+        groups: updatedGroups,
+      });
+    } catch (error) {
+      console.error('Error adding block:', error);
+      toast.error('Failed to add block. Please try again.');
+    }
   };
 
-  const handleReorderNotes = (reorderedNotes: Note[]) => {
-    // Switch to custom sort mode when user drags to reorder
-    setSortMode('custom');
-    
-    // Assign order indices to reordered notes
-    const notesWithOrder = reorderedNotes.map((note, index) => ({
-      ...note,
-      order: index,
-    }));
 
-    const updatedGroups = data.groups.map((g) =>
-      g.id === data.activeGroupId
-        ? {
-          ...g,
-          tabs: g.tabs.map((t) =>
-            t.id === data.activeTabId ? { ...t, notes: notesWithOrder } : t
-          ),
-        }
-        : g
-    );
+  const handleUpdateNoteTitle = async (noteId: string, newTitle: string) => {
+    const noteToUpdate = activeTab?.notes.find(n => n.id === noteId);
+    if (!noteToUpdate) return;
 
-    setData({
-      ...data,
-      groups: updatedGroups,
-    });
+    const updatedNote: Note = {
+      ...noteToUpdate,
+      title: newTitle,
+      updatedAt: Date.now(),
+    };
+
+    try {
+      // Update note title via API
+      const response = await fetch(`/api/notes/${noteId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: updatedNote.title,
+          blocks: updatedNote.blocks,
+          pin: updatedNote.pin,
+          groupId: activeGroup?.id,
+          tabId: activeTab?.id,
+          createdAt: updatedNote.createdAt,
+          updatedAt: updatedNote.updatedAt,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Failed to update note title:', error);
+        toast.error('Failed to update note title. Please try again.');
+        return;
+      }
+
+      // Update local state
+      const updatedGroups = data.groups.map((g) =>
+        g.id === data.activeGroupId
+          ? {
+            ...g,
+            tabs: g.tabs.map((t) =>
+              t.id === data.activeTabId
+                ? {
+                  ...t,
+                  notes: t.notes.map((n) =>
+                    n.id === noteId ? updatedNote : n
+                  ),
+                }
+                : t
+            ),
+          }
+          : g
+      );
+
+      setData({
+        ...data,
+        groups: updatedGroups,
+      });
+    } catch (error) {
+      console.error('Error updating note title:', error);
+      toast.error('Failed to update note title. Please try again.');
+    }
   };
 
-  const handleEditNote = (updatedNote: Note) => {
-    const updatedGroups = data.groups.map((g) =>
-      g.id === data.activeGroupId
-        ? {
-          ...g,
-          tabs: g.tabs.map((t) =>
-            t.id === data.activeTabId
-              ? {
-                ...t,
-                notes: t.notes.map((n) =>
-                  n.id === updatedNote.id ? updatedNote : n
-                ),
-              }
-              : t
-          ),
-        }
-        : g
-    );
+  const handleEditNote = async (updatedNote: Note) => {
+    // Validate pin value (must be between 1-4)
+    if (updatedNote.pin != null && updatedNote.pin > 0) {
+      if (updatedNote.pin > 4) {
+        toast.error('Pin number must be between 1 and 4.');
+        return;
+      }
+      
+      // Validate pin uniqueness per tab
+      const existingNoteWithPin = activeTab?.notes.find(
+        (n) => n.id !== updatedNote.id && n.pin === updatedNote.pin
+      );
+      if (existingNoteWithPin) {
+        toast.error(`Pin ${updatedNote.pin} is already assigned to another note in this tab. Please choose a different pin number.`);
+        return;
+      }
+      
+      // Check total number of pinned notes (max 4)
+      const currentPinnedCount = activeTab?.notes.filter(
+        (n) => n.id !== updatedNote.id && n.pin != null && n.pin > 0
+      ).length || 0;
+      
+      if (currentPinnedCount >= 4) {
+        toast.error('Maximum of 4 pins allowed per tab. Please remove a pin from another note first.');
+        return;
+      }
+    }
 
-    setData({
-      ...data,
-      groups: updatedGroups,
-    });
+    try {
+      // Update note via API
+      const response = await fetch(`/api/notes/${updatedNote.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: updatedNote.title,
+          blocks: updatedNote.blocks,
+          pin: updatedNote.pin,
+          groupId: activeGroup?.id,
+          tabId: activeTab?.id,
+          createdAt: updatedNote.createdAt,
+          updatedAt: updatedNote.updatedAt,
+        }),
+      });
 
-    setEditingNote(null);
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Failed to update note:', error);
+        toast.error('Failed to update note. Please try again.');
+        return;
+      }
+
+      // Update local state
+      const updatedGroups = data.groups.map((g) =>
+        g.id === data.activeGroupId
+          ? {
+            ...g,
+            tabs: g.tabs.map((t) =>
+              t.id === data.activeTabId
+                ? {
+                  ...t,
+                  notes: t.notes.map((n) =>
+                    n.id === updatedNote.id ? updatedNote : n
+                  ),
+                }
+                : t
+            ),
+          }
+          : g
+      );
+
+      setData({
+        ...data,
+        groups: updatedGroups,
+      });
+
+      setEditingNote(null);
+    } catch (error) {
+      console.error('Error updating note:', error);
+      toast.error('Failed to update note. Please try again.');
+    }
   };
 
   const handleDeleteNote = async (noteId: string) => {
@@ -515,7 +723,7 @@ export default function NotesPage() {
       if (!response.ok) {
         const error = await response.json();
         console.error('Failed to delete note:', error);
-        alert('Failed to delete note. Please try again.');
+        toast.error('Failed to delete note. Please try again.');
         return;
       }
 
@@ -541,43 +749,75 @@ export default function NotesPage() {
       setDeletingNoteId(null);
     } catch (error) {
       console.error('Error deleting note:', error);
-      alert('Failed to delete note. Please try again.');
+      toast.error('Failed to delete note. Please try again.');
     }
   };
 
-  const handleToggleTodo = (noteId: string, blockId: string) => {
-    const updatedGroups = data.groups.map((g) =>
-      g.id === data.activeGroupId
-        ? {
-          ...g,
-          tabs: g.tabs.map((t) =>
-            t.id === data.activeTabId
-              ? {
-                ...t,
-                notes: t.notes.map((n) =>
-                  n.id === noteId
-                    ? {
-                      ...n,
-                      blocks: n.blocks.map((b) =>
-                        b.id === blockId && b.type === 'todo'
-                          ? { ...b, completed: !b.completed }
-                          : b
-                      ),
-                      updatedAt: Date.now(),
-                    }
-                    : n
-                ),
-              }
-              : t
-          ),
-        }
-        : g
-    );
+  const handleToggleTodo = async (noteId: string, blockId: string) => {
+    // Find the note to update
+    const noteToUpdate = activeTab?.notes.find(n => n.id === noteId);
+    if (!noteToUpdate) return;
 
-    setData({
-      ...data,
-      groups: updatedGroups,
-    });
+    const updatedNote: Note = {
+      ...noteToUpdate,
+      blocks: noteToUpdate.blocks.map((b) =>
+        b.id === blockId && b.type === 'todo'
+          ? { ...b, completed: !b.completed }
+          : b
+      ),
+      updatedAt: Date.now(),
+    };
+
+    try {
+      // Update note via API
+      const response = await fetch(`/api/notes/${noteId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: updatedNote.title,
+          blocks: updatedNote.blocks,
+          pin: updatedNote.pin,
+          groupId: activeGroup?.id,
+          tabId: activeTab?.id,
+          createdAt: updatedNote.createdAt,
+          updatedAt: updatedNote.updatedAt,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Failed to update note:', error);
+        return;
+      }
+
+      // Update local state
+      const updatedGroups = data.groups.map((g) =>
+        g.id === data.activeGroupId
+          ? {
+            ...g,
+            tabs: g.tabs.map((t) =>
+              t.id === data.activeTabId
+                ? {
+                  ...t,
+                  notes: t.notes.map((n) =>
+                    n.id === noteId ? updatedNote : n
+                  ),
+                }
+                : t
+            ),
+          }
+          : g
+      );
+
+      setData({
+        ...data,
+        groups: updatedGroups,
+      });
+    } catch (error) {
+      console.error('Error toggling todo:', error);
+    }
   };
 
   const handleBlockContextMenu = (e: React.MouseEvent, note: Note, block: TextBlock) => {
@@ -758,7 +998,7 @@ export default function NotesPage() {
                     )}
                   >
                     <ArrowUpDown className="w-4 h-4" />
-                    Custom Order
+                    Custom
                   </button>
                   <button
                     onClick={() => {
@@ -839,9 +1079,9 @@ export default function NotesPage() {
           <NotesList
             notes={sortedNotes}
             viewMode={viewMode}
-            onReorder={handleReorderNotes}
             onEditNote={setEditingNote}
             onDeleteNote={setDeletingNoteId}
+            onUpdateTitle={handleUpdateNoteTitle}
             onAddBlock={handleAddBlock}
             onToggleTodo={handleToggleTodo}
             onBlockContextMenu={handleBlockContextMenu}
@@ -860,6 +1100,7 @@ export default function NotesPage() {
           note={editingNote}
           onSave={handleEditNote}
           onCancel={() => setEditingNote(null)}
+          tabNotes={activeTab?.notes || []}
         />
 
         <ConfirmDialog

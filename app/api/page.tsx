@@ -1061,7 +1061,7 @@ export default function ApiPage() {
                     <div 
                         className={cn(
                             "flex flex-col border-t lg:border-t-0 lg:border-l border-border/50",
-                            "h-1/2 lg:h-auto"
+                        "h-1/2 lg:h-auto"
                         )}
                         style={{ 
                             width: typeof window !== 'undefined' && window.innerWidth >= 1024 ? `${100 - leftPanelWidth}%` : '100%' 

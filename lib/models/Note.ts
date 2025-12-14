@@ -24,6 +24,7 @@ const NoteSchema = new Schema({
     blocks: [TextBlockSchema],
     groupId: { type: String }, // Optional linkage to a group
     tabId: { type: String },   // Optional linkage to a tab
+    pin: { type: Number, default: null, required: false }, // Pin number for pinned notes (1, 2, 3, etc.), null if unpinned
     deleted: { type: Boolean, default: false }, // Soft delete flag
     deletedAt: { type: Date }, // When the note was deleted
 }, {

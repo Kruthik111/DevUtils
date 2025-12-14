@@ -78,17 +78,22 @@ export async function fetchNotesData(): Promise<NotesData> {
             tabs: group.tabs.map((tab: any) => {
                 const tabNotes = notes
                     .filter((note: any) => note.groupId === group.id && note.tabId === tab.id)
-                    .map((note: any, index: number) => ({
+                    .map((note: any) => ({
                         ...note,
-                        // Assign order if missing (backward compatibility)
-                        order: note.order !== undefined ? note.order : index
-                    }))
-                    // Sort by order to ensure correct sequence
-                    .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+                        // Ensure pin is properly set (null if not present)
+                        pin: note.pin != null && note.pin > 0 ? note.pin : null
+                    }));
+                
+                // Sort notes: pinned first (by pin number), then unpinned (by createdAt desc)
+                const pinnedNotes = tabNotes.filter((n: any) => n.pin != null && n.pin > 0);
+                const unpinnedNotes = tabNotes.filter((n: any) => !n.pin || n.pin <= 0);
+                
+                pinnedNotes.sort((a: any, b: any) => (a.pin ?? 0) - (b.pin ?? 0));
+                unpinnedNotes.sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0));
                 
                 return {
                     ...tab,
-                    notes: tabNotes
+                    notes: [...pinnedNotes, ...unpinnedNotes]
                 };
             })
         }));

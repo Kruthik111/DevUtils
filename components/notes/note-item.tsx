@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Edit2, Trash2, Plus } from 'lucide-react';
+import { Edit2, Trash2, Plus, Pin } from 'lucide-react';
 import { Note, TextBlock } from '@/lib/notes/types';
 import { TextBlockItem } from './text-block-item';
 import { AddBlockForm } from './add-block-form';
@@ -15,6 +13,7 @@ interface NoteItemProps {
     viewMode?: 'grid' | 'list';
     onEdit: () => void;
     onDelete: () => void;
+    onUpdateTitle?: (noteId: string, newTitle: string) => void;
     onAddBlock: (type: NoteType, content: string, copyMode: CopyMode) => void;
     onToggleTodo: (blockId: string) => void;
     onBlockContextMenu: (e: React.MouseEvent, block: TextBlock) => void;
@@ -25,11 +24,14 @@ export function NoteItem({
     viewMode = 'grid',
     onEdit,
     onDelete,
+    onUpdateTitle,
     onAddBlock,
     onToggleTodo,
     onBlockContextMenu,
 }: NoteItemProps) {
     const [showAddBlock, setShowAddBlock] = useState(false);
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [editTitleValue, setEditTitleValue] = useState('');
     // On mobile/tablet, start collapsed. On desktop, always expanded
     const [isExpanded, setIsExpanded] = useState(() => {
         if (typeof window !== 'undefined') {
@@ -38,48 +40,37 @@ export function NoteItem({
         return false;
     });
 
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        transition,
-        isDragging,
-    } = useSortable({ id: note.id });
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-    };
-
     const handleAddBlock = (type: NoteType, content: string, copyMode: CopyMode) => {
         onAddBlock(type, content, copyMode);
         setShowAddBlock(false);
     };
 
+    const startEditingTitle = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsEditingTitle(true);
+        setEditTitleValue(note.title);
+    };
+
+    const saveTitleEdit = () => {
+        if (editTitleValue.trim() && onUpdateTitle) {
+            onUpdateTitle(note.id, editTitleValue.trim());
+        }
+        setIsEditingTitle(false);
+        setEditTitleValue('');
+    };
+
+    const cancelTitleEdit = () => {
+        setIsEditingTitle(false);
+        setEditTitleValue('');
+    };
+
     return (
-        <div
-            ref={setNodeRef}
-            style={style}
-            className="group relative"
-        >
+        <div className="group relative">
             {/* Note Card */}
             <div className={cn(
                 "bg-background/80 backdrop-blur-xl border border-border shadow-lg overflow-hidden relative",
                 viewMode === 'grid' ? "rounded-xl md:rounded-2xl" : "rounded-lg"
             )}>
-                {/* Drag Handle - Inside note */}
-                <div className="absolute left-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    <button
-                        {...attributes}
-                        {...listeners}
-                        className="p-1 rounded hover:bg-foreground/10 cursor-grab active:cursor-grabbing"
-                        title="Drag to reorder"
-                    >
-                        <GripVertical className="w-4 h-4 text-foreground/50" />
-                    </button>
-                </div>
 
                 {/* Note Header */}
                 <div 
@@ -87,17 +78,51 @@ export function NoteItem({
                         "flex items-center justify-between px-3 py-2 border-b border-border/30",
                         "cursor-pointer md:cursor-default"
                     )}
-                    onClick={() => {
+                    onClick={(e) => {
+                        // Don't toggle if editing title
+                        if (isEditingTitle) {
+                            e.stopPropagation();
+                            return;
+                        }
                         // Only toggle on mobile/tablet (below lg breakpoint)
                         if (typeof window !== 'undefined' && window.innerWidth < 1024) {
                             setIsExpanded(!isExpanded);
                         }
                     }}
                 >
-                    <div className="flex items-center gap-2 flex-1 min-w-0 pl-5">
-                        <h3 className="text-base md:text-lg font-semibold text-foreground truncate flex-1">
-                            {note.title}
-                        </h3>
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                        {note.pin != null && note.pin > 0 && (
+                            <div className="flex items-center gap-1 text-yellow-500 shrink-0">
+                                <Pin className="w-4 h-4 fill-amber-900" />
+                                <span className="text-xs font-semibold">{note.pin}</span>
+                            </div>
+                        )}
+                        {isEditingTitle ? (
+                            <input
+                                type="text"
+                                value={editTitleValue}
+                                onChange={(e) => setEditTitleValue(e.target.value)}
+                                onBlur={saveTitleEdit}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        saveTitleEdit();
+                                    } else if (e.key === 'Escape') {
+                                        cancelTitleEdit();
+                                    }
+                                }}
+                                className="text-base md:text-lg font-semibold bg-background border border-primary rounded px-2 py-1 flex-1 min-w-0 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                autoFocus
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                        ) : (
+                            <h3 
+                                className="text-base md:text-lg font-semibold text-foreground truncate flex-1 cursor-text"
+                                onDoubleClick={startEditingTitle}
+                                title="Double-click to edit title"
+                            >
+                                {note.title}
+                            </h3>
+                        )}
                     </div>
                     <div className="flex gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                         <button

@@ -9,6 +9,7 @@ interface NoteEditModalProps {
     note: Note | null;
     onSave: (note: Note) => void;
     onCancel: () => void;
+    tabNotes?: Note[]; // Notes in current tab for pin uniqueness validation
 }
 
 export function NoteEditModal({
@@ -16,30 +17,79 @@ export function NoteEditModal({
     note,
     onSave,
     onCancel,
+    tabNotes = [],
 }: NoteEditModalProps) {
     const [title, setTitle] = useState('');
     const [blocks, setBlocks] = useState<TextBlock[]>([]);
+    const [pin, setPin] = useState<number | null>(null);
     const [newBlockContent, setNewBlockContent] = useState('');
     const [newBlockType, setNewBlockType] = useState<NoteType>('snippet');
     const [newBlockCopyMode, setNewBlockCopyMode] = useState<CopyMode>('passive');
     const [showAddBlock, setShowAddBlock] = useState(false);
+    const [pinError, setPinError] = useState('');
 
     useEffect(() => {
         if (note) {
             setTitle(note.title);
             setBlocks([...note.blocks]);
+            setPin(note.pin ?? null);
+            setPinError('');
         }
     }, [note]);
 
     if (!isOpen || !note) return null;
 
     const handleSave = () => {
+        // Validate pin value (must be between 1-4)
+        if (pin != null && pin > 0) {
+            if (pin > 4) {
+                setPinError('Pin number must be between 1 and 4.');
+                return;
+            }
+            
+            // Validate pin uniqueness
+            const existingNoteWithPin = tabNotes.find(
+                (n) => n.id !== note?.id && n.pin === pin
+            );
+            if (existingNoteWithPin) {
+                setPinError(`Pin ${pin} is already assigned to another note. Please choose a different pin number.`);
+                return;
+            }
+        }
+
+        // Check total number of pinned notes (max 4)
+        const currentPinnedCount = tabNotes.filter(
+            (n) => n.id !== note?.id && n.pin != null && n.pin > 0
+        ).length;
+        
+        if (pin != null && pin > 0 && currentPinnedCount >= 4) {
+            setPinError('Maximum of 4 pins allowed per tab. Please remove a pin from another note first.');
+            return;
+        }
+
         onSave({
-            ...note,
+            ...note!,
             title,
             blocks,
+            pin: pin && pin > 0 ? pin : null,
             updatedAt: Date.now(),
         });
+    };
+
+    const handlePinChange = (value: string) => {
+        const numValue = value === '' ? null : parseInt(value, 10);
+        if (value === '') {
+            setPin(null);
+            setPinError('');
+        } else if (numValue && numValue > 0) {
+            if (numValue > 4) {
+                setPinError('Pin number must be between 1 and 4.');
+                setPin(numValue); // Still set it so user can see their input
+            } else {
+                setPin(numValue);
+                setPinError('');
+            }
+        }
     };
 
     const handleDeleteBlock = (blockId: string) => {
@@ -94,6 +144,45 @@ export function NoteEditModal({
                             className="w-full px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium"
                             placeholder="Enter note title..."
                         />
+                    </div>
+
+                    {/* Pin Position */}
+                    <div>
+                        <label className="block text-sm font-medium mb-2">Pin Position</label>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="number"
+                                value={pin ?? ''}
+                                onChange={(e) => handlePinChange(e.target.value)}
+                                min="1"
+                                max="4"
+                                className="w-24 px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                placeholder="1-4"
+                            />
+                            {pin != null && pin > 0 && (
+                                <button
+                                    onClick={() => {
+                                        setPin(null);
+                                        setPinError('');
+                                    }}
+                                    className="px-3 py-2 text-sm rounded-lg border border-border/50 hover:bg-foreground/5 transition-colors text-foreground/70 hover:text-foreground"
+                                >
+                                    Remove Pin
+                                </button>
+                            )}
+                        </div>
+                        {pinError && (
+                            <p className="mt-1 text-sm text-red-500">{pinError}</p>
+                        )}
+                        {tabNotes.length > 0 && (
+                            <p className="mt-1 text-xs text-foreground/50">
+                                Maximum 4 pins per tab. Used pins: {tabNotes
+                                    .filter(n => n.pin != null && n.pin > 0 && n.id !== note?.id)
+                                    .map(n => n.pin)
+                                    .sort((a, b) => (a ?? 0) - (b ?? 0))
+                                    .join(', ') || 'None'}
+                            </p>
+                        )}
                     </div>
 
                     {/* Blocks List */}

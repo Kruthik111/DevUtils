@@ -17,7 +17,7 @@ export interface Note {
     blocks: TextBlock[];
     createdAt: number;
     updatedAt: number;
-    order?: number; // Order index for custom sorting
+    pin?: number | null; // Pin number for pinned notes (1, 2, 3, etc.)
 }
 
 export interface Tab {
