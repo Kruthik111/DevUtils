@@ -52,7 +52,7 @@ export function LinkNote({ content, copyMode }: LinkNoteProps) {
             </a>
                 <button
                     onClick={handleCopy}
-                    className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1.5 rounded-md hover:bg-blue-500/20 transition-all flex-shrink-0"
+                    className="opacity-100 p-1.5 rounded-md hover:bg-blue-500/20 transition-all flex-shrink-0"
                     title="Copy link"
                 >
                     {copied ? (

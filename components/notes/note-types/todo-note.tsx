@@ -61,6 +61,22 @@ export function TodoNote({ content, completed, copyMode, onToggle }: TodoNotePro
             >
                 {content}
             </span>
+            {copyMode === 'passive' && (
+                <button
+                    onClick={handleCopy}
+                    className="opacity-100 p-1.5 rounded-md hover:bg-green-500/20 transition-all flex-shrink-0"
+                    title="Copy todo"
+                >
+                    {copied ? (
+                        <Check className="w-4 h-4 text-green-500" />
+                    ) : (
+                        <Copy className="w-4 h-4 text-green-500" />
+                    )}
+                </button>
+            )}
+            {copyMode === 'active' && copied && (
+                <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+            )}
         </div>
     );
 }

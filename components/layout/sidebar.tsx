@@ -110,10 +110,10 @@ export function Sidebar() {
       >
         <div className={cn(
           "h-full w-full bg-background/95 backdrop-blur-xl border-r border-border flex flex-col transition-all duration-500 ease-in-out",
-          "shadow-xl"
+          "shadow-md"
         )}>
           {/* Hamburger Menu Button */}
-          <div className="flex items-center justify-between p-2 border-b border-border/50 transition-all duration-500 ease-in-out">
+          <div className="flex items-center justify-between p-2  transition-all duration-500 ease-in-out">
             {!isCollapsed && (
               <span className="flex items-center gap-2">
               <div className="w-7 h-7 rounded bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">

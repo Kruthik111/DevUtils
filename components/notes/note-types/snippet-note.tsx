@@ -53,7 +53,7 @@ export function SnippetNote({ content, copyMode }: SnippetNoteProps) {
             {copyMode === 'passive' && (
                 <button
                     onClick={handleCopy}
-                    className="opacity-100 md:opacity-0 md:group-hover:opacity-100 p-1.5 rounded-md hover:bg-purple-500/20 transition-all flex-shrink-0"
+                    className="opacity-100 p-1.5 rounded-md hover:bg-purple-500/20 transition-all flex-shrink-0"
                     title="Copy snippet"
                 >
                     {copied ? (

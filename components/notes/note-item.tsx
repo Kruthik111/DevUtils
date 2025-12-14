@@ -64,23 +64,23 @@ export function NoteItem({
             style={style}
             className="group relative"
         >
-            {/* Drag Handle - Desktop only */}
-            <div className="hidden lg:block absolute -left-8 top-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                    {...attributes}
-                    {...listeners}
-                    className="p-1 rounded hover:bg-foreground/10 cursor-grab active:cursor-grabbing"
-                    title="Drag to reorder"
-                >
-                    <GripVertical className="w-4 h-4 text-foreground/50" />
-                </button>
-            </div>
-
             {/* Note Card */}
             <div className={cn(
-                "bg-background/80 backdrop-blur-xl border border-border shadow-lg overflow-hidden",
+                "bg-background/80 backdrop-blur-xl border border-border shadow-lg overflow-hidden relative",
                 viewMode === 'grid' ? "rounded-xl md:rounded-2xl" : "rounded-lg"
             )}>
+                {/* Drag Handle - Inside note */}
+                <div className="absolute left-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <button
+                        {...attributes}
+                        {...listeners}
+                        className="p-1 rounded hover:bg-foreground/10 cursor-grab active:cursor-grabbing"
+                        title="Drag to reorder"
+                    >
+                        <GripVertical className="w-4 h-4 text-foreground/50" />
+                    </button>
+                </div>
+
                 {/* Note Header */}
                 <div 
                     className={cn(
@@ -94,7 +94,7 @@ export function NoteItem({
                         }
                     }}
                 >
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-1 min-w-0 pl-5">
                         <h3 className="text-base md:text-lg font-semibold text-foreground truncate flex-1">
                             {note.title}
                         </h3>
