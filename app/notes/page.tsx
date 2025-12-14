@@ -7,7 +7,7 @@ import { NotesData, Note, TextBlock, NoteType, CopyMode, Tab, Group } from '@/li
 import { fetchNotesData, persistNotesData } from '@/lib/notes/storage';
 import { GroupSelector } from '@/components/notes/group-selector';
 import { TabBar } from '@/components/notes/tab-bar';
-import { AddNoteForm } from '@/components/notes/add-note-form';
+import { AddNoteModal } from '@/components/notes/add-note-modal';
 import { NotesList } from '@/components/notes/notes-list';
 import { NoteEditModal } from '@/components/notes/note-edit-modal';
 import { BlockEditModal } from '@/components/notes/block-edit-modal';
@@ -15,8 +15,9 @@ import { ConfirmDialog } from '@/components/notes/confirm-dialog';
 import { ContextMenu } from '@/components/notes/context-menu';
 import { Loading } from '@/components/ui/loading';
 import { useRefresh } from '@/components/providers/refresh-provider';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, ArrowUpDown, ArrowDownUp, ArrowUp, ArrowDown, Search, Filter, Grid3x3, List, ChevronDown, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useMemo } from 'react';
 
 export default function NotesPage() {
   const router = useRouter();
@@ -33,6 +34,11 @@ export default function NotesPage() {
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+  const [sortMode, setSortMode] = useState<'custom' | 'latest' | 'oldest'>('custom');
+  const [showSortMenu, setShowSortMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showAddNoteModal, setShowAddNoteModal] = useState(false);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -94,12 +100,62 @@ export default function NotesPage() {
     }
   }, [hasAccess, registerRefresh, unregisterRefresh]);
 
+  // Keyboard shortcut for Add New (Ctrl+N or Cmd+N)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        setShowAddNoteModal(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Save data on change
   useEffect(() => {
     if (data && hasAccess) {
       persistNotesData(data);
     }
   }, [data, hasAccess]);
+
+  // Calculate active group and tab (before conditional returns)
+  const activeGroup = data?.groups.find((g) => g.id === data?.activeGroupId);
+  const activeTab = activeGroup?.tabs.find((t) => t.id === data?.activeTabId);
+
+  // Sort and filter notes based on sortMode and search (must be before conditional returns)
+  const sortedNotes = useMemo(() => {
+    if (!activeTab) return [];
+    
+    let notes = [...activeTab.notes];
+    
+    // Ensure all notes have order field for custom sort
+    if (sortMode === 'custom') {
+      notes = notes.map((note, index) => ({
+        ...note,
+        order: note.order !== undefined ? note.order : index
+      }));
+    }
+    
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      notes = notes.filter(note => 
+        note.title.toLowerCase().includes(query) ||
+        note.blocks.some(block => block.content.toLowerCase().includes(query))
+      );
+    }
+    
+    // Apply sorting
+    if (sortMode === 'custom') {
+      return notes.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    } else if (sortMode === 'latest') {
+      return notes.sort((a, b) => b.updatedAt - a.updatedAt);
+    } else {
+      return notes.sort((a, b) => a.createdAt - b.createdAt);
+    }
+  }, [activeTab, sortMode, searchQuery]);
 
   // Show loading while checking auth or access
   if (status === 'loading' || hasAccess === null) {
@@ -114,9 +170,6 @@ export default function NotesPage() {
   if (!data) {
     return <Loading fullScreen />;
   }
-
-  const activeGroup = data.groups.find((g) => g.id === data.activeGroupId);
-  const activeTab = activeGroup?.tabs.find((t) => t.id === data.activeTabId);
 
   // Group Management
   const handleGroupChange = (groupId: string) => {
@@ -284,6 +337,7 @@ export default function NotesPage() {
       blocks,
       createdAt: Date.now(),
       updatedAt: Date.now(),
+      order: activeTab.notes.length, // Assign order based on current length
     };
 
     const updatedGroups = data.groups.map((g) =>
@@ -335,6 +389,7 @@ export default function NotesPage() {
         blocks: [block],
         createdAt: Date.now(),
         updatedAt: Date.now(),
+        order: activeTab.notes.length, // Assign order based on current length
       };
 
       const updatedGroups = data.groups.map((g) =>
@@ -397,12 +452,21 @@ export default function NotesPage() {
   };
 
   const handleReorderNotes = (reorderedNotes: Note[]) => {
+    // Switch to custom sort mode when user drags to reorder
+    setSortMode('custom');
+    
+    // Assign order indices to reordered notes
+    const notesWithOrder = reorderedNotes.map((note, index) => ({
+      ...note,
+      order: index,
+    }));
+
     const updatedGroups = data.groups.map((g) =>
       g.id === data.activeGroupId
         ? {
           ...g,
           tabs: g.tabs.map((t) =>
-            t.id === data.activeTabId ? { ...t, notes: reorderedNotes } : t
+            t.id === data.activeTabId ? { ...t, notes: notesWithOrder } : t
           ),
         }
         : g
@@ -599,45 +663,10 @@ export default function NotesPage() {
   };
 
   return (
-    <div className="p-2 md:p-8 min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 md:mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold">Notes</h1>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={async () => {
-                setIsRefreshing(true);
-                try {
-                  await loadData();
-                } finally {
-                  setIsRefreshing(false);
-                }
-              }}
-              disabled={isRefreshing}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-xl",
-                "bg-background/50 border border-border/50",
-                "hover:bg-primary/10 hover:border-primary/50",
-                "transition-all font-medium",
-                "disabled:opacity-50"
-              )}
-            >
-              <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
-              Refresh
-            </button>
-            <GroupSelector
-              groups={data.groups}
-              activeGroupId={data.activeGroupId}
-              onGroupChange={handleGroupChange}
-              onAddGroup={handleAddGroup}
-              onDeleteGroup={(groupId) => setDeletingGroupId(groupId)}
-              onUpdateGroupName={handleUpdateGroupName}
-            />
-          </div>
-        </div>
+    <div className="p-2 md:p-4 min-h-screen">
+      <div className="w-full mx-auto">
 
-        {/* Tab Bar */}
+        {/* Tab Bar - Moved above search */}
         {activeGroup && (
           <TabBar
             tabs={activeGroup.tabs}
@@ -649,13 +678,167 @@ export default function NotesPage() {
           />
         )}
 
-        {/* Add Note Form */}
-        <AddNoteForm onAdd={handleAddNote} onQuickAdd={handleQuickAdd} />
+        {/* Search and Filter Bar */}
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <div className="flex-1 relative min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search Projects..."
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-border bg-background/50 text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm"
+            />
+          </div>
+          {/* Filter button - Commented out for now */}
+          {/* <button
+            className={cn(
+              "flex items-center justify-center w-10 h-10 rounded-lg border border-border bg-background/50 flex-shrink-0",
+              "hover:bg-foreground/10 transition-all"
+            )}
+            title="Filter"
+          >
+            <Filter className="w-4 h-4 text-foreground/70" />
+          </button> */}
+          {/* Grid/List View Toggle - Hidden on mobile */}
+          <div className="hidden md:flex items-center gap-1 border border-border rounded-lg bg-background/50 p-1 flex-shrink-0">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={cn(
+                "flex items-center justify-center w-8 h-8 rounded transition-all",
+                viewMode === 'grid' 
+                  ? "bg-foreground/10 text-foreground" 
+                  : "text-foreground/50 hover:text-foreground/70"
+              )}
+              title="Grid view"
+            >
+              <Grid3x3 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={cn(
+                "flex items-center justify-center w-8 h-8 rounded transition-all",
+                viewMode === 'list' 
+                  ? "bg-foreground/10 text-foreground" 
+                  : "text-foreground/50 hover:text-foreground/70"
+              )}
+              title="List view"
+            >
+              <List className="w-4 h-4" />
+            </button>
+          </div>
+          {/* Sort Button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowSortMenu(!showSortMenu)}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-lg border border-border",
+                "bg-background/50 hover:bg-foreground/10 transition-all font-medium"
+              )}
+            >
+              {sortMode === 'custom' && <ArrowUpDown className="w-4 h-4" />}
+              {sortMode === 'latest' && <ArrowDown className="w-4 h-4" />}
+              {sortMode === 'oldest' && <ArrowUp className="w-4 h-4" />}
+            </button>
+            {showSortMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowSortMenu(false)}
+                />
+                <div className="absolute right-0 mt-2 w-48 bg-background border border-border rounded-lg shadow-xl z-20 py-2">
+                  <button
+                    onClick={() => {
+                      setSortMode('custom');
+                      setShowSortMenu(false);
+                    }}
+                    className={cn(
+                      "w-full text-left px-4 py-2 hover:bg-foreground/5 transition-colors flex items-center gap-2",
+                      sortMode === 'custom' && "bg-primary/10 text-primary"
+                    )}
+                  >
+                    <ArrowUpDown className="w-4 h-4" />
+                    Custom Order
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSortMode('latest');
+                      setShowSortMenu(false);
+                    }}
+                    className={cn(
+                      "w-full text-left px-4 py-2 hover:bg-foreground/5 transition-colors flex items-center gap-2",
+                      sortMode === 'latest' && "bg-primary/10 text-primary"
+                    )}
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                    Latest First
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSortMode('oldest');
+                      setShowSortMenu(false);
+                    }}
+                    className={cn(
+                      "w-full text-left px-4 py-2 hover:bg-foreground/5 transition-colors flex items-center gap-2",
+                      sortMode === 'oldest' && "bg-primary/10 text-primary"
+                    )}
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                    Oldest First
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+          <button
+            onClick={async () => {
+              setIsRefreshing(true);
+              try {
+                await loadData();
+              } finally {
+                setIsRefreshing(false);
+              }
+            }}
+            disabled={isRefreshing}
+            className={cn(
+              "flex items-center justify-center w-10 h-10 rounded-lg border border-border",
+              "bg-background/50 hover:bg-foreground/10 transition-all",
+              "disabled:opacity-50"
+            )}
+            title="Refresh"
+          >
+            <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
+          </button>
+          {/* Add New Button */}
+          <button
+            onClick={() => setShowAddNoteModal(true)}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border",
+              "bg-background/50 hover:bg-foreground/10 transition-all font-medium text-sm flex-shrink-0",
+              "hidden sm:flex"
+            )}
+            title="Add New Note (Ctrl+N)"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden md:inline">Add New...</span>
+            <ChevronDown className="w-3.5 h-3.5 hidden md:inline" />
+            <span className="text-xs text-foreground/50 ml-1 hidden md:inline">^N</span>
+          </button>
+          <GroupSelector
+            groups={data.groups}
+            activeGroupId={data.activeGroupId}
+            onGroupChange={handleGroupChange}
+            onAddGroup={handleAddGroup}
+            onDeleteGroup={(groupId) => setDeletingGroupId(groupId)}
+            onUpdateGroupName={handleUpdateGroupName}
+          />
+        </div>
 
         {/* Notes List */}
         {activeTab && (
           <NotesList
-            notes={activeTab.notes}
+            notes={sortedNotes}
+            viewMode={viewMode}
             onReorder={handleReorderNotes}
             onEditNote={setEditingNote}
             onDeleteNote={setDeletingNoteId}
@@ -666,6 +849,12 @@ export default function NotesPage() {
         )}
 
         {/* Modals */}
+        <AddNoteModal
+          isOpen={showAddNoteModal}
+          onAdd={handleAddNote}
+          onQuickAdd={handleQuickAdd}
+          onCancel={() => setShowAddNoteModal(false)}
+        />
         <NoteEditModal
           isOpen={!!editingNote}
           note={editingNote}

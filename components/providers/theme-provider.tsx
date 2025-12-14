@@ -66,6 +66,27 @@ export function ThemeProvider({
       root.style.setProperty("--primary", config.primary);
       root.style.setProperty("--secondary", config.secondary);
       root.style.setProperty("--accent", config.accent);
+      
+      // Calculate border color based on theme
+      let borderColor: string;
+      if (theme === "dark") {
+        borderColor = "rgba(255, 255, 255, 0.1)";
+      } else if (theme === "custom" && customTheme) {
+        // For custom themes, convert hex to rgb and add opacity
+        const hex = customTheme.primary.replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        borderColor = `rgba(${r}, ${g}, ${b}, 0.3)`;
+      } else {
+        // For light themes, use foreground color with higher opacity for visibility
+        const hex = config.foreground.replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        borderColor = `rgba(${r}, ${g}, ${b}, 0.15)`;
+      }
+      root.style.setProperty("--border", borderColor);
 
       // Also apply as classes for Tailwind if needed, though variables are better
       root.classList.remove("light", "dark");

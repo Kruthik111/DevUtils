@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Edit2, Trash2, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { GripVertical, Edit2, Trash2, Plus } from 'lucide-react';
 import { Note, TextBlock } from '@/lib/notes/types';
 import { TextBlockItem } from './text-block-item';
 import { AddBlockForm } from './add-block-form';
@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 
 interface NoteItemProps {
     note: Note;
+    viewMode?: 'grid' | 'list';
     onEdit: () => void;
     onDelete: () => void;
     onAddBlock: (type: NoteType, content: string, copyMode: CopyMode) => void;
@@ -21,6 +22,7 @@ interface NoteItemProps {
 
 export function NoteItem({
     note,
+    viewMode = 'grid',
     onEdit,
     onDelete,
     onAddBlock,
@@ -63,7 +65,7 @@ export function NoteItem({
             className="group relative"
         >
             {/* Drag Handle - Desktop only */}
-            <div className="hidden md:block absolute -left-10 top-4 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="hidden lg:block absolute -left-8 top-4 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                     {...attributes}
                     {...listeners}
@@ -75,12 +77,14 @@ export function NoteItem({
             </div>
 
             {/* Note Card */}
-            <div className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-xl md:rounded-2xl shadow-lg overflow-hidden">
+            <div className={cn(
+                "bg-background/80 backdrop-blur-xl border border-border shadow-lg overflow-hidden",
+                viewMode === 'grid' ? "rounded-xl md:rounded-2xl" : "rounded-lg"
+            )}>
                 {/* Note Header */}
                 <div 
                     className={cn(
-                        "flex items-center justify-between px-3 md:px-6 py-3 md:py-4 border-b border-border/30",
-                        "md:border-b",
+                        "flex items-center justify-between px-3 py-2 border-b border-border/30",
                         "cursor-pointer md:cursor-default"
                     )}
                     onClick={() => {
@@ -94,41 +98,34 @@ export function NoteItem({
                         <h3 className="text-base md:text-lg font-semibold text-foreground truncate flex-1">
                             {note.title}
                         </h3>
-                        <div className="lg:hidden">
-                            {isExpanded ? (
-                                <ChevronUp className="w-4 h-4 text-foreground/60" />
-                            ) : (
-                                <ChevronDown className="w-4 h-4 text-foreground/60" />
-                            )}
-                        </div>
                     </div>
-                    <div className="flex gap-2 opacity-0 md:group-hover:opacity-100 md:transition-opacity">
+                    <div className="flex gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onEdit();
                             }}
-                            className="p-1.5 md:p-2 rounded-md hover:bg-blue-500/20 transition-colors"
+                            className="p-1.5 md:p-2 rounded-md hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors touch-manipulation"
                             title="Edit note"
                         >
-                            <Edit2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-500" />
+                            <Edit2 className="w-4 h-4 md:w-4 md:h-4 text-blue-500" />
                         </button>
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onDelete();
                             }}
-                            className="p-1.5 md:p-2 rounded-md hover:bg-red-500/20 transition-colors"
+                            className="p-1.5 md:p-2 rounded-md hover:bg-red-500/20 active:bg-red-500/30 transition-colors touch-manipulation"
                             title="Delete note"
                         >
-                            <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-red-500" />
+                            <Trash2 className="w-4 h-4 md:w-4 md:h-4 text-red-500" />
                         </button>
                     </div>
                 </div>
 
                 {/* Text Blocks - Collapsible on mobile/tablet */}
                 <div className={cn(
-                    "px-3 md:px-6 py-3 md:py-4 space-y-2",
+                    "px-3 py-2 space-y-2",
                     "lg:block",
                     isExpanded ? "block" : "hidden"
                 )}>
@@ -144,7 +141,7 @@ export function NoteItem({
 
                 {/* Add Block Section - Collapsible on mobile/tablet */}
                 <div className={cn(
-                    "px-3 md:px-6 pb-3 md:pb-4",
+                    "px-3 pb-2",
                     "lg:block",
                     isExpanded ? "block" : "hidden"
                 )}>

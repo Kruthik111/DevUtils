@@ -75,10 +75,22 @@ export async function fetchNotesData(): Promise<NotesData> {
 
         const reconstructedGroups = groups.map((group: any) => ({
             ...group,
-            tabs: group.tabs.map((tab: any) => ({
-                ...tab,
-                notes: notes.filter((note: any) => note.groupId === group.id && note.tabId === tab.id)
-            }))
+            tabs: group.tabs.map((tab: any) => {
+                const tabNotes = notes
+                    .filter((note: any) => note.groupId === group.id && note.tabId === tab.id)
+                    .map((note: any, index: number) => ({
+                        ...note,
+                        // Assign order if missing (backward compatibility)
+                        order: note.order !== undefined ? note.order : index
+                    }))
+                    // Sort by order to ensure correct sequence
+                    .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+                
+                return {
+                    ...tab,
+                    notes: tabNotes
+                };
+            })
         }));
 
         return {

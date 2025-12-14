@@ -45,13 +45,13 @@ export function TabBar({
     };
 
     return (
-        <div className="flex items-center gap-2 border-b border-border/30 pb-2 mb-6">
+        <div className="flex items-center gap-1 border-b border-border pb-0 mb-6">
             {tabs.map((tab) => (
                 <div
                     key={tab.id}
-                    className={`group relative flex items-center gap-2 px-4 py-2 rounded-t-lg transition-all cursor-pointer ${activeTabId === tab.id
-                            ? 'bg-primary/10 border-b-2 border-primary text-primary'
-                            : 'hover:bg-foreground/5 text-foreground/60'
+                    className={`group relative flex items-center gap-2 px-4 py-2 transition-all cursor-pointer border-b-2 ${activeTabId === tab.id
+                            ? 'border-foreground text-foreground'
+                            : 'border-transparent text-foreground/60 hover:text-foreground/80'
                         }`}
                     onClick={() => {
                         if (editingTabId !== tab.id) {

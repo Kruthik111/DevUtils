@@ -69,6 +69,8 @@ export default function ApiPage() {
     const [varPopup, setVarPopup] = useState<{ key: string; value: string; x: number; y: number } | null>(null);
     const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id: string; type: 'api' | 'env' } | null>(null);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
+    const [leftPanelWidth, setLeftPanelWidth] = useState(50); // Percentage
+    const [isResizing, setIsResizing] = useState(false);
 
     // Form state
     const [name, setName] = useState('');
@@ -93,6 +95,41 @@ export default function ApiPage() {
             loadAllData();
         }
     }, [status, router]);
+
+    // Handle resizing
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!isResizing) return;
+            
+            const container = document.getElementById('api-resize-container');
+            if (!container) return;
+            
+            const rect = container.getBoundingClientRect();
+            const newWidth = ((e.clientX - rect.left) / rect.width) * 100;
+            
+            // Constrain between 20% and 80%
+            const constrainedWidth = Math.max(20, Math.min(80, newWidth));
+            setLeftPanelWidth(constrainedWidth);
+        };
+
+        const handleMouseUp = () => {
+            setIsResizing(false);
+        };
+
+        if (isResizing) {
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        }
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        };
+    }, [isResizing]);
 
     // Register refresh function
     useEffect(() => {
@@ -628,9 +665,14 @@ export default function ApiPage() {
                 </div>
 
                 {/* Main Content - Vertical on mobile/tablet, horizontal on desktop */}
-                <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+                <div id="api-resize-container" className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
                     {/* Left Panel - API Configuration */}
-                    <div className="flex-1 flex flex-col border-r border-border/50 overflow-hidden">
+                    <div 
+                        className="flex-1 flex flex-col border-r border-border/50 overflow-hidden"
+                        style={{ 
+                            width: typeof window !== 'undefined' && window.innerWidth >= 1024 ? `${leftPanelWidth}%` : '100%' 
+                        }}
+                    >
                         <div className="p-4 md:p-6 border-b border-border/50 bg-background/80 flex flex-wrap items-center gap-4">
                             <div className="flex-1 min-w-[200px]">
                                 <input
@@ -1000,11 +1042,31 @@ export default function ApiPage() {
                         </div>
                     </div>
 
+                    {/* Resizer Handle (Desktop only) */}
+                    <div
+                        className="hidden lg:block w-1 bg-border/50 hover:bg-primary/50 cursor-col-resize transition-colors relative group"
+                        onMouseDown={(e) => {
+                            setIsResizing(true);
+                            e.preventDefault();
+                        }}
+                        style={{ 
+                            width: '4px',
+                            zIndex: 10
+                        }}
+                    >
+                        <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-8" />
+                    </div>
+
                     {/* Right Panel - Response (Desktop) / Below (Mobile/Tablet) */}
-                    <div className={cn(
-                        "w-full lg:w-1/2 flex flex-col border-t lg:border-t-0 lg:border-l border-border/50",
-                        "h-1/2 lg:h-auto"
-                    )}>
+                    <div 
+                        className={cn(
+                            "flex flex-col border-t lg:border-t-0 lg:border-l border-border/50",
+                            "h-1/2 lg:h-auto"
+                        )}
+                        style={{ 
+                            width: typeof window !== 'undefined' && window.innerWidth >= 1024 ? `${100 - leftPanelWidth}%` : '100%' 
+                        }}
+                    >
                         <div className="p-4 border-b border-border/50 bg-background/80">
                             <h3 className="font-semibold">Response</h3>
                         </div>

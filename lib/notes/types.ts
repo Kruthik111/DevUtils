@@ -17,6 +17,7 @@ export interface Note {
     blocks: TextBlock[];
     createdAt: number;
     updatedAt: number;
+    order?: number; // Order index for custom sorting
 }
 
 export interface Tab {

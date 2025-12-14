@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "@/components/providers/theme-provider";
-import { Palette, Menu, X, ChevronDown, LogOut, User } from "lucide-react";
+import { Palette, Menu, X, LogOut, Bell, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { themes, type Theme } from "@/lib/theme-config";
 import { ThemeCustomizer } from "./theme-customizer";
@@ -22,12 +23,12 @@ import {
 export function Navbar() {
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showCustomTheme, setShowCustomTheme] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
-  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false);
-  const { isMobileSidebarOpen, setIsMobileSidebarOpen } = useSidebar();
+  const { isMobileSidebarOpen, setIsMobileSidebarOpen, isCollapsed } = useSidebar();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -55,45 +56,47 @@ export function Navbar() {
 
   return (
     <TooltipProvider>
-      <nav className={cn(
-        "fixed top-0 left-0 md:right-4 right-0 bg-background/80 backdrop-blur-xl border-b border-border/50 z-40 flex items-center justify-between px-4 md:px-6 transition-all duration-300",
-        isHeaderCollapsed ? "h-0 -translate-y-full opacity-0" : "h-16 translate-y-0 opacity-100"
-      )}>
-        <div className="flex items-center gap-2">
-          <h1 className="text-xl font-bold text-foreground">
-            DevUtils
-          </h1>
+      <nav 
+        className={cn(
+          "fixed top-0 right-0 bg-background/95 backdrop-blur-xl border-b border-border z-40 flex items-center justify-between px-3 md:px-6 h-14 transition-all duration-500 ease-in-out"
+        )}
+        style={{
+          left: typeof window !== 'undefined' && window.innerWidth < 768 
+            ? '0' 
+            : (isCollapsed ? '4rem' : '16rem'),
+          transition: 'left 500ms ease-in-out'
+        }}
+      >
+        {/* Left side - DevUtils */}
+        <div className="flex items-center gap-3">
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+            className="md:hidden p-2 rounded-lg hover:bg-foreground/10 transition-colors"
+            aria-label="Toggle menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          
+          {/* DevUtils */}
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+              D
+            </div>
+            <span className="text-sm font-medium text-foreground">DevUtils</span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {session?.user && (
-            <div className="flex items-center gap-2 mr-2">
-              <span className="text-sm font-medium hidden md:block">
-                {session.user.name}
-              </span>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => setShowLogoutConfirm(true)}
-                    className="flex items-center justify-center w-10 h-10 rounded-xl bg-background/50 hover:bg-red-500/10 border border-border/50 hover:border-red-500/50 transition-all duration-200 hover:scale-105 active:scale-95 group"
-                  >
-                    <LogOut className="w-4 h-4 text-foreground group-hover:text-red-500" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <p>Sign Out</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          )}
+        {/* Right side - Actions and user controls */}
+        <div className="flex items-center gap-3">
           {/* Online/Offline Indicator */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-foreground/10 transition-colors cursor-pointer">
                 <PulseDot isOnline={isOnline} />
               </div>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-700 dark:border-gray-300">
+            <TooltipContent side="bottom">
               <p>{isOnline ? "Online" : "Offline"}</p>
             </TooltipContent>
           </Tooltip>
@@ -104,26 +107,52 @@ export function Navbar() {
               <TooltipTrigger asChild>
                 <button
                   onClick={() => setShowThemeMenu(!showThemeMenu)}
-                  className={cn(
-                    "flex items-center justify-center w-10 h-10 rounded-xl",
-                    "bg-background/50 hover:bg-background/80",
-                    "border border-border/50",
-                    "transition-all duration-200 hover:scale-105 active:scale-95"
-                  )}
+                  className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-foreground/10 transition-colors"
                 >
-                  <Palette className="w-4 h-4" />
+                  <Palette className="w-4 h-4 text-foreground/70" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-700 dark:border-gray-300">
+              <TooltipContent side="bottom">
                 <p>Change Theme</p>
               </TooltipContent>
             </Tooltip>
           </div>
 
+          {/* Notifications/Bell */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-foreground/10 transition-colors relative">
+                <Bell className="w-4 h-4 text-foreground/70" />
+                {/* Notification dot */}
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>Notifications</p>
+            </TooltipContent>
+          </Tooltip>
+
+          {/* User Avatar */}
+          {session?.user && (
+            <button
+              onClick={() => router.push('/profile')}
+              className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-semibold cursor-pointer hover:ring-2 hover:ring-foreground/20 transition-all"
+            >
+              {session.user.name?.charAt(0) || 'U'}
+            </button>
+          )}
+
+          {/* Add New button - Hidden on mobile */}
+          <button className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-foreground/10 hover:bg-foreground/15 transition-colors text-sm font-medium text-foreground">
+            <Plus className="w-3.5 h-3.5" />
+            Add New...
+            <span className="text-xs text-foreground/50 ml-1">^N</span>
+          </button>
+
           {/* Theme Menu Modal */}
           {showThemeMenu && (
             <div
-              className="fixed h-screen inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+              className="fixed h-screen inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 z-50"
               style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
               onClick={(e) => {
                 if (e.target === e.currentTarget) {
@@ -132,7 +161,7 @@ export function Navbar() {
               }}
             >
               <div
-                className="bg-background/95 backdrop-blur-xl border border-border/50 rounded-3xl shadow-2xl w-full max-w-md max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden"
+                className="bg-background/95 backdrop-blur-xl border border-border/50 rounded-3xl shadow-2xl w-full max-w-md max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden relative z-50"
                 style={{
                   maxHeight: 'calc(100vh - 2rem)',
                   margin: 'auto'
@@ -186,45 +215,8 @@ export function Navbar() {
             </div>
           )}
 
-          {/* Mobile Sidebar Toggle */}
-          <div className="md:hidden">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-                  className={cn(
-                    "flex items-center justify-center w-10 h-10 rounded-xl",
-                    "bg-background/50 hover:bg-background/80",
-                    "border border-border/50",
-                    "transition-all duration-200 hover:scale-105 active:scale-95",
-                    isMobileSidebarOpen && "bg-primary/20 border-primary/50"
-                  )}
-                >
-                  <Menu className="w-4 h-4" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 border-gray-700 dark:border-gray-300">
-                <p>Menu</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
         </div>
       </nav>
-
-      {/* Collapse/Expand Toggle */}
-      <button
-        onClick={() => setIsHeaderCollapsed(!isHeaderCollapsed)}
-        className={cn(
-          "fixed left-1/2 -translate-x-1/2 z-50 flex items-center justify-center w-8 h-8 rounded-full bg-background/80 backdrop-blur-xl border border-border/50 hover:bg-background transition-all duration-300 shadow-lg",
-          isHeaderCollapsed ? "top-2" : "top-14"
-        )}
-        title={isHeaderCollapsed ? "Show Header" : "Hide Header"}
-      >
-        <ChevronDown className={cn(
-          "w-4 h-4 transition-transform duration-300",
-          isHeaderCollapsed ? "rotate-180" : "rotate-0"
-        )} />
-      </button>
 
       {/* Render custom theme modal outside dropdown so it persists */}
       {showCustomTheme && (

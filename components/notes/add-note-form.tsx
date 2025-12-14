@@ -80,7 +80,7 @@ export function AddNoteForm({ onAdd, onQuickAdd }: AddNoteFormProps) {
         );
     }
     return (
-        <div className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-2xl p-6 shadow-xl mb-6 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="bg-background/80 backdrop-blur-xl border border-border rounded-2xl p-4 shadow-xl mb-6 animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="space-y-4">
                 {/* Note Title */}
                 <div>
@@ -89,7 +89,7 @@ export function AddNoteForm({ onAdd, onQuickAdd }: AddNoteFormProps) {
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm font-medium"
+                        className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-sm font-medium"
                         placeholder="Enter note title..."
                         autoFocus
                     />
@@ -105,7 +105,7 @@ export function AddNoteForm({ onAdd, onQuickAdd }: AddNoteFormProps) {
                                 onClick={() => setNoteType(type)}
                                 className={`px-4 py-2 rounded-lg border transition-colors capitalize font-medium ${noteType === type
                                     ? 'bg-blue-600 text-white border-blue-600'
-                                    : 'border-border/50 hover:bg-foreground/5 text-foreground'
+                                    : 'border-border hover:bg-foreground/5 text-foreground'
                                     }`}
                             >
                                 {type}
@@ -121,7 +121,7 @@ export function AddNoteForm({ onAdd, onQuickAdd }: AddNoteFormProps) {
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
                         onFocus={() => setIsExpanded(true)}
-                        className="w-full px-4 py-3 rounded-lg border border-border/50 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-y font-mono text-sm transition-all"
+                        className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-y font-mono text-sm transition-all"
                         placeholder={
                             noteType === 'link'
                                 ? 'Enter URL...'
@@ -144,7 +144,7 @@ export function AddNoteForm({ onAdd, onQuickAdd }: AddNoteFormProps) {
                                     onClick={() => setCopyMode(mode)}
                                     className={`px-4 py-2 rounded-lg border transition-colors capitalize font-medium ${copyMode === mode
                                         ? 'bg-blue-600 text-white border-blue-600'
-                                        : 'border-border/50 hover:bg-foreground/5 text-foreground'
+                                        : 'border-border hover:bg-foreground/5 text-foreground'
                                         }`}
                                 >
                                     {mode}
@@ -176,7 +176,7 @@ export function AddNoteForm({ onAdd, onQuickAdd }: AddNoteFormProps) {
                             setContent('');
                             setIsExpanded(false);
                         }}
-                        className="px-4 py-3 rounded-lg border border-border/50 hover:bg-foreground/5 transition-all text-foreground font-medium"
+                        className="px-4 py-3 rounded-lg border border-border hover:bg-foreground/5 transition-all text-foreground font-medium"
                     >
                         Cancel
                     </button>

@@ -20,6 +20,7 @@ import { NoteItem } from './note-item';
 
 interface NotesListProps {
     notes: Note[];
+    viewMode: 'grid' | 'list';
     onReorder: (notes: Note[]) => void;
     onEditNote: (note: Note) => void;
     onDeleteNote: (noteId: string) => void;
@@ -30,6 +31,7 @@ interface NotesListProps {
 
 export function NotesList({
     notes,
+    viewMode,
     onReorder,
     onEditNote,
     onDeleteNote,
@@ -71,11 +73,15 @@ export function NotesList({
             onDragEnd={handleDragEnd}
         >
             <SortableContext items={notes} strategy={verticalListSortingStrategy}>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 md:pl-12">
+                <div className={viewMode === 'grid' 
+                    ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2"
+                    : "flex flex-col gap-2"
+                }>
                     {notes.map((note) => (
                         <NoteItem
                             key={note.id}
                             note={note}
+                            viewMode={viewMode}
                             onEdit={() => onEditNote(note)}
                             onDelete={() => onDeleteNote(note.id)}
                             onAddBlock={(type, content, copyMode) => onAddBlock(note.id, type, content, copyMode)}

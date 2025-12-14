@@ -1,11 +1,48 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { SidebarProvider } from "@/components/providers/sidebar-provider";
+import { useState, useEffect } from "react";
+import { SidebarProvider, useSidebar } from "@/components/providers/sidebar-provider";
 import { RefreshProvider } from "@/components/providers/refresh-provider";
 import { Sidebar } from "./sidebar";
 import { Navbar } from "./navbar";
 import { InstallPrompt } from "./install-prompt";
+
+function MainContent({ children }: { children: React.ReactNode }) {
+  const { isCollapsed } = useSidebar();
+  const [paddingLeft, setPaddingLeft] = useState('0');
+  
+  useEffect(() => {
+    const updatePadding = () => {
+      // Only add padding on desktop (md breakpoint and above)
+      // On mobile, sidebar is overlay and doesn't need padding
+      if (window.innerWidth >= 768) {
+        setPaddingLeft(isCollapsed ? '4rem' : '16rem');
+      } else {
+        setPaddingLeft('0');
+      }
+    };
+    
+    // Set initial padding
+    if (typeof window !== 'undefined') {
+      updatePadding();
+      window.addEventListener('resize', updatePadding);
+      return () => window.removeEventListener('resize', updatePadding);
+    }
+  }, [isCollapsed]);
+  
+  return (
+    <main 
+      className="pt-14 min-h-screen transition-all duration-500 ease-in-out"
+      style={{ 
+        paddingLeft,
+        transition: 'padding-left 500ms ease-in-out'
+      }}
+    >
+      <div className="w-full">{children}</div>
+    </main>
+  );
+}
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -22,7 +59,7 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
       <SidebarProvider>
         <Navbar />
         <Sidebar />
-        <main className="pt-16 md:pr-20 pr-4 min-h-screen">{children}</main>
+        <MainContent>{children}</MainContent>
         <InstallPrompt />
       </SidebarProvider>
     </RefreshProvider>

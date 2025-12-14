@@ -113,7 +113,7 @@ export function ThemeCustomizer({ onOpen, isOpen: controlledIsOpen, onClose }: T
 
       {isOpen && (
         <div
-          className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 z-50"
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -126,7 +126,7 @@ export function ThemeCustomizer({ onOpen, isOpen: controlledIsOpen, onClose }: T
           }}
         >
           <div
-            className="bg-background/95 backdrop-blur-xl border border-border/50 rounded-3xl shadow-2xl w-full max-w-md max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden"
+            className="bg-background/95 backdrop-blur-xl border border-border/50 rounded-3xl shadow-2xl w-full max-w-md max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden relative z-50"
             style={{
               maxHeight: 'calc(100vh - 2rem)',
               margin: 'auto'

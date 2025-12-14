@@ -225,8 +225,8 @@ export default function ProfilePage() {
           {/* Profile Name */}
           <div className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 shadow-xl">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="w-8 h-8 text-primary" />
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white">
+                <User className="w-8 h-8" />
               </div>
               <div className="flex-1">
                 {isEditingName ? (
