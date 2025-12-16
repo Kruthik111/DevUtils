@@ -49,8 +49,25 @@ export default function NotesPage() {
 
   // Load data function
   const loadData = async () => {
+    // First, check if user has any data in DB
+    let hasExistingData = false;
+    try {
+      const checkRes = await fetch('/api/notes');
+      if (checkRes.ok) {
+        const { groups } = await checkRes.json();
+        hasExistingData = groups && groups.length > 0;
+      }
+    } catch (error) {
+      console.error('Error checking existing data:', error);
+    }
+    
     const loadedData = await fetchNotesData();
     setData(loadedData);
+    
+    // If no existing data was found and we loaded default data, persist it
+    if (!hasExistingData && loadedData.groups.length > 0 && hasAccess) {
+      await persistNotesData(loadedData);
+    }
   };
 
   // Redirect to login if not authenticated
@@ -215,7 +232,7 @@ export default function NotesPage() {
     }
   };
 
-  const handleAddGroup = (name: string) => {
+  const handleAddGroup = async (name: string) => {
     // Limit to maximum 2 groups
     if (data.groups.length >= 2) {
       alert('You can have at most 2 groups. Please delete a group before creating a new one.');
@@ -234,12 +251,19 @@ export default function NotesPage() {
       ],
     };
 
-    setData({
+    const updatedData = {
       ...data,
       groups: [...data.groups, newGroup],
       activeGroupId: newGroup.id,
       activeTabId: newGroup.tabs[0].id,
-    });
+    };
+
+    setData(updatedData);
+    
+    // Persist to database
+    if (hasAccess) {
+      await persistNotesData(updatedData);
+    }
   };
 
   const handleDeleteGroup = async (groupId: string) => {
@@ -280,15 +304,22 @@ export default function NotesPage() {
     }
   };
 
-  const handleUpdateGroupName = (groupId: string, newName: string) => {
+  const handleUpdateGroupName = async (groupId: string, newName: string) => {
     const updatedGroups = data.groups.map((g) =>
       g.id === groupId ? { ...g, name: newName } : g
     );
 
-    setData({
+    const updatedData = {
       ...data,
       groups: updatedGroups,
-    });
+    };
+
+    setData(updatedData);
+    
+    // Persist to database
+    if (hasAccess) {
+      await persistNotesData(updatedData);
+    }
   };
 
   // Tab Management
@@ -299,7 +330,7 @@ export default function NotesPage() {
     });
   };
 
-  const handleAddTab = () => {
+  const handleAddTab = async () => {
     if (!activeGroup || activeGroup.tabs.length >= 3) return;
 
     const newTab: Tab = {
@@ -314,14 +345,21 @@ export default function NotesPage() {
         : g
     );
 
-    setData({
+    const updatedData = {
       ...data,
       groups: updatedGroups,
       activeTabId: newTab.id,
-    });
+    };
+
+    setData(updatedData);
+    
+    // Persist to database
+    if (hasAccess) {
+      await persistNotesData(updatedData);
+    }
   };
 
-  const handleDeleteTab = (tabId: string) => {
+  const handleDeleteTab = async (tabId: string) => {
     if (!activeGroup || activeGroup.tabs.length <= 1) return;
 
     // Check if tab has notes
@@ -336,14 +374,21 @@ export default function NotesPage() {
       g.id === data.activeGroupId ? { ...g, tabs: updatedTabs } : g
     );
 
-    setData({
+    const updatedData = {
       ...data,
       groups: updatedGroups,
       activeTabId: updatedTabs[0].id,
-    });
+    };
+
+    setData(updatedData);
+    
+    // Persist to database
+    if (hasAccess) {
+      await persistNotesData(updatedData);
+    }
   };
 
-  const handleUpdateTabName = (tabId: string, newName: string) => {
+  const handleUpdateTabName = async (tabId: string, newName: string) => {
     if (!activeGroup) return;
 
     const updatedTabs = activeGroup.tabs.map((t) =>
@@ -353,10 +398,17 @@ export default function NotesPage() {
       g.id === data.activeGroupId ? { ...g, tabs: updatedTabs } : g
     );
 
-    setData({
+    const updatedData = {
       ...data,
       groups: updatedGroups,
-    });
+    };
+
+    setData(updatedData);
+    
+    // Persist to database
+    if (hasAccess) {
+      await persistNotesData(updatedData);
+    }
   };
 
   // Note Management
