@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Check, X, Ban, CheckCircle, Plus, Loader2, Trash2, RefreshCw, Search, Filter, Grid3x3, List } from 'lucide-react';
+import { Check, X, Ban, CheckCircle, Plus, Loader2, Trash2, RefreshCw, Search, Filter, Grid3x3, List, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Loading } from '@/components/ui/loading';
 import { ConfirmDialog } from '@/components/notes/confirm-dialog';
@@ -33,6 +33,7 @@ export default function AdminUsersPage() {
     const [isAdmin, setIsAdmin] = useState(false);
     const [showCreateUser, setShowCreateUser] = useState(false);
     const [newUser, setNewUser] = useState({ name: '', email: '', password: '' });
+    const [showPassword, setShowPassword] = useState(false);
     const [creating, setCreating] = useState(false);
     const [createError, setCreateError] = useState('');
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -65,7 +66,7 @@ export default function AdminUsersPage() {
 
     const checkAdminAndLoad = async () => {
         if (!session?.user?.email) return;
-        
+
         // Check if user is admin
         if (session.user.email === 'gokruthik2003@gmail.com') {
             setIsAdmin(true);
@@ -217,7 +218,7 @@ export default function AdminUsersPage() {
         // Search filter
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase();
-            const matchesSearch = 
+            const matchesSearch =
                 user.name?.toLowerCase().includes(query) ||
                 user.email.toLowerCase().includes(query) ||
                 user.role.toLowerCase().includes(query);
@@ -292,8 +293,8 @@ export default function AdminUsersPage() {
                             onClick={() => setViewMode('grid')}
                             className={cn(
                                 "flex items-center justify-center w-8 h-8 rounded transition-all",
-                                viewMode === 'grid' 
-                                    ? "bg-foreground/10 text-foreground" 
+                                viewMode === 'grid'
+                                    ? "bg-foreground/10 text-foreground"
                                     : "text-foreground/50 hover:text-foreground/70"
                             )}
                             title="Grid view"
@@ -304,8 +305,8 @@ export default function AdminUsersPage() {
                             onClick={() => setViewMode('list')}
                             className={cn(
                                 "flex items-center justify-center w-8 h-8 rounded transition-all",
-                                viewMode === 'list' 
-                                    ? "bg-foreground/10 text-foreground" 
+                                viewMode === 'list'
+                                    ? "bg-foreground/10 text-foreground"
                                     : "text-foreground/50 hover:text-foreground/70"
                             )}
                             title="List view"
@@ -343,7 +344,7 @@ export default function AdminUsersPage() {
                         Create User
                     </button>
                 </div>
-                
+
                 {loading ? (
                     <Loading text="Loading users..." fullScreen={false} />
                 ) : (
@@ -581,16 +582,30 @@ export default function AdminUsersPage() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-2">Password</label>
-                                <input
-                                    type="password"
-                                    value={newUser.password}
-                                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                                    placeholder="Minimum 6 characters"
-                                    className={cn(
-                                        "w-full px-4 py-2 rounded-xl border border-border/50",
-                                        "bg-background/50 focus:outline-none focus:border-primary"
-                                    )}
-                                />
+                                <div className="relative">
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        value={newUser.password}
+                                        onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                                        placeholder="Minimum 6 characters"
+                                        className={cn(
+                                            "w-full px-4 py-2 rounded-xl border border-border/50",
+                                            "bg-background/50 focus:outline-none focus:border-primary",
+                                            "pr-10"
+                                        )}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/50 hover:text-foreground transition-colors"
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff className="w-4 h-4" />
+                                        ) : (
+                                            <Eye className="w-4 h-4" />
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                             {createError && (
                                 <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
@@ -731,8 +746,8 @@ export default function AdminUsersPage() {
                                                     ? status === 'active'
                                                         ? "bg-green-500/20 text-green-500 border-green-500"
                                                         : status === 'suspended'
-                                                        ? "bg-red-500/20 text-red-500 border-red-500"
-                                                        : "bg-primary/20 text-primary border-primary"
+                                                            ? "bg-red-500/20 text-red-500 border-red-500"
+                                                            : "bg-primary/20 text-primary border-primary"
                                                     : "bg-background/50 border-border hover:bg-foreground/5"
                                             )}
                                         >
