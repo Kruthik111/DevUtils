@@ -181,7 +181,7 @@ export function Sidebar() {
                 <div className="text-sm font-semibold text-foreground truncate">
                   {session?.user?.name || 'User'}
                 </div>
-                <div className="text-xs text-foreground/60 truncate">gokruthik2003@gmail.com</div>
+                <div className="text-xs text-foreground/60 truncate">{session?.user?.email}</div>
               </div>
             </div>
           </div>
