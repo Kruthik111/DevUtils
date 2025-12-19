@@ -62,7 +62,7 @@ export default function AdminUsersPage() {
         } else if (status === 'authenticated') {
             checkAdminAndLoad();
         }
-    }, [status, session, router]);
+    }, [status, session?.user?.email, router]);
 
     const checkAdminAndLoad = async () => {
         if (!session?.user?.email) return;
