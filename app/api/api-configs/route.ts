@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Types } from "mongoose";
 import { auth } from "@/lib/auth";
 import connectDB from "@/lib/mongodb";
 import ApiConfig from "@/lib/models/ApiConfig";
@@ -7,6 +8,9 @@ import User from "@/lib/models/User";
 // Check if user has access to API page
 async function checkAccess(userId: string): Promise<boolean> {
     await connectDB();
+    if (!Types.ObjectId.isValid(userId)) {
+        return false;
+    }
     const user = await User.findById(userId);
     if (!user) return false;
     

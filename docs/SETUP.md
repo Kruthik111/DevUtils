@@ -75,10 +75,19 @@ notelt/
 
 ## Environment Setup
 
-Currently, no environment variables are required. Future backend integration may require:
-- API endpoints
-- Authentication keys
-- Database connection strings
+Create a `.env.local` file in the project root with the following placeholders:
+
+```bash
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=YOUR_NEXTAUTH_SECRET
+
+# Google OAuth (required for Google sign-in)
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID_HERE
+GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID_HERE
+GOOGLE_CLIENT_SECRET=YOUR_GOOGLE_CLIENT_SECRET_HERE
+```
+
+Replace the placeholder values with your Google OAuth credentials (client ID/secret). The public client ID controls whether the Google sign-in button is enabled in the UI.
 
 ## Building for Production
 

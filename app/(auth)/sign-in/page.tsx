@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Chrome } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/auth-provider";
 
@@ -19,13 +20,16 @@ export default function SignInPage() {
   }, [authState.isAuthenticated, router]);
 
   const handleGoogleSignIn = () => {
+    if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
+      toast.error("Add NEXT_PUBLIC_GOOGLE_CLIENT_ID in .env.local to enable Google sign-in.");
+      return;
+    }
+
     setIsLoading(true);
-    // TODO: Implement Google OAuth
-    setTimeout(() => {
-      signIn();
+    signIn("google", { callbackUrl: "/notes" }).catch(() => {
+      toast.error("Google sign-in failed. Please try again.");
       setIsLoading(false);
-      router.push("/notes");
-    }, 1000);
+    });
   };
 
   // Don't show sign-in if already authenticated

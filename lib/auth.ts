@@ -1,8 +1,12 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import connectDB from "@/lib/mongodb";
 import User from "@/lib/models/User";
 import { compare } from "bcryptjs";
+
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true, // Add this line - allows localhost and other hosts
@@ -53,11 +57,54 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       },
     }),
+    ...(googleClientId && googleClientSecret
+      ? [
+          Google({
+            clientId: googleClientId,
+            clientSecret: googleClientSecret,
+            authorization: {
+              params: {
+                prompt: "consent",
+                access_type: "offline",
+                response_type: "code",
+              },
+            },
+          }),
+        ]
+      : []),
   ],
   pages: {
     signIn: "/signin",
   },
   callbacks: {
+    async signIn({ user, account }) {
+      // Link Google sign-ins to existing email/password accounts
+      if (account?.provider === "google") {
+        await connectDB();
+
+        if (!user.email) {
+          return false;
+        }
+
+        const existingUser = await User.findOne({ email: user.email.toLowerCase() });
+        if (!existingUser) {
+          // Require the user to already exist (migrating to Google only)
+          return false;
+        }
+
+        if (existingUser.suspended === true) {
+          return false;
+        }
+
+        // Reuse the existing account data for the JWT/session
+        user.id = existingUser._id.toString();
+        user.name = existingUser.name;
+        user.email = existingUser.email;
+        user.image = existingUser.image;
+      }
+
+      return true;
+    },
     async session({ session, token, trigger, newSession }) {
       if (token?.sub && session.user) {
         session.user.id = token.sub;
@@ -77,6 +124,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.sub = user.id;
         token.name = user.name;
         token.email = user.email;
+        token.picture = (user as any).image;
       }
 
       // Handle token updates (when update() is called)
