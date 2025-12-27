@@ -904,41 +904,72 @@ export default function NotesPage() {
     });
   };
 
-  const handleEditBlock = (updatedBlock: TextBlock) => {
-    if (!editingBlock) return;
+  const handleEditBlock = async (updatedBlock: TextBlock) => {
+    if (!editingBlock || !data || !activeGroup || !activeTab) return;
 
-    const updatedGroups = data.groups.map((g) =>
-      g.id === data.activeGroupId
-        ? {
-          ...g,
-          tabs: g.tabs.map((t) =>
-            t.id === data.activeTabId
-              ? {
-                ...t,
-                notes: t.notes.map((n) =>
-                  n.id === editingBlock.note.id
-                    ? {
-                      ...n,
-                      blocks: n.blocks.map((b) =>
-                        b.id === editingBlock.block.id ? updatedBlock : b
-                      ),
-                      updatedAt: Date.now(),
-                    }
-                    : n
-                ),
-              }
-              : t
-          ),
-        }
-        : g
-    );
+    const noteToUpdate = activeTab.notes.find((n) => n.id === editingBlock.note.id);
+    if (!noteToUpdate) return;
 
-    setData({
-      ...data,
-      groups: updatedGroups,
-    });
+    const updatedNote: Note = {
+      ...noteToUpdate,
+      blocks: noteToUpdate.blocks.map((b) =>
+        b.id === editingBlock.block.id ? updatedBlock : b
+      ),
+      updatedAt: Date.now(),
+    };
 
-    setEditingBlock(null);
+    try {
+      const response = await fetch(`/api/notes/${updatedNote.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: updatedNote.title,
+          blocks: updatedNote.blocks,
+          pin: updatedNote.pin,
+          groupId: activeGroup.id,
+          tabId: activeTab.id,
+          createdAt: updatedNote.createdAt,
+          updatedAt: updatedNote.updatedAt,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Failed to update block:', error);
+        toast.error('Failed to update block. Please try again.');
+        return;
+      }
+
+      const updatedGroups = data.groups.map((g) =>
+        g.id === data.activeGroupId
+          ? {
+            ...g,
+            tabs: g.tabs.map((t) =>
+              t.id === data.activeTabId
+                ? {
+                  ...t,
+                  notes: t.notes.map((n) =>
+                    n.id === updatedNote.id ? updatedNote : n
+                  ),
+                }
+                : t
+            ),
+          }
+          : g
+      );
+
+      setData({
+        ...data,
+        groups: updatedGroups,
+      });
+
+      setEditingBlock(null);
+    } catch (error) {
+      console.error('Error updating block:', error);
+      toast.error('Failed to update block. Please try again.');
+    }
   };
 
   const handleDeleteBlock = () => {
