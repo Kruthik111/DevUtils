@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Chrome } from "lucide-react";
 import { toast } from "sonner";
@@ -8,6 +8,14 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/auth-provider";
 
 export default function SignInPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignInContent />
+    </Suspense>
+  );
+}
+
+function SignInContent() {
   const [isLoading, setIsLoading] = useState(false);
   const { authState, signIn } = useAuth();
   const router = useRouter();
