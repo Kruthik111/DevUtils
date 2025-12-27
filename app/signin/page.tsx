@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Loader2, Eye, EyeOff } from "lucide-react";
@@ -15,6 +15,11 @@ import {
 
 export default function LoginPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const authError = searchParams.get("error");
+    const errorMessage = authError
+        ? "Sign-in failed because Google isn’t configured for this site. Please contact your admin or try again later."
+        : null;
     const [isLoading, setIsLoading] = useState(false);
     const [isGoogleLoading, setIsGoogleLoading] = useState(false);
     const [isRegistering, setIsRegistering] = useState(false);
@@ -71,7 +76,7 @@ export default function LoginPage() {
 
     const handleGoogleSignIn = async () => {
         if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
-            toast.error("Add NEXT_PUBLIC_GOOGLE_CLIENT_ID in .env.local to enable Google sign-in.");
+            toast.error("Google sign-in isn’t configured. Add your NEXT_PUBLIC_GOOGLE_CLIENT_ID to .env.local.");
             return;
         }
 
@@ -97,6 +102,11 @@ export default function LoginPage() {
                             : "Enter your credentials to access your account"}
                     </p>
                 </div>
+                {errorMessage && (
+                    <div className="rounded-md border border-destructive/30 bg-destructive/10 text-destructive text-sm p-3">
+                        {errorMessage}
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {isRegistering && (

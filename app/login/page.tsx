@@ -60,7 +60,7 @@ export default function LoginPage() {
 
     const handleGoogleSignIn = async () => {
         if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
-            toast.error("Add NEXT_PUBLIC_GOOGLE_CLIENT_ID in .env.local to enable Google sign-in.");
+            toast.error("Google sign-in isn’t configured. Add your NEXT_PUBLIC_GOOGLE_CLIENT_ID to .env.local.");
             return;
         }
 

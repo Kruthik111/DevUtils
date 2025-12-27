@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Chrome } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,11 @@ export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { authState, signIn } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const authError = searchParams.get("error");
+  const errorMessage = authError
+    ? "Sign-in failed because Google isn’t configured for this site. Please contact your admin or try again later."
+    : null;
 
   useEffect(() => {
     // If already authenticated, redirect to notes
@@ -21,7 +26,7 @@ export default function SignInPage() {
 
   const handleGoogleSignIn = () => {
     if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
-      toast.error("Add NEXT_PUBLIC_GOOGLE_CLIENT_ID in .env.local to enable Google sign-in.");
+      toast.error("Google sign-in isn’t configured. Add your NEXT_PUBLIC_GOOGLE_CLIENT_ID to .env.local.");
       return;
     }
 
@@ -54,6 +59,12 @@ export default function SignInPage() {
               Sign in to access your developer tools
             </p>
           </div>
+
+          {errorMessage && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 text-destructive text-sm p-3">
+              {errorMessage}
+            </div>
+          )}
 
           {/* Sign In Button */}
           <button
