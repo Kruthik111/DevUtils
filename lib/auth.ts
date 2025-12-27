@@ -3,7 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import connectDB from "@/lib/mongodb";
 import User from "@/lib/models/User";
-import { compare } from "bcryptjs";
+import { compare, hash } from "bcryptjs";
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -79,7 +79,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     async signIn({ user, account }) {
-      // Link Google sign-ins to existing email/password accounts
+      // Link Google sign-ins to existing accounts; create one if missing
       if (account?.provider === "google") {
         await connectDB();
 
@@ -88,20 +88,38 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         const existingUser = await User.findOne({ email: user.email.toLowerCase() });
-        if (!existingUser) {
-          // Require the user to already exist (migrating to Google only)
-          return false;
+
+        if (existingUser) {
+          if (existingUser.suspended === true) {
+            return false;
+          }
+
+          user.id = existingUser._id.toString();
+          user.name = existingUser.name;
+          user.email = existingUser.email;
+          user.image = existingUser.image;
+          return true;
         }
 
-        if (existingUser.suspended === true) {
-          return false;
-        }
+        // Create new user from Google profile
+        const randomPassword = `google-${Math.random().toString(36).slice(2)}`;
+        const hashed = await hash(randomPassword, 10);
 
-        // Reuse the existing account data for the JWT/session
-        user.id = existingUser._id.toString();
-        user.name = existingUser.name;
-        user.email = existingUser.email;
-        user.image = existingUser.image;
+        const created = await User.create({
+          email: user.email.toLowerCase(),
+          name: user.name || user.email.split("@")[0],
+          image: user.image,
+          password: hashed,
+          passwordPlain: undefined,
+          role: "user",
+          hasAccess: ["/notes"], // default access; adjust if needed
+          suspended: false,
+        });
+
+        user.id = created._id.toString();
+        user.name = created.name;
+        user.email = created.email;
+        user.image = created.image;
       }
 
       return true;

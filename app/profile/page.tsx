@@ -7,6 +7,7 @@ import { Download, Upload, Trash2, User, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/notes/confirm-dialog";
 import { Loading } from "@/components/ui/loading";
+import { toast } from "sonner";
 
 const PROFILE_KEY = "devutils-profile";
 
@@ -28,6 +29,8 @@ export default function ProfilePage() {
   const [passwordError, setPasswordError] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
   const [showPasswordSuccessDialog, setShowPasswordSuccessDialog] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
    const calculateStorage = () => {
     let total = 0;
@@ -106,49 +109,68 @@ export default function ProfilePage() {
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   };
 
-  const exportStorage = () => {
-    if (typeof window === "undefined") return;
-
-    const data: Record<string, string> = {};
-    for (let key in localStorage) {
-      if (localStorage.hasOwnProperty(key)) {
-        data[key] = localStorage.getItem(key) || "";
+  const exportDbBackup = async () => {
+    try {
+      setIsExporting(true);
+      const response = await fetch("/api/notes/backup");
+      if (!response.ok) {
+        toast.error("Failed to export data. Please try again.");
+        return;
       }
-    }
 
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `devutils-backup-${new Date().toISOString().split("T")[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+      const data = await response.json();
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `devutils-notes-backup-${new Date().toISOString().split("T")[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Exported notes backup.");
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export data. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
-  const importStorage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const importDbBackup = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const json = e.target?.result as string;
         const data = JSON.parse(json);
 
-        localStorage.clear();
-
-        for (const key in data) {
-          localStorage.setItem(key, data[key]);
+        if (!data || !Array.isArray(data.groups) || !Array.isArray(data.notes)) {
+          toast.error("Invalid backup file.");
+          return;
         }
 
-        calculateStorage();
-        window.location.reload();
+        setIsImporting(true);
+        const response = await fetch("/api/notes/backup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+
+        if (!response.ok) {
+          toast.error("Failed to import data. Please try again.");
+          return;
+        }
+
+        toast.success("Imported notes backup.");
       } catch (error) {
-        alert("Error importing file. Please make sure it's a valid JSON file.");
         console.error("Import error:", error);
+        toast.error("Error importing file. Please make sure it's a valid JSON.");
+      } finally {
+        setIsImporting(false);
       }
     };
     reader.readAsText(file);
@@ -225,7 +247,7 @@ export default function ProfilePage() {
           {/* Profile Name */}
           <div className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 shadow-xl">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white">
+              <div className="w-16 h-16 rounded-full bg-linear-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white">
                 <User className="w-8 h-8" />
               </div>
               <div className="flex-1">
@@ -441,19 +463,21 @@ export default function ProfilePage() {
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <button
-                  onClick={exportStorage}
+                  onClick={exportDbBackup}
+                  disabled={isExporting}
                   className={cn(
                     "flex items-center gap-2 px-6 py-3 rounded-xl",
                     "bg-primary text-background",
                     "hover:bg-primary/90 transition-all",
-                    "font-medium"
+                    "font-medium",
+                    "disabled:opacity-50"
                   )}
                 >
                   <Download className="w-4 h-4" />
-                  Export Data
+                  {isExporting ? "Exporting..." : "Export Data"}
                 </button>
                 <p className="text-sm text-foreground/60">
-                  Download all your settings and data as a JSON file
+                  Download your notes and groups as a JSON backup from the database.
                 </p>
               </div>
 
@@ -463,20 +487,22 @@ export default function ProfilePage() {
                     "flex items-center gap-2 px-6 py-3 rounded-xl cursor-pointer",
                     "bg-background border-2 border-border/50",
                     "hover:bg-primary/10 hover:border-primary/50 transition-all",
-                    "font-medium"
+                    "font-medium",
+                    isImporting && "opacity-50 cursor-not-allowed"
                   )}
                 >
                   <Upload className="w-4 h-4" />
-                  Import Data
+                  {isImporting ? "Importing..." : "Import Data"}
                   <input
                     type="file"
                     accept=".json"
-                    onChange={importStorage}
+                    onChange={importDbBackup}
                     className="hidden"
+                    disabled={isImporting}
                   />
                 </label>
                 <p className="text-sm text-foreground/60">
-                  Restore settings and data from a previously exported JSON file
+                  Restore notes and groups from a previously exported backup file.
                 </p>
               </div>
             </div>
