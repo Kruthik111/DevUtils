@@ -15,7 +15,7 @@ import { ConfirmDialog } from '@/components/notes/confirm-dialog';
 import { ContextMenu } from '@/components/notes/context-menu';
 import { Loading } from '@/components/ui/loading';
 import { useRefresh } from '@/components/providers/refresh-provider';
-import { RefreshCw, ArrowUpDown, ArrowDownUp, ArrowUp, ArrowDown, Search, Filter, Grid3x3, List, ChevronDown, Plus } from 'lucide-react';
+import { RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, Search, Grid3x3, List, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
@@ -1173,8 +1173,7 @@ export default function NotesPage() {
             title={isNoteLimitReached ? "Note limit reached (9 notes per tab)" : "Add New Note (Ctrl+N)"}
           >
             <Plus className="w-4 h-4" />
-            <span className="hidden md:inline">Add New...</span>
-            <ChevronDown className="w-3.5 h-3.5 hidden md:inline" />
+            <span className="inline">Add New...</span>
             <span className="text-xs text-foreground/50 ml-1 hidden md:inline">^N</span>
           </button>
           <GroupSelector
