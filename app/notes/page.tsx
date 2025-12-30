@@ -1167,7 +1167,7 @@ export default function NotesPage() {
             className={cn(
               "flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border",
               "bg-background/50 hover:bg-foreground/10 transition-all font-medium text-sm flex-shrink-0",
-              "hidden sm:flex",
+              "flex",
               isNoteLimitReached && "opacity-50 cursor-not-allowed"
             )}
             title={isNoteLimitReached ? "Note limit reached (9 notes per tab)" : "Add New Note (Ctrl+N)"}
