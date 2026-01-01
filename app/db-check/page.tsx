@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Loading } from "@/components/ui/loading";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 type DbCheck = {
   _id: string;
@@ -16,6 +17,7 @@ type DbCheck = {
 };
 
 export default function DbCheckPage() {
+  const { status } = useSession();
   const router = useRouter();
   const [items, setItems] = useState<DbCheck[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -38,15 +40,36 @@ export default function DbCheckPage() {
   );
 
   useEffect(() => {
-    const accessRaw = typeof window !== "undefined" ? window.localStorage.getItem("devutils.access") : null;
-    const access: string[] = accessRaw ? JSON.parse(accessRaw) : [];
-    if (!access.includes("/db-check")) {
-      toast.error("Access denied for DB Check");
-      router.push("/profile");
+    if (status === "loading") return;
+    if (status === "unauthenticated") {
+      router.push("/signin");
       return;
     }
 
-    const load = async () => {
+    const checkAccessAndLoad = async () => {
+      const accessRaw = typeof window !== "undefined" ? window.localStorage.getItem("devutils.access") : null;
+      const access: string[] = accessRaw ? JSON.parse(accessRaw) : [];
+      let allowed = access.includes("*") || access.includes("/db-check");
+
+      // Fallback: probe admin access once if cache missing
+      if (!allowed && typeof window !== "undefined") {
+        try {
+          const probe = await fetch("/api/users/access");
+          if (probe.ok) {
+            window.localStorage.setItem("devutils.access", JSON.stringify(["*"]));
+            allowed = true;
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      if (!allowed) {
+        toast.error("Access denied for DB Check");
+        router.push("/profile");
+        return;
+      }
+
       try {
         const res = await fetch("/api/db-checks");
         if (!res.ok) {
@@ -66,8 +89,12 @@ export default function DbCheckPage() {
         setIsLoading(false);
       }
     };
-    load();
-  }, [router]);
+    checkAccessAndLoad();
+  }, [router, status]);
+
+  if (status === "loading") {
+    return <Loading fullScreen />;
+  }
 
   const handleSelect = (id: string) => {
     setSelectedId(id);

@@ -5,8 +5,9 @@ import { Plus, Pencil, Trash2, RefreshCw, Server, Globe2, Activity, Database, Cp
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Loading } from "@/components/ui/loading";
-import { useRouter } from "next/navigation";
 import { ConfirmDialog } from "@/components/notes/confirm-dialog";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 type Service = {
   _id: string;
@@ -44,6 +45,7 @@ type HealthResponse = {
 };
 
 export default function HandleServerPage() {
+  const { status } = useSession();
   const router = useRouter();
   const [services, setServices] = useState<Service[]>([]);
   const [environments, setEnvironments] = useState<Environment[]>([]);
@@ -69,15 +71,37 @@ export default function HandleServerPage() {
   );
 
   useEffect(() => {
-    const accessRaw = typeof window !== "undefined" ? window.localStorage.getItem("devutils.access") : null;
-    const access: string[] = accessRaw ? JSON.parse(accessRaw) : [];
-    if (!access.includes("/handle-server")) {
-      toast.error("Access denied for Handle Server");
-      router.push("/profile");
+    if (status === "loading") return;
+    if (status === "unauthenticated") {
+      router.push("/signin");
       return;
     }
 
-    const load = async () => {
+    const checkAccessAndLoad = async () => {
+      const accessRaw = typeof window !== "undefined" ? window.localStorage.getItem("devutils.access") : null;
+      const access: string[] = accessRaw ? JSON.parse(accessRaw) : [];
+      let allowed = access.includes("*") || access.includes("/handle-server");
+
+      // Fallback: probe admin access once if cache missing
+      if (!allowed && typeof window !== "undefined") {
+        try {
+          const probe = await fetch("/api/users/access");
+          if (probe.ok) {
+            window.localStorage.setItem("devutils.access", JSON.stringify(["*"]));
+            allowed = true;
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      if (!allowed) {
+        toast.error("Access denied for Handle Server");
+        router.push("/profile");
+        return;
+      }
+
+      const load = async () => {
       try {
         const [svcRes, envRes] = await Promise.all([fetch("/api/services"), fetch("/api/environments")]);
         if (!svcRes.ok || !envRes.ok) {
@@ -100,8 +124,14 @@ export default function HandleServerPage() {
         setIsLoading(false);
       }
     };
-    load();
-  }, [router]);
+      load();
+    };
+    checkAccessAndLoad();
+  }, [router, status]);
+
+  if (status === "loading") {
+    return <Loading fullScreen />;
+  }
 
   const resetForm = () => {
     setForm({

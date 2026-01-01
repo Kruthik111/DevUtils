@@ -21,7 +21,8 @@ interface User {
 const PROTECTED_PAGES = [
     { path: '/api', label: 'API Testing' },
     { path: '/notes', label: 'Notes' },
-    // Add more protected pages here as needed
+    { path: '/db-check', label: 'DB Check' },
+    { path: '/handle-server', label: 'Handle Server' },
 ];
 
 export default function AdminUsersPage() {
@@ -133,12 +134,6 @@ export default function AdminUsersPage() {
         }
     };
 
-    const accessTargets = [
-        { path: '/api', label: 'API' },
-        { path: '/notes', label: 'Notes' },
-        { path: '/db-check', label: 'DB Check' },
-        { path: '/handle-server', label: 'Handle Server' },
-    ];
 
     const toggleSuspension = async (userId: string, suspended: boolean) => {
         try {
@@ -494,7 +489,7 @@ export default function AdminUsersPage() {
                                                     )}
                                                 </button>
                                             </div>
-                                            {accessTargets.map((page) => {
+                                            {PROTECTED_PAGES.map((page) => {
                                                 const hasAccess = user.hasAccess?.includes(page.path) || false;
                                                 return (
                                                     <div key={page.path} className="flex items-center justify-between">
