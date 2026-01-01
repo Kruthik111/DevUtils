@@ -14,6 +14,9 @@ const EnvironmentSchema = new Schema({
         type: Schema.Types.Mixed, // { key: value } pairs
         default: {},
     },
+    baseUrl: {
+        type: String,
+    },
     isDefault: {
         type: Boolean,
         default: false,

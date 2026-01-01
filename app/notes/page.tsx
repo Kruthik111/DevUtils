@@ -34,7 +34,6 @@ export default function NotesPage() {
   const [tabDeleteWarning, setTabDeleteWarning] = useState(false);
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [sortMode, setSortMode] = useState<'custom' | 'latest' | 'oldest'>('custom');
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,7 +64,7 @@ export default function NotesPage() {
     setData(loadedData);
     
     // If no existing data was found and we loaded default data, persist it
-    if (!hasExistingData && loadedData.groups.length > 0 && hasAccess) {
+    if (!hasExistingData && loadedData.groups.length > 0) {
       await persistNotesData(loadedData);
     }
   };
@@ -77,46 +76,20 @@ export default function NotesPage() {
     }
   }, [status, router]);
 
-  // Check access to notes page
+  // Load data when authenticated
   useEffect(() => {
     if (status === 'authenticated') {
-      // Check notes access
-      fetch('/api/notes')
-        .then(async (res) => {
-          if (!res.ok) {
-            // Notes access denied, check API access
-            setHasAccess(false);
-            const apiRes = await fetch('/api/api-configs');
-            if (apiRes.ok) {
-              // Has API access, redirect to API page
-              router.push('/api');
-            } else {
-              // No API access either, redirect to profile
-              router.push('/profile');
-            }
-          } else {
-            // Has access, load data
-            setHasAccess(true);
-            loadData();
-          }
-        })
-        .catch(() => {
-          // On error, redirect to profile as fallback
-          setHasAccess(false);
-          router.push('/profile');
-        });
+      loadData();
     }
-  }, [status, router]);
+  }, [status]);
 
   // Register refresh function
   useEffect(() => {
-    if (hasAccess) {
-      registerRefresh('notes', loadData);
-      return () => {
-        unregisterRefresh('notes');
-      };
-    }
-  }, [hasAccess, registerRefresh, unregisterRefresh]);
+    registerRefresh('notes', loadData);
+    return () => {
+      unregisterRefresh('notes');
+    };
+  }, [registerRefresh, unregisterRefresh]);
 
   // Note: We no longer auto-save all data on change
   // Individual note operations (create, update, delete) now use dedicated API endpoints
@@ -206,13 +179,13 @@ export default function NotesPage() {
     return [...pinnedNotes, ...unpinnedNotes];
   }, [activeTab, sortMode, searchQuery]);
 
-  // Show loading while checking auth or access
-  if (status === 'loading' || hasAccess === null) {
+  // Show loading while checking auth
+  if (status === 'loading') {
     return <Loading fullScreen />;
   }
 
-  // Don't render if not authenticated or no access
-  if (status === 'unauthenticated' || hasAccess === false) {
+  // Don't render if not authenticated
+  if (status === 'unauthenticated') {
     return null;
   }
 
@@ -261,9 +234,7 @@ export default function NotesPage() {
     setData(updatedData);
     
     // Persist to database
-    if (hasAccess) {
-      await persistNotesData(updatedData);
-    }
+    await persistNotesData(updatedData);
   };
 
   const handleDeleteGroup = async (groupId: string) => {
@@ -317,9 +288,7 @@ export default function NotesPage() {
     setData(updatedData);
     
     // Persist to database
-    if (hasAccess) {
-      await persistNotesData(updatedData);
-    }
+    await persistNotesData(updatedData);
   };
 
   // Tab Management
@@ -354,9 +323,7 @@ export default function NotesPage() {
     setData(updatedData);
     
     // Persist to database
-    if (hasAccess) {
-      await persistNotesData(updatedData);
-    }
+    await persistNotesData(updatedData);
   };
 
   const handleDeleteTab = async (tabId: string) => {
@@ -383,9 +350,7 @@ export default function NotesPage() {
     setData(updatedData);
     
     // Persist to database
-    if (hasAccess) {
-      await persistNotesData(updatedData);
-    }
+    await persistNotesData(updatedData);
   };
 
   const handleUpdateTabName = async (tabId: string, newName: string) => {
@@ -406,9 +371,7 @@ export default function NotesPage() {
     setData(updatedData);
     
     // Persist to database
-    if (hasAccess) {
-      await persistNotesData(updatedData);
-    }
+    await persistNotesData(updatedData);
   };
 
   // Note Management
@@ -1038,7 +1001,7 @@ export default function NotesPage() {
           {/* Filter button - Commented out for now */}
           {/* <button
             className={cn(
-              "flex items-center justify-center w-10 h-10 rounded-lg border border-border bg-background/50 flex-shrink-0",
+              "flex items-center justify-center w-10 h-10 rounded-lg border border-border bg-background/50 shrink-0",
               "hover:bg-foreground/10 transition-all"
             )}
             title="Filter"
@@ -1046,7 +1009,7 @@ export default function NotesPage() {
             <Filter className="w-4 h-4 text-foreground/70" />
           </button> */}
           {/* Grid/List View Toggle - Hidden on mobile */}
-          <div className="hidden md:flex items-center gap-1 border border-border rounded-lg bg-background/50 p-1 flex-shrink-0">
+          <div className="hidden md:flex items-center gap-1 border border-border rounded-lg bg-background/50 p-1 shrink-0">
             <button
               onClick={() => setViewMode('grid')}
               className={cn(
@@ -1166,7 +1129,7 @@ export default function NotesPage() {
             disabled={isNoteLimitReached}
             className={cn(
               "flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border",
-              "bg-background/50 hover:bg-foreground/10 transition-all font-medium text-sm flex-shrink-0",
+              "bg-background/50 hover:bg-foreground/10 transition-all font-medium text-sm shrink-0",
               "flex",
               isNoteLimitReached && "opacity-50 cursor-not-allowed"
             )}

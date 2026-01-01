@@ -133,6 +133,13 @@ export default function AdminUsersPage() {
         }
     };
 
+    const accessTargets = [
+        { path: '/api', label: 'API' },
+        { path: '/notes', label: 'Notes' },
+        { path: '/db-check', label: 'DB Check' },
+        { path: '/handle-server', label: 'Handle Server' },
+    ];
+
     const toggleSuspension = async (userId: string, suspended: boolean) => {
         try {
             const res = await fetch('/api/users/suspend', {
@@ -487,7 +494,7 @@ export default function AdminUsersPage() {
                                                     )}
                                                 </button>
                                             </div>
-                                            {PROTECTED_PAGES.map((page) => {
+                                            {accessTargets.map((page) => {
                                                 const hasAccess = user.hasAccess?.includes(page.path) || false;
                                                 return (
                                                     <div key={page.path} className="flex items-center justify-between">

@@ -36,6 +36,8 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: "notes", label: "Notes", icon: StickyNote, href: "/notes" },
   { id: "api", label: "API", icon: Code, href: "/api" },
+  { id: "db-check", label: "DB Check", icon: Database, href: "/db-check" },
+  { id: "handle-server", label: "Handle Server", icon: Server, href: "/handle-server" },
   // { id: "test-tool", label: "Test Tool", icon: FlaskConical, href: "/test-tool" },
   // { id: "handle-server", label: "Handle Server", icon: Server, href: "/handle-server" },
   // { id: "extension", label: "Extension", icon: Puzzle, href: "/extension" },
@@ -50,17 +52,27 @@ export function Sidebar() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasApiAccess, setHasApiAccess] = useState(false);
   const [hasNotesAccess, setHasNotesAccess] = useState(false);
+  const [hasDbCheckAccess, setHasDbCheckAccess] = useState(false);
+  const [hasHandleServerAccess, setHasHandleServerAccess] = useState(false);
 
   useEffect(() => {
     if (session?.user?.email === 'gokruthik2003@gmail.com') {
       setIsAdmin(true);
       setHasApiAccess(true); // Admin has access to everything
       setHasNotesAccess(true);
+      setHasDbCheckAccess(true);
+      setHasHandleServerAccess(true);
     } else if (session?.user?.email) {
       // Check admin access
       fetch('/api/users/access')
         .then(res => {
-          if (res.ok) setIsAdmin(true);
+          if (res.ok) {
+            setIsAdmin(true);
+            setHasDbCheckAccess(true);
+            setHasHandleServerAccess(true);
+            setHasApiAccess(true);
+            setHasNotesAccess(true);
+          }
         })
         .catch(() => { });
 
@@ -82,9 +94,25 @@ export function Sidebar() {
         .catch(() => {
           setHasNotesAccess(false);
         });
+
+      // Check DB Check access
+      fetch('/api/db-checks')
+        .then(res => {
+          setHasDbCheckAccess(res.ok);
+        })
+        .catch(() => setHasDbCheckAccess(false));
+
+      // Check Handle Server access
+      fetch('/api/services')
+        .then(res => {
+          setHasHandleServerAccess(res.ok);
+        })
+        .catch(() => setHasHandleServerAccess(false));
     } else {
       setHasApiAccess(false);
       setHasNotesAccess(false);
+      setHasDbCheckAccess(false);
+      setHasHandleServerAccess(false);
     }
   }, [session]);
 
@@ -93,7 +121,7 @@ export function Sidebar() {
       {/* Mobile Backdrop */}
       {isMobileSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[5] md:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-5 md:hidden"
           onClick={() => setIsMobileSidebarOpen(false)}
         />
       )}
@@ -116,7 +144,7 @@ export function Sidebar() {
           <div className="flex items-center justify-between p-2  transition-all duration-500 ease-in-out">
             {!isCollapsed && (
               <span className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
+                <div className="w-7 h-7 rounded bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
                   D
                 </div>
                 <h2 className="text-lg font-bold text-foreground px-2 transition-opacity duration-500 ease-in-out">DevUtils</h2>
@@ -141,6 +169,8 @@ export function Sidebar() {
               if (item.adminOnly && !isAdmin) return null;
               if (item.id === 'api' && !hasApiAccess) return null;
               if (item.id === 'notes' && !hasNotesAccess) return null;
+              if (item.id === 'db-check' && !hasDbCheckAccess) return null;
+              if (item.id === 'handle-server' && !hasHandleServerAccess) return null;
 
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -157,7 +187,7 @@ export function Sidebar() {
                         !isActive && "text-foreground/70 hover:text-foreground"
                       )}
                     >
-                      <Icon className="w-6 h-6 flex-shrink-0" />
+                      <Icon className="w-6 h-6 shrink-0" />
                       {!isCollapsed && (
                         <span className="font-medium text-sm transition-opacity duration-500 ease-in-out">{item.label}</span>
                       )}
@@ -172,9 +202,9 @@ export function Sidebar() {
               );
             })}
           </div>
-          <div className="p-4 border-t border-border/50 bg-background/95 backdrop-blur-sm flex-shrink-0 mt-auto">
+        <div className="p-4 border-t border-border/50 bg-background/95 backdrop-blur-sm shrink-0 mt-auto">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-semibold">
+              <div className="w-8 h-8 rounded-full bg-linear-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-semibold">
                 {session?.user?.name?.charAt(0) || 'U'}
               </div>
               <div className="flex-1 min-w-0">
@@ -193,7 +223,7 @@ export function Sidebar() {
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[19] md:hidden"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-19 md:hidden"
             onClick={() => setIsMobileSidebarOpen(false)}
           />
           <aside
@@ -204,7 +234,7 @@ export function Sidebar() {
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-border/50 bg-background/95 backdrop-blur-sm sticky top-0 z-10">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                  <div className="w-8 h-8 rounded bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
                     D
                   </div>
                   <div>
@@ -243,7 +273,7 @@ export function Sidebar() {
                         !isActive && "text-foreground/70 hover:text-foreground"
                       )}
                     >
-                      <Icon className="w-5 h-5 flex-shrink-0" />
+                      <Icon className="w-5 h-5 shrink-0" />
                       <span className="font-medium text-sm">{item.label}</span>
                     </Link>
                   );
@@ -254,7 +284,7 @@ export function Sidebar() {
               {session?.user && (
                 <div className="p-4 border-t border-border/50 bg-background/95 backdrop-blur-sm">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-semibold">
+                    <div className="w-8 h-8 rounded-full bg-linear-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-semibold">
                       {session.user.name?.charAt(0) || 'U'}
                     </div>
                     <div className="flex-1 min-w-0">

@@ -9,7 +9,7 @@ async function checkAccess(userId: string): Promise<boolean> {
     const user = await User.findById(userId);
     if (!user) return false;
     if (user.role === 'admin') return true;
-    return user.hasAccess?.includes('/api') || false;
+    return user.hasAccess?.includes('/handle-server') || user.hasAccess?.includes('/api') || false;
 }
 
 export async function GET(req: Request) {
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { name, variables, isDefault } = body;
+        const { name, variables, isDefault, baseUrl } = body;
 
         // If setting as default, unset other defaults
         if (isDefault) {
@@ -66,6 +66,7 @@ export async function POST(req: Request) {
             name: name || 'Untitled Environment',
             variables: variables || {},
             isDefault: isDefault || false,
+            baseUrl: baseUrl || undefined,
         });
 
         return NextResponse.json({ environment });
@@ -90,7 +91,7 @@ export async function PUT(req: Request) {
         }
 
         const body = await req.json();
-        const { id, name, variables, isDefault } = body;
+        const { id, name, variables, isDefault, baseUrl } = body;
 
         // If setting as default, unset other defaults
         if (isDefault) {
@@ -106,6 +107,7 @@ export async function PUT(req: Request) {
                 name,
                 variables: variables || {},
                 isDefault: isDefault || false,
+                baseUrl: baseUrl || undefined,
             },
             { new: true }
         );
