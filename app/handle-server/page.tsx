@@ -83,13 +83,16 @@ export default function HandleServerPage() {
       const access: string[] = accessRaw ? JSON.parse(accessRaw) : [];
       let allowed = access.includes("*") || access.includes("/handle-server");
 
-      // Fallback: probe admin access once if cache missing
+      // Fallback: fetch user access if not cached
       if (!allowed && typeof window !== "undefined") {
         try {
-          const probe = await fetch("/api/users/access");
-          if (probe.ok) {
-            window.localStorage.setItem("devutils.access", JSON.stringify(["*"]));
-            allowed = true;
+          const res = await fetch("/api/user/access");
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data.hasAccess)) {
+              window.localStorage.setItem("devutils.access", JSON.stringify(data.hasAccess));
+              allowed = data.hasAccess.includes("*") || data.hasAccess.includes("/handle-server");
+            }
           }
         } catch {
           // ignore
