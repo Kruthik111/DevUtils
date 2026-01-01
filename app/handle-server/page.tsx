@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, RefreshCw, Server, Globe2, Activity, Database, Cpu, Info } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Server, Globe2, Activity, Database, Cpu, Info, Play, RotateCcw, Square } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Loading } from "@/components/ui/loading";
@@ -54,6 +54,7 @@ export default function HandleServerPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isHealthLoading, setIsHealthLoading] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [healthMap, setHealthMap] = useState<Record<string, HealthResponse | null>>({});
   const [showConfirm, setShowConfirm] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
   const [envForm, setEnvForm] = useState({ name: "" });
@@ -187,6 +188,27 @@ export default function HandleServerPage() {
     }
   };
 
+  const handleServiceAction = async (action: "start" | "restart" | "stop" | "delete", services: string[] | "all") => {
+    setActionLoading(action + (services === "all" ? "-all" : Array.isArray(services) ? services.join(",") : ""));
+    try {
+      const res = await window.fetch(`http://localhost:8000/dev/services/${action}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ services }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `Failed to ${action} service(s)`);
+      }
+      toast.success(`${action.toUpperCase()} request sent`);
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.message || `Failed to ${action} service(s)`);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleEdit = (svc: Service) => {
     setForm({
       id: svc._id,
@@ -256,7 +278,7 @@ export default function HandleServerPage() {
     setIsHealthLoading(svc._id);
     setHealthMap((m) => ({ ...m, [svc._id]: null }));
     try {
-      const res = await fetch(`${baseUrl}/${svc.name}/health`);
+      const res = await window.fetch(`${baseUrl}/${svc.name}/health`, { cache: "no-store" });
       const text = await res.text();
       let json: any = null;
       try {
@@ -383,18 +405,40 @@ export default function HandleServerPage() {
             </button>
           </div>
           {services.length > 0 && (
-            <button
-              onClick={handleCheckAll}
-              disabled={isHealthLoading === "all"}
-              className={cn(
-                "inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm",
-                "bg-emerald-700 text-background hover:bg-emerald-600 transition-colors",
-                "disabled:opacity-50"
-              )}
-            >
-              {isHealthLoading === "all" ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
-              Check All
-            </button>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={handleCheckAll}
+                disabled={isHealthLoading === "all"}
+                className={cn(
+                  "inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm",
+                  "bg-emerald-700 text-background hover:bg-emerald-600 transition-colors",
+                  "disabled:opacity-50"
+                )}
+              >
+                {isHealthLoading === "all" ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}
+                Check All
+              </button>
+              {[
+                { action: "start", label: "Start All", icon: <Play className="w-4 h-4" /> },
+                { action: "restart", label: "Restart All", icon: <RotateCcw className="w-4 h-4" /> },
+                { action: "stop", label: "Stop All", icon: <Square className="w-4 h-4" /> },
+                { action: "delete", label: "Delete All", icon: <Trash2 className="w-4 h-4" /> },
+              ].map((btn) => (
+                <button
+                  key={btn.action}
+                  onClick={() => handleServiceAction(btn.action as any, "all")}
+                  disabled={actionLoading !== null}
+                  className={cn(
+                    "inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm",
+                    "border border-border/50 bg-background hover:bg-foreground/5 transition-colors",
+                    "disabled:opacity-50"
+                  )}
+                >
+                  {actionLoading?.startsWith(btn.action) ? <RefreshCw className="w-4 h-4 animate-spin" /> : btn.icon}
+                  {btn.label}
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -490,17 +534,52 @@ export default function HandleServerPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handleEdit(svc)}
+                        onClick={() => handleServiceAction("start", [svc.name])}
+                        disabled={actionLoading !== null}
                         className="p-2 rounded-md hover:bg-foreground/10"
+                        title="Start"
                       >
-                        <Pencil className="w-4 h-4" />
+                        {actionLoading?.startsWith("start") ? (
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Play className="w-4 h-4" />
+                        )}
                       </button>
                       <button
-                        onClick={() => setShowConfirm({ open: true, id: svc._id })}
-                        disabled={isDeleting === svc._id}
-                        className="p-2 rounded-md hover:bg-red-500/10 text-red-500 disabled:opacity-50"
+                        onClick={() => handleServiceAction("restart", [svc.name])}
+                        disabled={actionLoading !== null}
+                        className="p-2 rounded-md hover:bg-foreground/10"
+                        title="Restart"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        {actionLoading?.startsWith("restart") ? (
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <RotateCcw className="w-4 h-4" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleServiceAction("stop", [svc.name])}
+                        disabled={actionLoading !== null}
+                        className="p-2 rounded-md hover:bg-foreground/10"
+                        title="Stop"
+                      >
+                        {actionLoading?.startsWith("stop") ? (
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Square className="w-4 h-4" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleServiceAction("delete", [svc.name])}
+                        disabled={actionLoading !== null}
+                        className="p-2 rounded-md hover:bg-red-500/10 text-red-500 disabled:opacity-50"
+                        title="Delete"
+                      >
+                        {actionLoading?.startsWith("delete") ? (
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   </div>
