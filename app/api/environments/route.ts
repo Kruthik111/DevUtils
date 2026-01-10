@@ -29,7 +29,13 @@ export async function GET(req: Request) {
         const environments = await Environment.find({ userId: session.user.id })
             .sort({ isDefault: -1, createdAt: -1 });
 
-        return NextResponse.json({ environments });
+        // Normalize variables to always be an object
+        const normalizedEnvironments = environments.map(env => ({
+            ...env.toObject(),
+            variables: env.variables || {},
+        }));
+
+        return NextResponse.json({ environments: normalizedEnvironments });
     } catch (error) {
         console.error("Error fetching environments:", error);
         return NextResponse.json({ message: "Internal server error" }, { status: 500 });
@@ -69,7 +75,13 @@ export async function POST(req: Request) {
             baseUrl: baseUrl || undefined,
         });
 
-        return NextResponse.json({ environment });
+        // Normalize variables to always be an object
+        const normalizedEnv = {
+            ...environment.toObject(),
+            variables: environment.variables || {},
+        };
+
+        return NextResponse.json({ environment: normalizedEnv });
     } catch (error) {
         console.error("Error creating environment:", error);
         return NextResponse.json({ message: "Internal server error" }, { status: 500 });
@@ -116,7 +128,13 @@ export async function PUT(req: Request) {
             return NextResponse.json({ message: "Environment not found" }, { status: 404 });
         }
 
-        return NextResponse.json({ environment });
+        // Normalize variables to always be an object
+        const normalizedEnv = {
+            ...environment.toObject(),
+            variables: environment.variables || {},
+        };
+
+        return NextResponse.json({ environment: normalizedEnv });
     } catch (error) {
         console.error("Error updating environment:", error);
         return NextResponse.json({ message: "Internal server error" }, { status: 500 });

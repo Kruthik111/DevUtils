@@ -148,8 +148,13 @@ export default function ApiPage() {
             const res = await fetch('/api/environments');
             if (res.ok) {
                 const { environments } = await res.json();
-                setEnvironments(environments);
-                const defaultEnv = environments.find((e: Environment) => e.isDefault) || environments[0];
+                // Normalize variables to always be an object
+                const normalizedEnvs = environments.map((e: Environment) => ({
+                    ...e,
+                    variables: e.variables || {},
+                }));
+                setEnvironments(normalizedEnvs);
+                const defaultEnv = normalizedEnvs.find((e: Environment) => e.isDefault) || normalizedEnvs[0];
                 if (defaultEnv) setSelectedEnvironment(defaultEnv);
             }
         } catch (error) {
@@ -243,7 +248,7 @@ export default function ApiPage() {
             
             // Add highlighted variable
             const varName = match[1];
-            const varValue = selectedEnvironment.variables[varName] || '';
+            const varValue = (selectedEnvironment.variables || {})[varName] || '';
             parts.push(
                 <span
                     key={`var-${match.index}`}
@@ -691,7 +696,11 @@ export default function ApiPage() {
                                     value={selectedEnvironment?._id || ''}
                                     onChange={(e) => {
                                         const env = environments.find(env => env._id === e.target.value);
-                                        setSelectedEnvironment(env || null);
+                                        if (env) {
+                                            setSelectedEnvironment({ ...env, variables: env.variables || {} });
+                                        } else {
+                                            setSelectedEnvironment(null);
+                                        }
                                     }}
                                     className={cn(
                                         "px-4 py-2 rounded-xl border border-border/50 text-sm",
