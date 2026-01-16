@@ -6,8 +6,6 @@ import { useSession } from "next-auth/react";
 import {
   StickyNote,
   FlaskConical,
-  Server,
-  Database,
   Puzzle,
   User,
   Code,
@@ -36,10 +34,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: "notes", label: "Notes", icon: StickyNote, href: "/notes" },
   { id: "api", label: "API", icon: Code, href: "/api" },
-  { id: "db-check", label: "DB Check", icon: Database, href: "/db-check" },
-  { id: "handle-server", label: "Handle Server", icon: Server, href: "/handle-server" },
   // { id: "test-tool", label: "Test Tool", icon: FlaskConical, href: "/test-tool" },
-  // { id: "handle-server", label: "Handle Server", icon: Server, href: "/handle-server" },
   // { id: "extension", label: "Extension", icon: Puzzle, href: "/extension" },
   { id: "admin-users", label: "Users", icon: Shield, href: "/admin/users", adminOnly: true },
   { id: "profile", label: "Profile", icon: User, href: "/profile" },
@@ -50,69 +45,19 @@ export function Sidebar() {
   const { isMobileSidebarOpen, setIsMobileSidebarOpen, isCollapsed, setIsCollapsed } = useSidebar();
   const { data: session } = useSession();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [hasApiAccess, setHasApiAccess] = useState(false);
-  const [hasNotesAccess, setHasNotesAccess] = useState(false);
-  const [hasDbCheckAccess, setHasDbCheckAccess] = useState(false);
-  const [hasHandleServerAccess, setHasHandleServerAccess] = useState(false);
 
   useEffect(() => {
     if (session?.user?.email === 'gokruthik2003@gmail.com') {
       setIsAdmin(true);
-      setHasApiAccess(true); // Admin has access to everything
-      setHasNotesAccess(true);
-      setHasDbCheckAccess(true);
-      setHasHandleServerAccess(true);
     } else if (session?.user?.email) {
       // Check admin access
       fetch('/api/users/access')
         .then(res => {
           if (res.ok) {
             setIsAdmin(true);
-            setHasDbCheckAccess(true);
-            setHasHandleServerAccess(true);
-            setHasApiAccess(true);
-            setHasNotesAccess(true);
           }
         })
         .catch(() => { });
-
-      // Check API access by trying to fetch API configs
-      // This will return 403 if user doesn't have access
-      fetch('/api/api-configs')
-        .then(res => {
-          setHasApiAccess(res.ok); // 200-299 means access granted
-        })
-        .catch(() => {
-          setHasApiAccess(false);
-        });
-
-      // Check Notes access by trying to fetch notes
-      fetch('/api/notes')
-        .then(res => {
-          setHasNotesAccess(res.ok); // 200-299 means access granted
-        })
-        .catch(() => {
-          setHasNotesAccess(false);
-        });
-
-      // Check DB Check access
-      fetch('/api/db-checks')
-        .then(res => {
-          setHasDbCheckAccess(res.ok);
-        })
-        .catch(() => setHasDbCheckAccess(false));
-
-      // Check Handle Server access
-      fetch('/api/services')
-        .then(res => {
-          setHasHandleServerAccess(res.ok);
-        })
-        .catch(() => setHasHandleServerAccess(false));
-    } else {
-      setHasApiAccess(false);
-      setHasNotesAccess(false);
-      setHasDbCheckAccess(false);
-      setHasHandleServerAccess(false);
     }
   }, [session]);
 
@@ -167,10 +112,6 @@ export function Sidebar() {
           <div className="flex-1 py-2 overflow-y-auto">
             {navItems.map((item) => {
               if (item.adminOnly && !isAdmin) return null;
-              if (item.id === 'api' && !hasApiAccess) return null;
-              if (item.id === 'notes' && !hasNotesAccess) return null;
-              if (item.id === 'db-check' && !hasDbCheckAccess) return null;
-              if (item.id === 'handle-server' && !hasHandleServerAccess) return null;
 
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -255,8 +196,6 @@ export function Sidebar() {
               <div className="flex-1 py-2">
                 {navItems.map((item) => {
                   if (item.adminOnly && !isAdmin) return null;
-                  if (item.id === 'api' && !hasApiAccess) return null;
-                  if (item.id === 'notes' && !hasNotesAccess) return null;
 
                   const Icon = item.icon;
                   const isActive = pathname === item.href;

@@ -2,15 +2,6 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import connectDB from "@/lib/mongodb";
 import ApiConfig from "@/lib/models/ApiConfig";
-import User from "@/lib/models/User";
-
-async function checkAccess(userId: string): Promise<boolean> {
-    await connectDB();
-    const user = await User.findById(userId);
-    if (!user) return false;
-    if (user.role === 'admin') return true;
-    return user.hasAccess?.includes('/api') || false;
-}
 
 export async function POST(req: Request) {
     try {
@@ -20,12 +11,6 @@ export async function POST(req: Request) {
         }
 
         await connectDB();
-
-        // Check access
-        const hasAccess = await checkAccess(session.user.id);
-        if (!hasAccess) {
-            return NextResponse.json({ message: "Access denied" }, { status: 403 });
-        }
 
         const body = await req.json();
         const { method, url, headers, queryParams, payload, apiConfigId } = body;

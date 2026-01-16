@@ -1,25 +1,7 @@
 import { NextResponse } from "next/server";
-import { Types } from "mongoose";
 import { auth } from "@/lib/auth";
 import connectDB from "@/lib/mongodb";
 import ApiConfig from "@/lib/models/ApiConfig";
-import User from "@/lib/models/User";
-
-// Check if user has access to API page
-async function checkAccess(userId: string): Promise<boolean> {
-    await connectDB();
-    if (!Types.ObjectId.isValid(userId)) {
-        return false;
-    }
-    const user = await User.findById(userId);
-    if (!user) return false;
-    
-    // Admin has access to everything
-    if (user.role === 'admin') return true;
-    
-    // Check if user has access to /api page
-    return user.hasAccess?.includes('/api') || false;
-}
 
 export async function GET(req: Request) {
     try {
@@ -29,12 +11,6 @@ export async function GET(req: Request) {
         }
 
         await connectDB();
-
-        // Check access
-        const hasAccess = await checkAccess(session.user.id);
-        if (!hasAccess) {
-            return NextResponse.json({ message: "Access denied" }, { status: 403 });
-        }
 
         // Get all API configs for the user, sorted by lastOpened
         const apiConfigs = await ApiConfig.find({ userId: session.user.id })
@@ -55,12 +31,6 @@ export async function POST(req: Request) {
         }
 
         await connectDB();
-
-        // Check access
-        const hasAccess = await checkAccess(session.user.id);
-        if (!hasAccess) {
-            return NextResponse.json({ message: "Access denied" }, { status: 403 });
-        }
 
         const body = await req.json();
         const { name, method, url, headers, queryParams, payload, environmentId } = body;
@@ -92,12 +62,6 @@ export async function PUT(req: Request) {
         }
 
         await connectDB();
-
-        // Check access
-        const hasAccess = await checkAccess(session.user.id);
-        if (!hasAccess) {
-            return NextResponse.json({ message: "Access denied" }, { status: 403 });
-        }
 
         const body = await req.json();
         const { id, name, method, url, headers, queryParams, payload, environmentId } = body;
@@ -136,12 +100,6 @@ export async function DELETE(req: Request) {
         }
 
         await connectDB();
-
-        // Check access
-        const hasAccess = await checkAccess(session.user.id);
-        if (!hasAccess) {
-            return NextResponse.json({ message: "Access denied" }, { status: 403 });
-        }
 
         const { searchParams } = new URL(req.url);
         const id = searchParams.get('id');

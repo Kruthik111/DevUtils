@@ -18,12 +18,6 @@ interface User {
     suspended?: boolean;
 }
 
-const PROTECTED_PAGES = [
-    { path: '/api', label: 'API Testing' },
-    { path: '/notes', label: 'Notes' },
-    { path: '/db-check', label: 'DB Check' },
-    { path: '/handle-server', label: 'Handle Server' },
-];
 
 export default function AdminUsersPage() {
     const router = useRouter();
@@ -48,13 +42,10 @@ export default function AdminUsersPage() {
         }
         return 'list'; // Default fallback
     });
-    const [showAccessModal, setShowAccessModal] = useState<{ userId: string; userName: string } | null>(null);
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [filters, setFilters] = useState({
         userType: 'all', // 'all', 'admin', 'user'
         status: 'all', // 'all', 'active', 'suspended'
-        hasApiAccess: 'all', // 'all', 'yes', 'no'
-        hasNotesAccess: 'all', // 'all', 'yes', 'no'
     });
 
     useEffect(() => {
@@ -111,28 +102,6 @@ export default function AdminUsersPage() {
         };
     }, [registerRefresh, unregisterRefresh]);
 
-    const toggleAccess = async (userId: string, pagePath: string) => {
-        const user = users.find(u => u._id === userId);
-        if (!user) return;
-
-        const newAccess = user.hasAccess?.includes(pagePath)
-            ? user.hasAccess.filter(p => p !== pagePath)
-            : [...(user.hasAccess || []), pagePath];
-
-        try {
-            const res = await fetch('/api/users/access', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, hasAccess: newAccess }),
-            });
-
-            if (res.ok) {
-                await loadUsers();
-            }
-        } catch (error) {
-            console.error('Error updating access:', error);
-        }
-    };
 
 
     const toggleSuspension = async (userId: string, suspended: boolean) => {
@@ -237,20 +206,6 @@ export default function AdminUsersPage() {
         if (filters.status !== 'all') {
             if (filters.status === 'active' && user.suspended) return false;
             if (filters.status === 'suspended' && !user.suspended) return false;
-        }
-
-        // API access filter
-        if (filters.hasApiAccess !== 'all') {
-            const hasApiAccess = user.hasAccess?.includes('/api') || false;
-            if (filters.hasApiAccess === 'yes' && !hasApiAccess) return false;
-            if (filters.hasApiAccess === 'no' && hasApiAccess) return false;
-        }
-
-        // Notes access filter
-        if (filters.hasNotesAccess !== 'all') {
-            const hasNotesAccess = user.hasAccess?.includes('/notes') || false;
-            if (filters.hasNotesAccess === 'yes' && !hasNotesAccess) return false;
-            if (filters.hasNotesAccess === 'no' && hasNotesAccess) return false;
         }
 
         return true;
@@ -359,11 +314,6 @@ export default function AdminUsersPage() {
                                             <tr className="border-b border-border/50">
                                                 <th className="text-left p-3">User</th>
                                                 <th className="text-center p-3">Status</th>
-                                                {PROTECTED_PAGES.map((page) => (
-                                                    <th key={page.path} className="text-center p-3">
-                                                        {page.label}
-                                                    </th>
-                                                ))}
                                                 <th className="text-center p-3">Actions</th>
                                             </tr>
                                         </thead>
@@ -404,30 +354,6 @@ export default function AdminUsersPage() {
                                                             )}
                                                         </button>
                                                     </td>
-                                                    {PROTECTED_PAGES.map((page) => {
-                                                        const hasAccess = user.hasAccess?.includes(page.path) || false;
-                                                        return (
-                                                            <td key={page.path} className="p-3 text-center">
-                                                                <button
-                                                                    onClick={() => setShowAccessModal({ userId: user._id, userName: user.name || user.email })}
-                                                                    disabled={user.role === 'admin' || user.suspended}
-                                                                    className={cn(
-                                                                        "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
-                                                                        hasAccess
-                                                                            ? "bg-green-500/20 text-green-500 hover:bg-green-500/30"
-                                                                            : "bg-red-500/20 text-red-500 hover:bg-red-500/30",
-                                                                        (user.role === 'admin' || user.suspended) && "opacity-50 cursor-not-allowed"
-                                                                    )}
-                                                                >
-                                                                    {hasAccess ? (
-                                                                        <Check className="w-4 h-4" />
-                                                                    ) : (
-                                                                        <X className="w-4 h-4" />
-                                                                    )}
-                                                                </button>
-                                                            </td>
-                                                        );
-                                                    })}
                                                     <td className="p-3 text-center">
                                                         <button
                                                             onClick={() => setDeleteConfirm(user._id)}
@@ -489,31 +415,6 @@ export default function AdminUsersPage() {
                                                     )}
                                                 </button>
                                             </div>
-                                            {PROTECTED_PAGES.map((page) => {
-                                                const hasAccess = user.hasAccess?.includes(page.path) || false;
-                                                return (
-                                                    <div key={page.path} className="flex items-center justify-between">
-                                                        <span className="text-sm text-foreground/70">{page.label}</span>
-                                                        <button
-                                                            onClick={() => setShowAccessModal({ userId: user._id, userName: user.name || user.email })}
-                                                            disabled={user.role === 'admin' || user.suspended}
-                                                            className={cn(
-                                                                "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
-                                                                hasAccess
-                                                                    ? "bg-green-500/20 text-green-500 hover:bg-green-500/30"
-                                                                    : "bg-red-500/20 text-red-500 hover:bg-red-500/30",
-                                                                (user.role === 'admin' || user.suspended) && "opacity-50 cursor-not-allowed"
-                                                            )}
-                                                        >
-                                                            {hasAccess ? (
-                                                                <Check className="w-4 h-4" />
-                                                            ) : (
-                                                                <X className="w-4 h-4" />
-                                                            )}
-                                                        </button>
-                                                    </div>
-                                                );
-                                            })}
                                         </div>
                                         <div className="flex gap-2 pt-3 border-t border-border/30">
                                             <button
@@ -631,72 +532,6 @@ export default function AdminUsersPage() {
                 </div>
             )}
 
-            {/* Access Management Modal */}
-            {showAccessModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowAccessModal(null)} />
-                    <div className="relative bg-background border border-border/50 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col">
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-border/30">
-                            <h2 className="text-xl font-bold">Manage Access - {showAccessModal.userName}</h2>
-                            <button
-                                onClick={() => setShowAccessModal(null)}
-                                className="p-2 rounded-lg hover:bg-foreground/5 transition-colors"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-                            {PROTECTED_PAGES.map((page) => {
-                                const user = users.find(u => u._id === showAccessModal.userId);
-                                if (!user) return null;
-                                const hasAccess = user.hasAccess?.includes(page.path) || false;
-                                return (
-                                    <div key={page.path} className="flex items-center justify-between p-4 rounded-lg border border-border/30 bg-foreground/5">
-                                        <div>
-                                            <div className="font-medium">{page.label}</div>
-                                            <div className="text-sm text-foreground/60">{page.path}</div>
-                                        </div>
-                                        <button
-                                            onClick={async () => {
-                                                await toggleAccess(showAccessModal.userId, page.path);
-                                                await loadUsers();
-                                            }}
-                                            disabled={user.role === 'admin' || user.suspended}
-                                            className={cn(
-                                                "flex items-center gap-2 px-4 py-2 rounded-lg transition-all font-medium",
-                                                hasAccess
-                                                    ? "bg-green-500/20 text-green-500 hover:bg-green-500/30"
-                                                    : "bg-red-500/20 text-red-500 hover:bg-red-500/30",
-                                                (user.role === 'admin' || user.suspended) && "opacity-50 cursor-not-allowed"
-                                            )}
-                                        >
-                                            {hasAccess ? (
-                                                <>
-                                                    <Check className="w-4 h-4" />
-                                                    Remove Access
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <X className="w-4 h-4" />
-                                                    Grant Access
-                                                </>
-                                            )}
-                                        </button>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                        <div className="flex gap-3 justify-end px-6 py-4 border-t border-border/30">
-                            <button
-                                onClick={() => setShowAccessModal(null)}
-                                className="px-4 py-2 rounded-lg border border-border/50 hover:bg-foreground/5 transition-colors font-medium"
-                            >
-                                Close
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Filter Modal */}
             {showFilterModal && (

@@ -5,7 +5,6 @@ import { auth } from "@/lib/auth";
 import connectDB from "@/lib/mongodb";
 import Group from "@/lib/models/Group";
 import Note from "@/lib/models/Note";
-import User from "@/lib/models/User";
 
 type IncomingTab = {
   id: string;
@@ -41,15 +40,6 @@ function sanitizeNotes(notes: any[]) {
   }));
 }
 
-async function checkAccess(userId: string): Promise<boolean> {
-  await connectDB();
-  if (!Types.ObjectId.isValid(userId)) return false;
-  const user = await User.findById(userId);
-  if (!user) return false;
-  if (user.role === "admin") return true;
-  return user.hasAccess?.includes("/notes") || false;
-}
-
 export async function GET() {
   try {
     const session = await auth();
@@ -58,11 +48,6 @@ export async function GET() {
     }
 
     const userId = session.user.id;
-
-    const hasAccess = await checkAccess(userId);
-    if (!hasAccess) {
-      return NextResponse.json({ message: "Access denied" }, { status: 403 });
-    }
 
     await connectDB();
 
@@ -87,11 +72,6 @@ export async function POST(req: Request) {
     }
 
     const userId = session.user.id;
-
-    const hasAccess = await checkAccess(userId);
-    if (!hasAccess) {
-      return NextResponse.json({ message: "Access denied" }, { status: 403 });
-    }
 
     await connectDB();
 

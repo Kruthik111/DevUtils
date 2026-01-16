@@ -4,8 +4,6 @@ const urlsToCache = [
   '/',
   '/notes',
   '/test-tool',
-  '/handle-server',
-  '/db-check',
   '/extension',
   '/sign-in',
 ];

@@ -87,7 +87,10 @@ GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID_HERE
 GOOGLE_CLIENT_SECRET=YOUR_GOOGLE_CLIENT_SECRET_HERE
 ```
 
-Replace the placeholder values with your Google OAuth credentials (client ID/secret). The public client ID controls whether the Google sign-in button is enabled in the UI.
+Replace the placeholder values with:
+- **MONGODB_URI**: Your MongoDB connection string (defaults to `mongodb://localhost:27017/devutils` if not provided)
+- **NEXTAUTH_SECRET**: A random secret string for NextAuth (generate with: `openssl rand -base64 32`)
+- **Google OAuth credentials**: Get these from Google Cloud Console. The public client ID controls whether the Google sign-in button is enabled in the UI.
 
 ## Building for Production
 

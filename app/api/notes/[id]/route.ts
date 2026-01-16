@@ -2,21 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import connectDB from "@/lib/mongodb";
 import Note from "@/lib/models/Note";
-import User from "@/lib/models/User";
 import mongoose from "mongoose";
-
-// Check if user has access to notes page
-async function checkAccess(userId: string): Promise<boolean> {
-    await connectDB();
-    const user = await User.findById(userId);
-    if (!user) return false;
-    
-    // Admin has access to everything
-    if (user.role === 'admin') return true;
-    
-    // Check if user has access to /notes page
-    return user.hasAccess?.includes('/notes') || false;
-}
 
 // Update a single note
 export async function PUT(
@@ -30,12 +16,6 @@ export async function PUT(
         }
 
         await connectDB();
-
-        // Check access
-        const hasAccess = await checkAccess(session.user.id);
-        if (!hasAccess) {
-            return NextResponse.json({ message: "Access denied" }, { status: 403 });
-        }
 
         const { id: noteId } = await params;
         const body = await req.json();
