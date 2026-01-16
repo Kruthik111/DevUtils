@@ -110,10 +110,10 @@ export default function NotesPage() {
     return activeTab.notes.length >= 9;
   }, [activeTab]);
 
-  // Keyboard shortcut for Add New (Ctrl+N or Cmd+N)
+  // Keyboard shortcut for Add New (Ctrl+K or Cmd+K)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         if (isNoteLimitReached) {
           toast.error('You can only create 9 notes per tab. Please delete a note before adding a new one.');
@@ -1035,8 +1035,8 @@ export default function NotesPage() {
               <List className="w-4 h-4" />
             </button>
           </div>
-          {/* Sort Button */}
-          <div className="relative">
+          {/* Sort Button - Commented out for now */}
+          {/* <div className="relative">
             <button
               onClick={() => setShowSortMenu(!showSortMenu)}
               className={cn(
@@ -1097,7 +1097,7 @@ export default function NotesPage() {
                 </div>
               </>
             )}
-          </div>
+          </div> */}
           <button
             onClick={async () => {
               setIsRefreshing(true);
@@ -1133,11 +1133,11 @@ export default function NotesPage() {
               "flex",
               isNoteLimitReached && "opacity-50 cursor-not-allowed"
             )}
-            title={isNoteLimitReached ? "Note limit reached (9 notes per tab)" : "Add New Note (Ctrl+N)"}
+            title={isNoteLimitReached ? "Note limit reached (9 notes per tab)" : "Add New Note (Ctrl+K)"}
           >
             <Plus className="w-4 h-4" />
             <span className="inline">Add New...</span>
-            <span className="text-xs text-foreground/50 ml-1 hidden md:inline">^N</span>
+            <span className="text-xs text-foreground/50 ml-1 hidden md:inline">^K</span>
           </button>
           <GroupSelector
             groups={data.groups}
