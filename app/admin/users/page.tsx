@@ -594,47 +594,6 @@ export default function AdminUsersPage() {
                                 </div>
                             </div>
 
-                            {/* API Access Filter */}
-                            <div>
-                                <label className="block text-sm font-medium mb-3">API Access</label>
-                                <div className="flex flex-wrap gap-2">
-                                    {['all', 'yes', 'no'].map((access) => (
-                                        <button
-                                            key={access}
-                                            onClick={() => setFilters({ ...filters, hasApiAccess: access })}
-                                            className={cn(
-                                                "px-4 py-2 rounded-lg border transition-all font-medium text-sm capitalize",
-                                                filters.hasApiAccess === access
-                                                    ? "bg-primary/20 text-primary border-primary"
-                                                    : "bg-background/50 border-border hover:bg-foreground/5"
-                                            )}
-                                        >
-                                            {access === 'all' ? 'All' : access === 'yes' ? 'Has Access' : 'No Access'}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Notes Access Filter */}
-                            <div>
-                                <label className="block text-sm font-medium mb-3">Notes Access</label>
-                                <div className="flex flex-wrap gap-2">
-                                    {['all', 'yes', 'no'].map((access) => (
-                                        <button
-                                            key={access}
-                                            onClick={() => setFilters({ ...filters, hasNotesAccess: access })}
-                                            className={cn(
-                                                "px-4 py-2 rounded-lg border transition-all font-medium text-sm capitalize",
-                                                filters.hasNotesAccess === access
-                                                    ? "bg-primary/20 text-primary border-primary"
-                                                    : "bg-background/50 border-border hover:bg-foreground/5"
-                                            )}
-                                        >
-                                            {access === 'all' ? 'All' : access === 'yes' ? 'Has Access' : 'No Access'}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
                         </div>
                         <div className="flex gap-3 px-6 py-4 border-t border-border/30">
                             <button
@@ -642,8 +601,6 @@ export default function AdminUsersPage() {
                                     setFilters({
                                         userType: 'all',
                                         status: 'all',
-                                        hasApiAccess: 'all',
-                                        hasNotesAccess: 'all',
                                     });
                                 }}
                                 className="flex-1 px-4 py-2 rounded-lg border border-border/50 hover:bg-foreground/5 transition-colors font-medium"
