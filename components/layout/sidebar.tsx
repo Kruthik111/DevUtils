@@ -10,6 +10,8 @@ import {
   User,
   Code,
   Shield,
+  Bell,
+  MessageSquare,
   Menu,
   X
 } from "lucide-react";
@@ -36,7 +38,9 @@ const navItems: NavItem[] = [
   { id: "api", label: "API", icon: Code, href: "/api" },
   // { id: "test-tool", label: "Test Tool", icon: FlaskConical, href: "/test-tool" },
   // { id: "extension", label: "Extension", icon: Puzzle, href: "/extension" },
+  { id: "feedback", label: "Feedback", icon: MessageSquare, href: "/feedback" },
   { id: "admin-users", label: "Users", icon: Shield, href: "/admin/users", adminOnly: true },
+  { id: "admin-notifications", label: "Notifications", icon: Bell, href: "/admin/notifications", adminOnly: true },
   { id: "profile", label: "Profile", icon: User, href: "/profile" },
 ];
 

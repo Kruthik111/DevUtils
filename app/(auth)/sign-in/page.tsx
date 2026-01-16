@@ -2,7 +2,8 @@
 
 import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Chrome } from "lucide-react";
+import { Chrome, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -22,7 +23,7 @@ function SignInContent() {
   const searchParams = useSearchParams();
   const authError = searchParams.get("error");
   const errorMessage = authError
-    ? "Sign-in failed because Google isn’t configured for this site. Please contact your admin or try again later."
+    ? "Sign-in failed because Google isn't configured for this site. Please contact your admin or try again later."
     : null;
 
   useEffect(() => {
@@ -34,7 +35,7 @@ function SignInContent() {
 
   const handleGoogleSignIn = () => {
     if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
-      toast.error("Google sign-in isn’t configured. Add your NEXT_PUBLIC_GOOGLE_CLIENT_ID to .env.local.");
+      toast.error("Google sign-in isn't configured. Add your NEXT_PUBLIC_GOOGLE_CLIENT_ID to .env.local.");
       return;
     }
 
@@ -51,55 +52,135 @@ function SignInContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center from-background via-background to-primary/5 p-4">
-      {/* Title at top */}
-      <div className="absolute top-8 left-1/2 -translate-x-1/2">
-        <h1 className="text-4xl font-bold from-primary to-primary/60 bg-clip-text text-foreground">
-          DevUtils
-        </h1>
+    <div className="min-h-screen bg-white flex">
+      {/* Left Section - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-purple-50 to-purple-100">
+        {/* Animated background gradient orbs */}
+        <div className="absolute inset-0 overflow-hidden">
+          <motion.div
+            className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-400 rounded-full blur-3xl opacity-30"
+            animate={{
+              x: [0, 50, 0],
+              y: [0, 30, 0],
+              scale: [1, 1.2, 1],
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+          <motion.div
+            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl opacity-20"
+            animate={{
+              x: [0, -50, 0],
+              y: [0, -30, 0],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: 10,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+        </div>
+
+        <div className="relative z-10 flex flex-col items-center justify-center px-12 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="mb-6"
+          >
+            <motion.span
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-100 border border-purple-300 text-purple-700 text-sm font-medium mb-8"
+            >
+              <Sparkles className="w-4 h-4 text-purple-600" />
+              Developer Tools Reimagined
+            </motion.span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight"
+          >
+            <span className="text-black">DevUtils</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="text-xl md:text-2xl text-gray-600 max-w-md"
+          >
+            Centralize frequently used developer commands, snippets, links, and notes into a single, searchable clipboard vault with instant copy and click-to-copy access.
+          </motion.p>
+        </div>
       </div>
 
-      {/* Sign-in form */}
-      <div className="w-full max-w-md mt-20">
-        <div className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-3xl shadow-2xl p-8 space-y-6">
-          <div className="text-center space-y-2">
-            <p className="text-foreground/60 text-sm">
-              Sign in to access your developer tools
+      {/* Right Section - Sign In */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 md:p-8 bg-white">
+        <div className="w-full max-w-md">
+          {/* Mobile Logo */}
+          <div className="lg:hidden text-center mb-8">
+            <h1 className="text-3xl font-bold text-black mb-2">DevUtils</h1>
+            <p className="text-gray-600 text-sm">
+              Developer Tools Reimagined
             </p>
           </div>
 
-          {errorMessage && (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/10 text-destructive text-sm p-3">
-              {errorMessage}
-            </div>
-          )}
-
-          {/* Sign In Button */}
-          <button
-            onClick={handleGoogleSignIn}
-            disabled={isLoading}
-            className={cn(
-              "w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl",
-              "bg-background border-2 border-border/50",
-              "hover:bg-primary/10 hover:border-primary/50",
-              "transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
-              "disabled:opacity-50 disabled:cursor-not-allowed",
-              "shadow-lg hover:shadow-xl"
-            )}
+          {/* Sign In Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white border-2 border-gray-200 rounded-2xl shadow-xl p-8 md:p-10 space-y-6"
           >
-            <Chrome className="w-5 h-5" />
-            <span className="font-medium">
-              {isLoading ? "Signing in..." : "Sign in with Google"}
-            </span>
-          </button>
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold text-black">Welcome Back</h2>
+              <p className="text-gray-600 text-sm">
+                Sign in to access your developer tools
+              </p>
+            </div>
 
-          {/* Info */}
-          <p className="text-center text-xs text-foreground/40">
-            This is a dummy sign-in page. Google OAuth will be implemented later.
-          </p>
+            {errorMessage && (
+              <div className="rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm p-3">
+                {errorMessage}
+              </div>
+            )}
+
+            {/* Google Sign In Button */}
+            <button
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+              className={cn(
+                "w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl",
+                "bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold",
+                "hover:from-purple-700 hover:to-purple-800 transition-all duration-200",
+                "hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed",
+                "shadow-lg hover:shadow-xl shadow-purple-500/30"
+              )}
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                <>
+                  <Chrome className="w-5 h-5" />
+                  <span>Sign in with Google</span>
+                </>
+              )}
+            </button>
+          </motion.div>
         </div>
       </div>
     </div>
   );
 }
-

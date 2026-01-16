@@ -13,6 +13,7 @@ import { BackgroundUpload } from "./background-upload";
 import { useSidebar } from "@/components/providers/sidebar-provider";
 import { useSession, signOut } from "next-auth/react";
 import { ConfirmDialog } from "@/components/notes/confirm-dialog";
+import { Notifications } from "./notifications";
 import {
   Tooltip,
   TooltipContent,
@@ -137,14 +138,12 @@ export function Navbar() {
             </Tooltip>
           </div>
 
-          {/* Notifications/Bell */}
+          {/* Notifications */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <button className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-foreground/10 transition-colors relative">
-                <Bell className="w-4 h-4 text-foreground/70" />
-                {/* Notification dot */}
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full" />
-              </button>
+              <div>
+                <Notifications />
+              </div>
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <p>Notifications</p>

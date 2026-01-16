@@ -120,6 +120,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         user.name = created.name;
         user.email = created.email;
         user.image = created.image;
+
+        // Create notification for admin users about new user signup
+        const Notification = (await import("@/lib/models/Notification")).default;
+        const adminUsers = await User.find({ role: "admin" });
+        
+        for (const admin of adminUsers) {
+          await Notification.create({
+            userId: admin._id,
+            title: "New User Signed Up",
+            message: `${created.name} (${created.email}) has signed up`,
+            type: "user_signup",
+            read: false,
+            link: `/admin/users`,
+          });
+        }
+
+        // Send welcome notification to the new user
+        await Notification.create({
+          userId: created._id,
+          title: "Welcome to DevUtils!",
+          message: `Welcome ${created.name}! We're excited to have you on board. Start by exploring the Notes feature and API testing tools.`,
+          type: "success",
+          read: false,
+          link: `/notes`,
+        });
       }
 
       return true;

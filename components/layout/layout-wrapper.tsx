@@ -7,6 +7,7 @@ import { RefreshProvider } from "@/components/providers/refresh-provider";
 import { Sidebar } from "./sidebar";
 import { Navbar } from "./navbar";
 import { InstallPrompt } from "./install-prompt";
+import { Footer } from "@/components/landing/footer";
 
 function MainContent({ children }: { children: React.ReactNode }) {
   const { isCollapsed } = useSidebar();
@@ -47,9 +48,14 @@ function MainContent({ children }: { children: React.ReactNode }) {
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLoginPage = pathname.startsWith("/login") || pathname.startsWith("/signin");
+  const isLandingPage = pathname === "/";
+  
+  // Pages that should have footer
+  const pagesWithFooter = ["/notes", "/api", "/profile"];
+  const shouldShowFooter = pagesWithFooter.some(page => pathname.startsWith(page));
 
-  // On login/signin page, hide sidebar and navbar
-  if (isLoginPage) {
+  // On login/signin page or landing page, hide sidebar and navbar
+  if (isLoginPage || isLandingPage) {
     return <div className="w-full h-full">{children}</div>;
   }
 
@@ -60,6 +66,7 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
         <Navbar />
         <Sidebar />
         <MainContent>{children}</MainContent>
+        <Footer />
         <InstallPrompt />
       </SidebarProvider>
     </RefreshProvider>

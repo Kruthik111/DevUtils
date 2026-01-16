@@ -1,275 +1,217 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { signIn } from "next-auth/react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { Chrome, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Loader2, Eye, EyeOff } from "lucide-react";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/components/providers/auth-provider";
 
-export default function LoginPage() {
-    return (
-        <Suspense fallback={null}>
-            <LoginContent />
-        </Suspense>
-    );
+export default function SignInPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignInContent />
+    </Suspense>
+  );
 }
 
-function LoginContent() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const authError = searchParams.get("error");
-    const errorMessage = authError
-        ? "Sign-in failed because Google isn’t configured for this site. Please contact your admin or try again later."
-        : null;
-    const [isLoading, setIsLoading] = useState(false);
-    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-    const [isRegistering, setIsRegistering] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
-    const [formData, setFormData] = useState({
-        name: "",
-        email: "",
-        password: "",
+function SignInContent() {
+  const [isLoading, setIsLoading] = useState(false);
+  const { authState, signIn } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const authError = searchParams.get("error");
+  const errorMessage = authError
+    ? "Sign-in failed because Google isn't configured for this site. Please contact your admin or try again later."
+    : null;
+
+  useEffect(() => {
+    // If already authenticated, redirect to notes
+    if (authState.isAuthenticated) {
+      router.push("/notes");
+    }
+  }, [authState.isAuthenticated, router]);
+
+  const handleGoogleSignIn = () => {
+    if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
+      toast.error("Google sign-in isn't configured. Add your NEXT_PUBLIC_GOOGLE_CLIENT_ID to .env.local.");
+      return;
+    }
+
+    setIsLoading(true);
+    signIn("google", { callbackUrl: "/notes" }).catch(() => {
+      toast.error("Google sign-in failed. Please try again.");
+      setIsLoading(false);
     });
+  };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
+  // Don't show sign-in if already authenticated
+  if (authState.isAuthenticated) {
+    return null;
+  }
 
-        try {
-            if (isRegistering) {
-                const res = await fetch("/api/auth/register", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(formData),
-                });
-
-                if (!res.ok) {
-                    const data = await res.json();
-                    throw new Error(data.message || "Registration failed");
-                }
-
-                toast.success("Account created! Please sign in.");
-                setIsRegistering(false);
-            } else {
-                const res = await signIn("credentials", {
-                    email: formData.email,
-                    password: formData.password,
-                    redirect: false,
-                });
-
-                if (res?.error) {
-                    // Check if user might be suspended
-                    const errorMessage = res.error === "CredentialsSignin" 
-                        ? "Invalid email or password. If your account is suspended, please contact an administrator."
-                        : "Invalid credentials";
-                    throw new Error(errorMessage);
-                }
-
-                router.push("/notes");
-                router.refresh();
-            }
-        } catch (error: any) {
-            toast.error(error.message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const handleGoogleSignIn = async () => {
-        if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
-            toast.error("Google sign-in isn’t configured. Add your NEXT_PUBLIC_GOOGLE_CLIENT_ID to .env.local.");
-            return;
-        }
-
-        try {
-            setIsGoogleLoading(true);
-            await signIn("google", { callbackUrl: "/notes" });
-        } catch (error: any) {
-            toast.error(error.message || "Google sign-in failed. Please try again.");
-            setIsGoogleLoading(false);
-        }
-    };
-
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-background p-4">
-            <div className="w-full max-w-md space-y-8 bg-background/80 backdrop-blur-xl border border-border/50 p-8 rounded-3xl shadow-xl">
-                <div className="text-center space-y-2">
-                    <h1 className="text-3xl font-bold tracking-tight">
-                        {isRegistering ? "Create an account" : "Welcome back"}
-                    </h1>
-                    <p className="text-muted-foreground">
-                        {isRegistering
-                            ? "Enter your details to get started"
-                            : "Enter your credentials to access your account"}
-                    </p>
-                </div>
-                {errorMessage && (
-                    <div className="rounded-md border border-destructive/30 bg-destructive/10 text-destructive text-sm p-3">
-                        {errorMessage}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {isRegistering && (
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                Name
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="John Doe"
-                                value={formData.name}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, name: e.target.value })
-                                }
-                            />
-                        </div>
-                    )}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            Email
-                        </label>
-                        <input
-                            type="email"
-                            required
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="m@example.com"
-                            value={formData.email}
-                            onChange={(e) =>
-                                setFormData({ ...formData, email: e.target.value })
-                            }
-                        />
-                    </div>
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            Password
-                        </label>
-                        <div className="relative">
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                required
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                placeholder="Enter your password"
-                                value={formData.password}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, password: e.target.value })
-                                }
-                            />
-                            <TooltipProvider delayDuration={0}>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors focus:outline-none"
-                                            aria-label={showPassword ? "Hide password" : "Show password"}
-                                        >
-                                            {showPassword ? (
-                                                <EyeOff className="h-4 w-4" />
-                                            ) : (
-                                                <Eye className="h-4 w-4" />
-                                            )}
-                                        </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent 
-                                        side="bottom"
-                                        className="z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md"
-                                    >
-                                        <p>{showPassword ? "Hide password" : "Show password"}</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-background hover:bg-primary/90 h-10 px-4 py-2"
-                    >
-                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {isRegistering ? "Sign Up" : "Sign In"}
-                    </button>
-                </form>
-
-                <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-background px-2 text-muted-foreground">
-                            Or continue with
-                        </span>
-                    </div>
-                </div>
-
-                <button
-                    type="button"
-                    onClick={handleGoogleSignIn}
-                    disabled={isGoogleLoading}
-                    className="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
-                >
-                    {isGoogleLoading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                            <path
-                                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                                fill="#4285F4"
-                            />
-                            <path
-                                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                                fill="#34A853"
-                            />
-                            <path
-                                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                                fill="#FBBC05"
-                            />
-                            <path
-                                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                                fill="#EA4335"
-                            />
-                        </svg>
-                    )}
-                    {isGoogleLoading ? "Signing in..." : "Sign in with Google"}
-                </button>
-
-                {/*
-                //No need to show this for now, let admin create users
-                <div className="text-center text-sm">
-                    {isRegistering ? (
-                        <p>
-                            Already have an account?{" "}
-                            <button
-                                onClick={() => setIsRegistering(false)}
-                                className="underline hover:text-primary"
-                            >
-                                Sign in
-                            </button>
-                        </p>
-                    ) : (
-                        <p>
-                            Don't have an account?{" "}
-                            <button
-                                onClick={() => setIsRegistering(true)}
-                                className="underline hover:text-primary"
-                            >
-                                Sign up
-                            </button>
-                        </p>
-                    )}
-                </div>
-                */}
-            </div>
+  return (
+    <div className="min-h-screen bg-white flex">
+      {/* Left Section - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-purple-50 to-purple-100">
+        {/* Animated background gradient orbs */}
+        <div className="absolute inset-0 overflow-hidden">
+          <motion.div
+            className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-400 rounded-full blur-3xl opacity-30"
+            animate={{
+              x: [0, 50, 0],
+              y: [0, 30, 0],
+              scale: [1, 1.2, 1],
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+          <motion.div
+            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500 rounded-full blur-3xl opacity-20"
+            animate={{
+              x: [0, -50, 0],
+              y: [0, -30, 0],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: 10,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
         </div>
-    );
+
+        <div className="relative z-10 flex flex-col items-center justify-center px-12 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="mb-6"
+          >
+            <motion.span
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-100 border border-purple-300 text-purple-700 text-sm font-medium mb-8"
+            >
+              <Sparkles className="w-4 h-4 text-purple-600" />
+              Developer Tools Reimagined
+            </motion.span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+            className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight"
+          >
+            <span className="text-black">DevUtils</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="text-xl md:text-2xl text-gray-600 max-w-md"
+          >
+            Centralize frequently used developer commands, snippets, links, and notes into a single, searchable clipboard vault with instant copy and click-to-copy access.
+          </motion.p>
+        </div>
+      </div>
+
+      {/* Right Section - Sign In */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 md:p-8 bg-white relative overflow-hidden">
+        {/* Gradient background in corners - right section only */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Top-right corner gradient */}
+          <motion.div
+            className="absolute top-0 right-0 w-96 h-96 bg-purple-400 rounded-full blur-3xl opacity-20"
+            animate={{
+              x: [0, -30, 0],
+              y: [0, 30, 0],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+          {/* Bottom-left corner gradient (of right section) */}
+          <motion.div
+            className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500 rounded-full blur-3xl opacity-20"
+            animate={{
+              x: [0, 30, 0],
+              y: [0, -30, 0],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: 10,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+        </div>
+        <div className="w-full max-w-md relative z-10">
+          {/* Mobile Logo */}
+          <div className="lg:hidden text-center mb-8">
+            <h1 className="text-3xl font-bold text-black mb-2">DevUtils</h1>
+            <p className="text-gray-600 text-sm">
+              Developer Tools Reimagined
+            </p>
+          </div>
+
+          {/* Sign In Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white border-2 border-gray-200 rounded-2xl shadow-xl p-8 md:p-10 space-y-6"
+          >
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold text-black">Welcome Back</h2>
+              <p className="text-gray-600 text-sm">
+                Sign in to access your developer tools
+              </p>
+            </div>
+
+            {errorMessage && (
+              <div className="rounded-lg border border-red-300 bg-red-50 text-red-700 text-sm p-3">
+                {errorMessage}
+              </div>
+            )}
+
+            {/* Google Sign In Button */}
+            <button
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+              className={cn(
+                "w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl",
+                "bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold",
+                "hover:from-purple-700 hover:to-purple-800 transition-all duration-200",
+                "hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed",
+                "shadow-lg hover:shadow-xl shadow-purple-500/30"
+              )}
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                <>
+                  <Chrome className="w-5 h-5" />
+                  <span>Sign in with Google</span>
+                </>
+              )}
+            </button>
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
 }

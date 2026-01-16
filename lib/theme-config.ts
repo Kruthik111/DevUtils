@@ -21,7 +21,7 @@ export const themeConfig = {
   },
   dark: {
     name: "Dark",
-    background: "#1f1f1f",
+    background: "#0f0f0f",
     foreground: "#e5e5e5",
     primary: "#ffffff",
     secondary: "#2d2d2d",

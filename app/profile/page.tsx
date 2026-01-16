@@ -22,13 +22,6 @@ export default function ProfilePage() {
   const [name, setName] = useState("");
   const [isEditingName, setIsEditingName] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [showChangePassword, setShowChangePassword] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [changingPassword, setChangingPassword] = useState(false);
-  const [showPasswordSuccessDialog, setShowPasswordSuccessDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
 
@@ -183,58 +176,6 @@ export default function ProfilePage() {
     window.location.reload();
   };
 
-  const handleChangePassword = async () => {
-    setPasswordError("");
-    
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordError("All fields are required");
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setPasswordError("New password must be at least 6 characters");
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setPasswordError("New passwords do not match");
-      return;
-    }
-
-    setChangingPassword(true);
-
-    try {
-      const response = await fetch("/api/user/change-password", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          currentPassword,
-          newPassword,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setShowChangePassword(false);
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-        setPasswordError("");
-        setShowPasswordSuccessDialog(true);
-      } else {
-        setPasswordError(data.message || "Failed to change password");
-      }
-    } catch (error) {
-      console.error("Error changing password:", error);
-      setPasswordError("Failed to change password. Please try again.");
-    } finally {
-      setChangingPassword(false);
-    }
-  };
-
   const circumference = 2 * Math.PI * 45;
   const offset = circumference - (storagePercentage / 100) * circumference;
 
@@ -311,89 +252,6 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
-          </div>
-
-          {/* Change Password */}
-          <div className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 shadow-xl">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Change Password</h2>
-              <button
-                onClick={() => {
-                  setShowChangePassword(!showChangePassword);
-                  setPasswordError("");
-                  setCurrentPassword("");
-                  setNewPassword("");
-                  setConfirmPassword("");
-                }}
-                className={cn(
-                  "px-4 py-2 rounded-xl text-sm font-medium",
-                  "bg-primary text-background",
-                  "hover:bg-primary/90 transition-all"
-                )}
-              >
-                {showChangePassword ? "Cancel" : "Change Password"}
-              </button>
-            </div>
-            {showChangePassword && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Current Password</label>
-                  <input
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className={cn(
-                      "w-full px-4 py-2 rounded-xl border border-border/50",
-                      "bg-background/50 focus:outline-none focus:border-primary"
-                    )}
-                    placeholder="Enter current password"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">New Password</label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className={cn(
-                      "w-full px-4 py-2 rounded-xl border border-border/50",
-                      "bg-background/50 focus:outline-none focus:border-primary"
-                    )}
-                    placeholder="Enter new password (min 6 characters)"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Confirm New Password</label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className={cn(
-                      "w-full px-4 py-2 rounded-xl border border-border/50",
-                      "bg-background/50 focus:outline-none focus:border-primary"
-                    )}
-                    placeholder="Confirm new password"
-                  />
-                </div>
-                {passwordError && (
-                  <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
-                    {passwordError}
-                  </div>
-                )}
-                <button
-                  onClick={handleChangePassword}
-                  disabled={changingPassword}
-                  className={cn(
-                    "w-full px-4 py-2 rounded-xl text-sm font-medium",
-                    "bg-primary text-background",
-                    "hover:bg-primary/90 transition-all",
-                    "disabled:opacity-50"
-                  )}
-                >
-                  {changingPassword ? "Changing..." : "Update Password"}
-                </button>
-              </div>
-            )}
           </div>
 
           {/* Storage Usage */}
@@ -541,14 +399,7 @@ export default function ProfilePage() {
         onCancel={() => setShowClearConfirm(false)}
       />
 
-      {/* Password Success Dialog */}
-      <ConfirmDialog
-        isOpen={showPasswordSuccessDialog}
-        title="Password Changed"
-        message="Your password has been changed successfully!"
-        onConfirm={() => setShowPasswordSuccessDialog(false)}
-        onCancel={() => setShowPasswordSuccessDialog(false)}
-      />
+
     </div>
   );
 }
