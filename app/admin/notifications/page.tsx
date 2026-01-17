@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -36,7 +36,7 @@ interface Feedback {
   read: boolean;
 }
 
-export default function AdminNotificationsPage() {
+function AdminNotificationsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
@@ -615,5 +615,13 @@ export default function AdminNotificationsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AdminNotificationsPage() {
+  return (
+    <Suspense fallback={<Loading fullScreen />}>
+      <AdminNotificationsContent />
+    </Suspense>
   );
 }
