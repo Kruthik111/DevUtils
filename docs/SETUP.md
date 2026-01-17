@@ -2,22 +2,23 @@
 
 ## Prerequisites
 
-- Node.js 22.x or higher
+- Node.js 20.x or higher
 - npm or yarn package manager
 - nvm (Node Version Manager) - recommended
+- MongoDB (local or cloud instance)
 
 ## Installation
 
-### 1. Switch to Node.js 22
+### 1. Switch to Node.js 20 or Higher
 
 ```bash
-nvm use 22
+nvm use 20
 ```
 
-If you don't have Node.js 22 installed:
+If you don't have Node.js 20 installed:
 ```bash
-nvm install 22
-nvm use 22
+nvm install 20
+nvm use 20
 ```
 
 ### 2. Install Dependencies
@@ -26,7 +27,30 @@ nvm use 22
 npm install
 ```
 
-### 3. Run Development Server
+### 3. Configure Environment Variables
+
+Create a `.env.local` file in the project root with the following:
+
+```bash
+# MongoDB Connection
+MONGODB_URI=mongodb://localhost:27017/devutils
+
+# NextAuth Configuration
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=YOUR_NEXTAUTH_SECRET
+
+# Google OAuth (required for Google sign-in)
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID_HERE
+GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID_HERE
+GOOGLE_CLIENT_SECRET=YOUR_GOOGLE_CLIENT_SECRET_HERE
+```
+
+Replace the placeholder values with:
+- **MONGODB_URI**: Your MongoDB connection string (defaults to `mongodb://localhost:27017/devutils` if not provided)
+- **NEXTAUTH_SECRET**: A random secret string for NextAuth (generate with: `openssl rand -base64 32`)
+- **Google OAuth credentials**: Get these from Google Cloud Console. See [GOOGLE_OAUTH_SETUP.md](../GOOGLE_OAUTH_SETUP.md) for detailed instructions.
+
+### 4. Run Development Server
 
 ```bash
 npm run dev
@@ -37,30 +61,43 @@ The application will be available at `http://localhost:3000`
 ## Project Structure
 
 ```
-notelt/
+DevUtils/
 ├── app/                    # Next.js App Router
 │   ├── (auth)/            # Auth routes group
 │   │   └── sign-in/       # Sign-in page
+│   ├── admin/             # Admin pages
+│   │   ├── users/         # User management
+│   │   └── notifications/ # Notification management & feedbacks
+│   ├── api/               # API routes
+│   │   ├── auth/          # Authentication APIs
+│   │   ├── feedback/      # Feedback API
+│   │   ├── notifications/ # Notifications APIs
+│   │   ├── notes/         # Notes APIs
+│   │   └── api-configs/   # API testing APIs
 │   ├── notes/             # Notes feature
-│   ├── test-tool/         # Test tool feature
-│   ├── handle-server/     # Server health monitoring
-│   ├── db-check/          # Repetitive DB check
-│   ├── extension/         # Extension download
+│   ├── api/               # API testing page
+│   ├── feedback/          # User feedback page
+│   ├── profile/           # User profile
 │   ├── layout.tsx         # Root layout
-│   ├── page.tsx           # Home page
+│   ├── page.tsx           # Landing page
 │   └── globals.css        # Global styles
 ├── components/
-│   ├── features/          # Feature-specific components
-│   ├── layout/           # Layout components (Sidebar, Navbar)
-│   ├── providers/        # Context providers (Theme)
-│   └── ui/               # Reusable UI components
+│   ├── landing/           # Landing page components
+│   ├── layout/            # Layout components (Sidebar, Navbar, Footer, Notifications)
+│   ├── notes/             # Notes feature components
+│   ├── providers/         # Context providers (Theme, Auth, Sidebar)
+│   └── ui/                # Reusable UI components (shadcn/ui)
 ├── lib/
-│   ├── theme-config.ts   # Theme configuration
-│   └── utils.ts          # Utility functions
+│   ├── models/            # MongoDB models (User, Note, Notification, etc.)
+│   ├── auth.ts            # NextAuth configuration
+│   ├── mongodb.ts         # MongoDB connection
+│   ├── theme-config.ts    # Theme configuration
+│   └── utils.ts           # Utility functions
 ├── public/
-│   ├── manifest.json     # PWA manifest
-│   └── sw.js            # Service worker
-└── docs/                # Documentation
+│   ├── manifest.json      # PWA manifest
+│   ├── sw.js              # Service worker
+│   └── icons/             # App icons and images
+└── docs/                  # Documentation
 ```
 
 ## Technologies Used
@@ -70,7 +107,11 @@ notelt/
 - **Tailwind CSS 4** - Utility-first CSS framework
 - **shadcn/ui** - UI component library (Radix UI primitives)
 - **next-themes** - Theme management
+- **NextAuth.js** - Authentication (Google OAuth)
+- **MongoDB** - Database with Mongoose ODM
+- **Framer Motion** - Animations
 - **lucide-react** - Icon library
+- **sonner** - Toast notifications
 - **PWA Support** - Offline functionality and app installation
 
 ## Environment Setup
@@ -78,6 +119,10 @@ notelt/
 Create a `.env.local` file in the project root with the following placeholders:
 
 ```bash
+# MongoDB Connection
+MONGODB_URI=mongodb://localhost:27017/devutils
+
+# NextAuth Configuration
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=YOUR_NEXTAUTH_SECRET
 
@@ -98,6 +143,43 @@ Replace the placeholder values with:
 npm run build
 npm start
 ```
+
+## Features
+
+### Authentication
+- Google OAuth sign-in
+- Session-based authentication with NextAuth.js
+- Protected routes for authenticated users
+
+### Notes Management
+- Create, edit, and delete notes
+- Organize notes into groups and tabs
+- Markdown support
+- Search and filter functionality
+- Persistent storage in MongoDB
+
+### API Testing
+- Configure and test APIs
+- Multiple environments support
+- Headers and parameters configuration
+- Request history
+
+### User Management (Admin Only)
+- View all users
+- Manage user roles (Admin/User)
+- Suspend/activate users
+- Delete users
+
+### Notifications
+- Real-time notifications
+- Read/unread states
+- Click to navigate to related pages
+- 12 notification limit per user (no limit for admins)
+
+### Feedback System
+- Users can submit feedback
+- Admin can view all feedbacks in accordion format
+- Feedbacks create notifications for admins
 
 ## PWA Installation
 

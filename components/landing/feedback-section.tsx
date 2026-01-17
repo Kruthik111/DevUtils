@@ -5,13 +5,11 @@ import { MessageSquare, Send, Mail } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { StaggerContainer, StaggerItem } from "./scroll-animations";
+import { useSession } from "next-auth/react";
 
 export function FeedbackSection() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    message: "",
-  });
+  const { data: session } = useSession();
+  const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
 
@@ -24,7 +22,7 @@ export function FeedbackSection() {
       const response = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ message }),
       });
 
       if (!response.ok) {
@@ -32,7 +30,7 @@ export function FeedbackSection() {
       }
 
       setSubmitStatus("success");
-      setFormData({ name: "", email: "", message: "" });
+      setMessage("");
       
       // Reset success message after 3 seconds
       setTimeout(() => setSubmitStatus("idle"), 3000);
@@ -95,67 +93,28 @@ export function FeedbackSection() {
           className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8 md:p-10"
         >
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  required
-                  className={cn(
-                    "w-full px-4 py-3 rounded-xl border border-gray-300",
-                    "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent",
-                    "transition-all duration-200"
-                  )}
-                  placeholder="Your name"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  required
-                  className={cn(
-                    "w-full px-4 py-3 rounded-xl border border-gray-300",
-                    "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent",
-                    "transition-all duration-200"
-                  )}
-                  placeholder="your.email@example.com"
-                />
-              </div>
+            {/* Display user info */}
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+              <p className="text-sm text-gray-600 mb-2">Submitting as:</p>
+              <p className="font-medium text-black">
+                {session?.user?.name || "User"}
+              </p>
+              <p className="text-sm text-gray-600">
+                {session?.user?.email}
+              </p>
             </div>
+
             <div>
               <label
                 htmlFor="message"
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Message
+                Your Feedback
               </label>
               <textarea
                 id="message"
-                value={formData.message}
-                onChange={(e) =>
-                  setFormData({ ...formData, message: e.target.value })
-                }
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
                 required
                 rows={6}
                 className={cn(

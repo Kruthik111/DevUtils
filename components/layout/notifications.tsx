@@ -208,11 +208,12 @@ export function Notifications() {
                           </div>
                           <div
                             className={cn(
-                              "text-xs",
+                              "text-xs line-clamp-2",
                               notification.read
                                 ? "text-foreground/50"
                                 : "text-foreground/70"
                             )}
+                            title={notification.message}
                           >
                             {notification.message}
                           </div>

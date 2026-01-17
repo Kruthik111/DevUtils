@@ -15,11 +15,11 @@ const NotificationSchema = new Schema({
     message: {
         type: String,
         required: [true, 'Message is required'],
-        maxLength: [500, 'Message should be less than 500 characters'],
+        maxLength: [1000, 'Message should be less than 1000 characters'],
     },
     type: {
         type: String,
-        enum: ['info', 'success', 'warning', 'error', 'user_signup'],
+        enum: ['info', 'success', 'warning', 'error', 'user_signup', 'feedback'],
         default: 'info',
     },
     read: {

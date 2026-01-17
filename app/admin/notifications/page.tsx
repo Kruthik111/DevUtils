@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Bell,
   Plus,
@@ -14,6 +14,9 @@ import {
   CheckCircle,
   AlertCircle,
   Info,
+  MessageSquare,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Loading } from "@/components/ui/loading";
@@ -25,14 +28,27 @@ interface UserOption {
   email: string;
 }
 
+interface Feedback {
+  _id: string;
+  title: string;
+  message: string;
+  createdAt: string;
+  read: boolean;
+}
+
 export default function AdminNotificationsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, status } = useSession();
   const [isAdmin, setIsAdmin] = useState(false);
   const [users, setUsers] = useState<UserOption[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"create" | "feedbacks">("create");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [sending, setSending] = useState(false);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [loadingFeedbacks, setLoadingFeedbacks] = useState(false);
+  const [expandedFeedback, setExpandedFeedback] = useState<string | null>(null);
   const [notificationForm, setNotificationForm] = useState({
     title: "",
     message: "",
@@ -53,6 +69,22 @@ export default function AdminNotificationsPage() {
       fetchUsers();
     }
   }, [status, session, router]);
+
+  // Check URL params for tab
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "feedbacks") {
+      setActiveTab("feedbacks");
+      fetchFeedbacks();
+    }
+  }, [searchParams]);
+
+  // Fetch feedbacks when tab changes
+  useEffect(() => {
+    if (activeTab === "feedbacks") {
+      fetchFeedbacks();
+    }
+  }, [activeTab]);
 
   const checkAdminAccess = async () => {
     try {
@@ -78,6 +110,21 @@ export default function AdminNotificationsPage() {
       }
     } catch (error) {
       console.error("Error fetching users:", error);
+    }
+  };
+
+  const fetchFeedbacks = async () => {
+    setLoadingFeedbacks(true);
+    try {
+      const response = await fetch("/api/admin/feedbacks");
+      if (response.ok) {
+        const data = await response.json();
+        setFeedbacks(data.feedbacks || []);
+      }
+    } catch (error) {
+      console.error("Error fetching feedbacks:", error);
+    } finally {
+      setLoadingFeedbacks(false);
     }
   };
 
@@ -172,42 +219,169 @@ export default function AdminNotificationsPage() {
               Notification Management
             </h1>
             <p className="text-foreground/60">
-              Send notifications to specific users or all users
+              Send notifications to users or view feedback submissions
             </p>
           </div>
+          {activeTab === "create" && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className={cn(
+                "flex items-center gap-2 px-6 py-3 rounded-xl",
+                "bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold",
+                "hover:from-purple-700 hover:to-purple-800 transition-all duration-200",
+                "hover:scale-105 active:scale-95",
+                "shadow-lg hover:shadow-xl shadow-purple-500/30"
+              )}
+            >
+              <Plus className="w-5 h-5" />
+              Create Notification
+            </button>
+          )}
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2 mb-8 border-b border-border/50">
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => setActiveTab("create")}
             className={cn(
-              "flex items-center gap-2 px-6 py-3 rounded-xl",
-              "bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold",
-              "hover:from-purple-700 hover:to-purple-800 transition-all duration-200",
-              "hover:scale-105 active:scale-95",
-              "shadow-lg hover:shadow-xl shadow-purple-500/30"
+              "px-6 py-3 font-medium transition-all border-b-2",
+              activeTab === "create"
+                ? "border-purple-600 text-purple-600"
+                : "border-transparent text-foreground/60 hover:text-foreground"
             )}
           >
-            <Plus className="w-5 h-5" />
-            Create Notification
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4" />
+              Create Notification
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab("feedbacks")}
+            className={cn(
+              "px-6 py-3 font-medium transition-all border-b-2",
+              activeTab === "feedbacks"
+                ? "border-purple-600 text-purple-600"
+                : "border-transparent text-foreground/60 hover:text-foreground"
+            )}
+          >
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" />
+              View Feedbacks
+              {feedbacks.length > 0 && (
+                <span className="px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-600">
+                  {feedbacks.length}
+                </span>
+              )}
+            </div>
           </button>
         </div>
 
-        {/* Info Card */}
-        <div className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-2xl p-6 mb-8">
-          <div className="flex items-start gap-4">
-            <Info className="w-6 h-6 text-purple-600 flex-shrink-0 mt-1" />
-            <div>
-              <h3 className="font-semibold text-foreground mb-2">
-                How it works
-              </h3>
-              <ul className="text-foreground/70 space-y-1 text-sm">
-                <li>• Regular users have a limit of 12 notifications (oldest deleted when exceeded)</li>
-                <li>• Admin users have no notification limit</li>
-                <li>• You can send notifications to all users or select specific users</li>
-                <li>• Feedback submissions automatically create notifications for all admins</li>
-                <li>• New users receive a welcome notification when they sign up</li>
-              </ul>
+        {/* Create Notification Tab Content */}
+        {activeTab === "create" && (
+          <div className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-2xl p-6 mb-8">
+            <div className="flex items-start gap-4">
+              <Info className="w-6 h-6 text-purple-600 flex-shrink-0 mt-1" />
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">
+                  How it works
+                </h3>
+                <ul className="text-foreground/70 space-y-1 text-sm">
+                  <li>• Regular users have a limit of 12 notifications (oldest deleted when exceeded)</li>
+                  <li>• Admin users have no notification limit</li>
+                  <li>• You can send notifications to all users or select specific users</li>
+                  <li>• Feedback submissions automatically create notifications for all admins</li>
+                  <li>• New users receive a welcome notification when they sign up</li>
+                </ul>
+              </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Feedbacks Tab Content */}
+        {activeTab === "feedbacks" && (
+          <div>
+            {loadingFeedbacks ? (
+              <Loading fullScreen={false} text="Loading feedbacks..." />
+            ) : feedbacks.length === 0 ? (
+              <div className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-2xl p-12 text-center">
+                <MessageSquare className="w-12 h-12 text-foreground/30 mx-auto mb-4" />
+                <p className="text-foreground/60">No feedbacks received yet</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {feedbacks.map((feedback) => {
+                  const isExpanded = expandedFeedback === feedback._id;
+                  // Extract user info from message (format: "Name (email): message")
+                  const messageMatch = feedback.message.match(/^(.+?)\s*\((.+?)\):\s*(.+)$/);
+                  const userName = messageMatch ? messageMatch[1] : "Unknown User";
+                  const userEmail = messageMatch ? messageMatch[2] : "";
+                  const feedbackMessage = messageMatch ? messageMatch[3] : feedback.message;
+
+                  return (
+                    <div
+                      key={feedback._id}
+                      className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-2xl overflow-hidden"
+                    >
+                      <button
+                        onClick={() =>
+                          setExpandedFeedback(isExpanded ? null : feedback._id)
+                        }
+                        className="w-full p-6 text-left hover:bg-foreground/5 transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="font-semibold text-foreground">
+                                {userName}
+                              </h3>
+                              <span className="text-xs text-foreground/40">
+                                {new Date(feedback.createdAt).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                  }
+                                )}
+                              </span>
+                            </div>
+                            <p className="text-sm text-foreground/60 mb-1">
+                              {userEmail}
+                            </p>
+                            {!isExpanded && (
+                              <p className="text-sm text-foreground/70 line-clamp-2">
+                                {feedbackMessage}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {isExpanded ? (
+                              <ChevronUp className="w-5 h-5 text-foreground/50" />
+                            ) : (
+                              <ChevronDown className="w-5 h-5 text-foreground/50" />
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                      {isExpanded && (
+                        <div className="px-6 pb-6 border-t border-border/30 pt-4">
+                          <h4 className="text-sm font-medium text-foreground mb-2">
+                            Feedback Message:
+                          </h4>
+                          <p className="text-sm text-foreground/70 whitespace-pre-wrap">
+                            {feedbackMessage}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Create Modal */}
         {showCreateModal && (

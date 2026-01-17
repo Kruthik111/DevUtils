@@ -14,14 +14,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, email, message } = body;
+    const { message } = body;
 
-    if (!name || !email || !message) {
+    if (!message || message.trim() === "") {
       return NextResponse.json(
-        { message: "Name, email, and message are required" },
+        { message: "Message is required" },
         { status: 400 }
       );
     }
+
+    // Get user info from session
+    const userName = session.user.name || "User";
+    const userEmail = session.user.email || "Unknown";
 
     // Get all admin users
     const adminUsers = await User.find({ role: "admin" });
@@ -32,10 +36,10 @@ export async function POST(request: NextRequest) {
       const notification = await Notification.create({
         userId: admin._id,
         title: "New Feedback Received",
-        message: `${name} (${email}): ${message.substring(0, 100)}${message.length > 100 ? "..." : ""}`,
-        type: "info",
+        message: `${userName} (${userEmail}): ${message}`,
+        type: "feedback",
         read: false,
-        link: null,
+        link: "/admin/notifications?tab=feedbacks",
       });
       notifications.push(notification);
     }

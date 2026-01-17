@@ -11,11 +11,7 @@ import { Loading } from "@/components/ui/loading";
 export default function FeedbackPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    message: "",
-  });
+  const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
 
@@ -37,11 +33,7 @@ export default function FeedbackPage() {
       const response = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name || session?.user?.name || "User",
-          email: formData.email || session?.user?.email || "",
-          message: formData.message,
-        }),
+        body: JSON.stringify({ message }),
       });
 
       if (!response.ok) {
@@ -49,7 +41,7 @@ export default function FeedbackPage() {
       }
 
       setSubmitStatus("success");
-      setFormData({ name: "", email: "", message: "" });
+      setMessage("");
       
       // Reset success message after 3 seconds
       setTimeout(() => setSubmitStatus("idle"), 3000);
@@ -90,65 +82,28 @@ export default function FeedbackPage() {
           className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-2xl shadow-xl p-8 md:p-10"
         >
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-foreground mb-2"
-                >
-                  Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  placeholder={session?.user?.name || "Your name"}
-                  className={cn(
-                    "w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground",
-                    "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent",
-                    "transition-all duration-200"
-                  )}
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-foreground mb-2"
-                >
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  placeholder={session?.user?.email || "your.email@example.com"}
-                  className={cn(
-                    "w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground",
-                    "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent",
-                    "transition-all duration-200"
-                  )}
-                />
-              </div>
+            {/* Display user info */}
+            <div className="bg-foreground/5 border border-border rounded-xl p-4">
+              <p className="text-sm text-foreground/60 mb-2">Submitting as:</p>
+              <p className="font-medium text-foreground">
+                {session?.user?.name || "User"}
+              </p>
+              <p className="text-sm text-foreground/60">
+                {session?.user?.email}
+              </p>
             </div>
+
             <div>
               <label
                 htmlFor="message"
                 className="block text-sm font-medium text-foreground mb-2"
               >
-                Message *
+                Your Feedback *
               </label>
               <textarea
                 id="message"
-                value={formData.message}
-                onChange={(e) =>
-                  setFormData({ ...formData, message: e.target.value })
-                }
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
                 required
                 rows={6}
                 className={cn(
