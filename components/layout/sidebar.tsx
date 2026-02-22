@@ -12,6 +12,7 @@ import {
   Shield,
   Bell,
   MessageSquare,
+  Braces,
   Menu,
   X
 } from "lucide-react";
@@ -36,6 +37,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: "notes", label: "Notes", icon: StickyNote, href: "/notes" },
   { id: "api", label: "API", icon: Code, href: "/api" },
+  { id: "json-tools", label: "JSON Tools", icon: Braces, href: "/json-tools" },
   // { id: "test-tool", label: "Test Tool", icon: FlaskConical, href: "/test-tool" },
   // { id: "extension", label: "Extension", icon: Puzzle, href: "/extension" },
   { id: "feedback", label: "Feedback", icon: MessageSquare, href: "/feedback" },
