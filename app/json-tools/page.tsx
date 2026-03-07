@@ -1,8 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useState, useMemo } from "react";
 import {
   Braces,
   Check,
@@ -77,9 +75,6 @@ function sortObjectKeys(obj: unknown): unknown {
 type ActiveTab = "validator" | "encode";
 
 export default function JsonToolsPage() {
-  const { status } = useSession();
-  const router = useRouter();
-
   const [activeTab, setActiveTab] = useState<ActiveTab>("validator");
 
   // Validator state
@@ -91,12 +86,6 @@ export default function JsonToolsPage() {
   // Encode/Decode state
   const [encodeInput, setEncodeInput] = useState("");
   const [encodeOutput, setEncodeOutput] = useState("");
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/signin");
-    }
-  }, [status, router]);
 
   // --- Validator logic ---
   const validation = useMemo(() => {
@@ -231,14 +220,6 @@ export default function JsonToolsPage() {
     { id: "validator", label: "Validate & Prettify" },
     { id: "encode", label: "URL Encode / Decode" },
   ];
-
-  if (status === "loading") {
-    return <Loading fullScreen />;
-  }
-
-  if (status === "unauthenticated") {
-    return null;
-  }
 
   return (
     <div className="min-h-screen p-4 md:p-8">

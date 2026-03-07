@@ -17,6 +17,7 @@ import {
   X
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/components/providers/sidebar-provider";
 import {
@@ -25,6 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 
 interface NavItem {
   id: string;
@@ -32,24 +34,26 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   href: string;
   adminOnly?: boolean;
+  authRequired?: boolean;
 }
 
 const navItems: NavItem[] = [
-  { id: "notes", label: "Notes", icon: StickyNote, href: "/notes" },
-  { id: "api", label: "API", icon: Code, href: "/api" },
+  { id: "notes", label: "Notes", icon: StickyNote, href: "/notes", authRequired: true },
+  { id: "api", label: "API", icon: Code, href: "/api", authRequired: true },
   { id: "json-tools", label: "JSON Tools", icon: Braces, href: "/json-tools" },
   // { id: "test-tool", label: "Test Tool", icon: FlaskConical, href: "/test-tool" },
   // { id: "extension", label: "Extension", icon: Puzzle, href: "/extension" },
-  { id: "feedback", label: "Feedback", icon: MessageSquare, href: "/feedback" },
-  { id: "admin-users", label: "Users", icon: Shield, href: "/admin/users", adminOnly: true },
-  { id: "admin-notifications", label: "Notifications", icon: Bell, href: "/admin/notifications", adminOnly: true },
-  { id: "profile", label: "Profile", icon: User, href: "/profile" },
+  { id: "feedback", label: "Feedback", icon: MessageSquare, href: "/feedback", authRequired: true },
+  { id: "admin-users", label: "Users", icon: Shield, href: "/admin/users", adminOnly: true, authRequired: true },
+  { id: "admin-notifications", label: "Notifications", icon: Bell, href: "/admin/notifications", adminOnly: true, authRequired: true },
+  { id: "profile", label: "Profile", icon: User, href: "/profile", authRequired: true },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isMobileSidebarOpen, setIsMobileSidebarOpen, isCollapsed, setIsCollapsed } = useSidebar();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -127,9 +131,16 @@ export function Sidebar() {
                   <TooltipTrigger asChild>
                     <Link
                       href={item.href}
+                      onClick={(e) => {
+                        if (item.authRequired && status === "unauthenticated") {
+                          e.preventDefault();
+                          toast.error("Please sign in or sign up to access this feature.");
+                          router.push("/signin");
+                        }
+                      }}
                       className={cn(
                         "relative flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg transition-all duration-500 ease-in-out",
-                        "hover:bg-foreground/10",
+                        item.authRequired && status === "unauthenticated" ? "hover:cursor-not-allowed" : "hover:bg-foreground/10",
                         isActive && "bg-foreground/10 text-foreground",
                         !isActive && "text-foreground/70 hover:text-foreground"
                       )}
@@ -149,7 +160,7 @@ export function Sidebar() {
               );
             })}
           </div>
-        <div className="p-4 border-t border-border/50 bg-background/95 backdrop-blur-sm shrink-0 mt-auto">
+          <div className="p-4 border-t border-border/50 bg-background/95 backdrop-blur-sm shrink-0 mt-auto">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-linear-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-semibold">
                 {session?.user?.name?.charAt(0) || 'U'}
@@ -210,10 +221,19 @@ export function Sidebar() {
                     <Link
                       key={item.id}
                       href={item.href}
-                      onClick={() => setIsMobileSidebarOpen(false)}
+                      onClick={(e) => {
+                        if (item.authRequired && status === "unauthenticated") {
+                          e.preventDefault();
+                          setIsMobileSidebarOpen(false);
+                          toast.error("Please sign in or sign up to access this feature.");
+                          router.push("/signin");
+                        } else {
+                          setIsMobileSidebarOpen(false);
+                        }
+                      }}
                       className={cn(
                         "relative flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg transition-all duration-200",
-                        "hover:bg-foreground/10",
+                        item.authRequired && status === "unauthenticated" ? "hover:cursor-not-allowed" : "hover:bg-foreground/10",
                         isActive && "bg-foreground/10 text-foreground",
                         !isActive && "text-foreground/70 hover:text-foreground"
                       )}
