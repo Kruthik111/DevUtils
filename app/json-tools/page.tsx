@@ -230,14 +230,11 @@ export default function JsonToolsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-linear-to-br from-amber-500 to-orange-600 mb-6">
-            <Braces className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+          <h1 className="text-3xl font-bold mb-2 text-foreground">
             JSON{" "}
             <span className="text-gray-600 dark:text-gray-400">Tools</span>
           </h1>
-          <p className="text-xl text-foreground/60 max-w-2xl mx-auto">
+          <p className="text-foreground/60 max-w-2xl mx-auto text-sm md:text-base">
             Validate, prettify, stringify, parse, and search your JSON data
           </p>
         </motion.div>

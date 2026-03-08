@@ -13,6 +13,7 @@ import {
   Bell,
   MessageSquare,
   Braces,
+  Sparkles,
   Menu,
   X
 } from "lucide-react";
@@ -41,6 +42,7 @@ const navItems: NavItem[] = [
   { id: "notes", label: "Notes", icon: StickyNote, href: "/notes", authRequired: true },
   { id: "api", label: "API", icon: Code, href: "/api", authRequired: true },
   { id: "json-tools", label: "JSON Tools", icon: Braces, href: "/json-tools" },
+  { id: "better-prompts", label: "Better Prompts", icon: Sparkles, href: "/better-prompts" },
   // { id: "test-tool", label: "Test Tool", icon: FlaskConical, href: "/test-tool" },
   // { id: "extension", label: "Extension", icon: Puzzle, href: "/extension" },
   { id: "feedback", label: "Feedback", icon: MessageSquare, href: "/feedback", authRequired: true },
