@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { X, Plus, Trash2 } from 'lucide-react';
+import { X, Plus, Trash2, Pin, PinOff } from 'lucide-react';
 import { Note, TextBlock, NoteType, CopyMode } from '@/lib/notes/types';
+import { themes, themeConfig, type Theme } from "@/lib/theme-config";
+import { cn } from "@/lib/utils";
 
 interface NoteEditModalProps {
     isOpen: boolean;
@@ -145,41 +147,66 @@ export function NoteEditModal({
 
                     {/* Pin Position */}
                     <div>
-                        <label className="block text-sm font-medium mb-2">Pin Position</label>
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="number"
-                                value={pin ?? ''}
-                                onChange={(e) => handlePinChange(e.target.value)}
-                                min="1"
-                                max="4"
-                                className="w-24 px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                placeholder="1-4"
-                            />
+                        <label className="flex items-center gap-2 text-sm font-medium mb-3">
+                            <Pin className="w-4 h-4 text-primary" />
+                            Pin Position
+                        </label>
+                        <div className="flex flex-wrap items-center gap-3">
+                            {[1, 2, 3, 4].map((p) => {
+                                const isUsed = tabNotes.some(n => n.id !== note?.id && n.pin === p);
+                                const isActive = pin === p;
+                                
+                                return (
+                                    <button
+                                        key={p}
+                                        onClick={() => {
+                                            if (!isUsed) {
+                                                setPin(isActive ? null : p);
+                                                setPinError('');
+                                            }
+                                        }}
+                                        disabled={isUsed}
+                                        title={isUsed ? `Pin ${p} is already taken` : `Pin to position ${p}`}
+                                        className={cn(
+                                            "relative flex flex-col items-center justify-center w-14 h-14 rounded-2xl border transition-all duration-200",
+                                            isActive 
+                                                ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30 scale-105" 
+                                                : isUsed
+                                                    ? "bg-foreground/5 text-foreground/20 border-border/30 cursor-not-allowed opacity-50"
+                                                    : "bg-background text-foreground/70 border-border/50 hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
+                                        )}
+                                    >
+                                        <Pin className={cn("w-5 h-5 mb-1", isActive ? "fill-current" : "")} />
+                                        <span className="text-[10px] font-black uppercase tracking-widest">{p}</span>
+                                        {isUsed && (
+                                            <div className="absolute inset-0 flex items-center justify-center rotate-45 pointer-events-none">
+                                                <div className="w-full h-px bg-red-500/30" />
+                                            </div>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                            
                             {pin != null && pin > 0 && (
                                 <button
                                     onClick={() => {
                                         setPin(null);
                                         setPinError('');
                                     }}
-                                    className="px-3 py-2 text-sm rounded-lg border border-border/50 hover:bg-foreground/5 transition-colors text-foreground/70 hover:text-foreground"
+                                    className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl border border-dashed border-border/50 hover:border-red-500/50 hover:bg-red-500/5 hover:text-red-500 transition-all duration-200 group"
+                                    title="Remove Pin"
                                 >
-                                    Remove Pin
+                                    <PinOff className="w-5 h-5 mb-1 opacity-50 group-hover:opacity-100" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest opacity-50 group-hover:opacity-100">Clear</span>
                                 </button>
                             )}
                         </div>
                         {pinError && (
-                            <p className="mt-1 text-sm text-red-500">{pinError}</p>
+                            <p className="mt-2 text-xs text-red-500 font-medium px-1 animate-in fade-in slide-in-from-top-1">{pinError}</p>
                         )}
-                        {tabNotes.length > 0 && (
-                            <p className="mt-1 text-xs text-foreground/50">
-                                Maximum 4 pins per tab. Used pins: {tabNotes
-                                    .filter(n => n.pin != null && n.pin > 0 && n.id !== note?.id)
-                                    .map(n => n.pin)
-                                    .sort((a, b) => (a ?? 0) - (b ?? 0))
-                                    .join(', ') || 'None'}
-                            </p>
-                        )}
+                        <p className="mt-3 text-[10px] text-foreground/40 font-medium uppercase tracking-widest">
+                            {pin != null ? `Selected: Position ${pin}` : "Select a position to pin this note to the top of your list"}
+                        </p>
                     </div>
 
                     {/* Blocks List */}
