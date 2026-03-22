@@ -4,10 +4,9 @@ To complete the PWA setup, you need to create icon files for the app.
 
 ## Required Icons
 
-The app requires the following icon files in the `public/` directory:
+The app primarily uses a single branding asset in the `public/` directory:
 
-- `icon-192.png` - 192x192 pixels
-- `icon-512.png` - 512x512 pixels
+- `logo.png` - Primary brand asset used for logos, icons, and Apple touch icons.
 
 ## Creating Icons
 
@@ -43,7 +42,7 @@ For development, you can use placeholder icons:
 
 ## Apple Touch Icon
 
-The app also references `/icon-192.png` as the Apple touch icon in the layout.
+The app also references `/logo.png` as the Apple touch icon in the layout.
 
 ## Updating Icons
 

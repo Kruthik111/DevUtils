@@ -96,7 +96,7 @@ DevUtils/
 ├── public/
 │   ├── manifest.json      # PWA manifest
 │   ├── sw.js              # Service worker
-│   └── icons/             # App icons and images
+│   └── logo.png           # Primary brand logo and icon
 └── docs/                  # Documentation
 ```
 
