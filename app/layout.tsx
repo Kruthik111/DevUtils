@@ -7,6 +7,7 @@ import { LayoutWrapper } from "@/components/layout/layout-wrapper";
 import { ThemeSync } from "@/components/providers/theme-sync";
 import { Toaster } from "sonner";
 import Script from "next/script";
+import { NotesProvider } from "@/components/providers/notes-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -65,7 +66,9 @@ export default function RootLayout({
         <ThemeProvider defaultTheme="light">
           <AuthProvider>
             <ThemeSync />
-            <LayoutWrapper>{children}</LayoutWrapper>
+            <NotesProvider>
+              <LayoutWrapper>{children}</LayoutWrapper>
+            </NotesProvider>
           </AuthProvider>
         </ThemeProvider>
         <Toaster position="top-right" richColors closeButton />

@@ -16,6 +16,7 @@ import { ContextMenu } from '@/components/notes/context-menu';
 import { Loading } from '@/components/ui/loading';
 import { NotesPageSkeleton } from '@/components/notes/notes-page-skeleton';
 import { useRefresh } from '@/components/providers/refresh-provider';
+import { useNotes } from '@/components/providers/notes-provider';
 import { RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, Search, Grid3x3, List, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
@@ -27,7 +28,7 @@ export default function NotesPage() {
   const { registerRefresh, unregisterRefresh } = useRefresh();
 
   // All hooks must be called before any conditional returns
-  const [data, setData] = useState<NotesData | null>(null);
+  const { notesData: data, setNotesData: setData } = useNotes();
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [editingBlock, setEditingBlock] = useState<{ note: Note; block: TextBlock } | null>(null);
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null);
@@ -48,7 +49,10 @@ export default function NotesPage() {
   } | null>(null);
 
   // Load data function
-  const loadData = async () => {
+  const loadData = async (forceFetch = false) => {
+    // If not a force fetch and we already have data, skip
+    if (!forceFetch && data) return;
+    
     // First, check if user has any data in DB
     let hasExistingData = false;
     try {
@@ -80,9 +84,9 @@ export default function NotesPage() {
   // Load data when authenticated
   useEffect(() => {
     if (status === 'authenticated') {
-      loadData();
+      loadData(false);
     }
-  }, [status]);
+  }, [status, data]); // Added data to deps to allow loadData to check it properly
 
   // Register refresh function
   useEffect(() => {
@@ -1144,7 +1148,7 @@ export default function NotesPage() {
             onClick={async () => {
               setIsRefreshing(true);
               try {
-                await loadData();
+                await loadData(true);
               } finally {
                 setIsRefreshing(false);
               }
