@@ -35,7 +35,7 @@ export function ThemeSelector({ collapsed }: ThemeSelectorProps) {
           {!collapsed && <span className="text-sm font-medium">Appearance</span>}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align={collapsed ? "right" : "start"} className="w-56 p-2 bg-background border-border shadow-2xl rounded-2xl">
+      <DropdownMenuContent align={collapsed ? "end" : "start"} className="w-56 p-2 bg-background border-border shadow-2xl rounded-2xl">
         <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-foreground/40 px-2 py-1.5">
           Select Theme
         </DropdownMenuLabel>

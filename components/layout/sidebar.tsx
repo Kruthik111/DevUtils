@@ -117,7 +117,7 @@ export function Sidebar() {
             "relative flex items-center gap-3 transition-all duration-300 ease-in-out px-4 py-3 rounded-2xl mx-2",
             isActive 
               ? "bg-primary/10 text-primary font-bold" 
-              : "text-foreground/50 hover:text-foreground hover:bg-foreground/5"
+              : "text-foreground hover:bg-foreground/5"
           )}
         >
           <Icon className={cn("w-5 h-5 shrink-0 transition-transform duration-300", isActive && "scale-110")} />
@@ -184,7 +184,7 @@ export function Sidebar() {
               <div key={idx} className="space-y-1">
                 {group.label && !isCollapsed && (
                   <div className="px-7 pb-2">
-                    <span className="text-[10px] font-black text-foreground/20 uppercase tracking-[0.2em]">
+                    <span className="text-[10px] font-black text-foreground/40 uppercase tracking-[0.2em]">
                       {group.label}
                     </span>
                   </div>
@@ -246,7 +246,7 @@ export function Sidebar() {
               <div key={idx} className="space-y-2">
                 {group.label && (
                   <div className="px-6 pb-2">
-                    <span className="text-[10px] font-black text-foreground/20 uppercase tracking-[0.2em]">
+                    <span className="text-[10px] font-black text-foreground/40 uppercase tracking-[0.2em]">
                       {group.label}
                     </span>
                   </div>
