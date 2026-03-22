@@ -54,7 +54,7 @@ function SignInContent() {
   return (
     <div className="min-h-screen bg-white flex">
       {/* Left Section - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-purple-50 to-purple-100">
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-linear-to-br from-purple-50 to-purple-100">
         {/* Animated background gradient orbs */}
         <div className="absolute inset-0 overflow-hidden">
           <motion.div
@@ -127,6 +127,8 @@ function SignInContent() {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-4 md:p-8 bg-white relative overflow-hidden">
         {/* Gradient background in corners - right section only */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 bg-size-[40px_40px] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)]" />
+          <div className="absolute inset-0 mask-[radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] bg-primary/5" />
           {/* Top-right corner gradient */}
           <motion.div
             className="absolute top-0 right-0 w-96 h-96 bg-purple-400 rounded-full blur-3xl opacity-20"
@@ -191,7 +193,7 @@ function SignInContent() {
               disabled={isLoading}
               className={cn(
                 "w-full flex items-center justify-center gap-3 px-6 py-4 rounded-xl",
-                "bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold",
+                "bg-linear-to-r from-purple-600 to-purple-700 text-white font-semibold",
                 "hover:from-purple-700 hover:to-purple-800 transition-all duration-200",
                 "hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed",
                 "shadow-lg hover:shadow-xl shadow-purple-500/30"

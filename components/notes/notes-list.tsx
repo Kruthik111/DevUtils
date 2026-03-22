@@ -2,6 +2,7 @@
 
 import { Note, TextBlock, NoteType, CopyMode } from '@/lib/notes/types';
 import { NoteItem } from './note-item';
+import { NoteSkeleton } from './note-skeleton';
 
 interface NotesListProps {
     notes: Note[];
@@ -12,6 +13,7 @@ interface NotesListProps {
     onAddBlock: (noteId: string, type: NoteType, content: string, copyMode: CopyMode) => void;
     onToggleTodo: (noteId: string, blockId: string) => void;
     onBlockContextMenu: (e: React.MouseEvent, note: Note, block: TextBlock) => void;
+    isLoading?: boolean;
 }
 
 export function NotesList({
@@ -23,7 +25,21 @@ export function NotesList({
     onAddBlock,
     onToggleTodo,
     onBlockContextMenu,
+    isLoading,
 }: NotesListProps) {
+    if (isLoading) {
+        return (
+            <div className={viewMode === 'grid' 
+                ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4"
+                : "flex flex-col gap-2"
+            }>
+                {[...Array(6)].map((_, i) => (
+                    <NoteSkeleton key={i} viewMode={viewMode} />
+                ))}
+            </div>
+        );
+    }
+
     if (notes.length === 0) {
         return (
             <div className="text-center py-12 text-foreground/50">

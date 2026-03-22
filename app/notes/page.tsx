@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { NotesData, Note, TextBlock, NoteType, CopyMode, Tab, Group } from '@/lib/notes/types';
-import { fetchNotesData, persistNotesData } from '@/lib/notes/storage';
+import { fetchNotesData, persistNotesData, createDefaultData } from '@/lib/notes/storage';
 import { GroupSelector } from '@/components/notes/group-selector';
 import { TabBar } from '@/components/notes/tab-bar';
 import { AddNoteModal } from '@/components/notes/add-note-modal';
@@ -14,6 +14,7 @@ import { BlockEditModal } from '@/components/notes/block-edit-modal';
 import { ConfirmDialog } from '@/components/notes/confirm-dialog';
 import { ContextMenu } from '@/components/notes/context-menu';
 import { Loading } from '@/components/ui/loading';
+import { NotesPageSkeleton } from '@/components/notes/notes-page-skeleton';
 import { useRefresh } from '@/components/providers/refresh-provider';
 import { RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, Search, Grid3x3, List, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -100,9 +101,13 @@ export default function NotesPage() {
   //   }
   // }, [data, hasAccess]);
 
+  // Use default data shell for consistent UI while loading
+  const displayData = useMemo(() => data || createDefaultData(), [data]);
+  const isLoading = !data;
+
   // Calculate active group and tab (before conditional returns)
-  const activeGroup = data?.groups.find((g) => g.id === data?.activeGroupId);
-  const activeTab = activeGroup?.tabs.find((t) => t.id === data?.activeTabId);
+  const activeGroup = displayData.groups.find((g) => g.id === displayData.activeGroupId);
+  const activeTab = activeGroup?.tabs.find((t) => t.id === displayData.activeTabId);
 
   // Check if note limit reached (9 notes per tab)
   const isNoteLimitReached = useMemo(() => {
@@ -189,23 +194,25 @@ export default function NotesPage() {
     return null;
   }
 
-  if (!data) {
-    return <Loading fullScreen />;
-  }
+  // Removed early return for !data to allow shell to render with skeleton items
 
   // Group Management
   const handleGroupChange = (groupId: string) => {
+    if (!data) return;
     const group = data.groups.find((g) => g.id === groupId);
     if (group) {
-      setData({
-        ...data,
+      const d = data;
+      const updatedData: NotesData = {
+        ...d,
         activeGroupId: groupId,
         activeTabId: group.tabs[0].id,
-      });
+      };
+      setData(updatedData);
     }
   };
 
   const handleAddGroup = async (name: string) => {
+    if (!data) return;
     // Limit to maximum 2 groups
     if (data.groups.length >= 2) {
       alert('You can have at most 2 groups. Please delete a group before creating a new one.');
@@ -224,9 +231,10 @@ export default function NotesPage() {
       ],
     };
 
-    const updatedData = {
-      ...data,
-      groups: [...data.groups, newGroup],
+    const d = data;
+    const updatedData: NotesData = {
+      ...d,
+      groups: [...d.groups, newGroup],
       activeGroupId: newGroup.id,
       activeTabId: newGroup.tabs[0].id,
     };
@@ -238,6 +246,7 @@ export default function NotesPage() {
   };
 
   const handleDeleteGroup = async (groupId: string) => {
+    if (!data) return;
     // Prevent deletion of work group
     if (groupId.startsWith('work-')) {
       toast.error('The "Work" group cannot be deleted.');
@@ -261,12 +270,14 @@ export default function NotesPage() {
       const filteredGroups = data.groups.filter((g) => g.id !== groupId);
       if (filteredGroups.length === 0) return;
 
-      setData({
-        ...data,
+      const d = data;
+      const updatedData: NotesData = {
+        ...d,
         groups: filteredGroups,
         activeGroupId: filteredGroups[0].id,
         activeTabId: filteredGroups[0].tabs[0].id,
-      });
+      };
+      setData(updatedData);
 
       setDeletingGroupId(null);
     } catch (error) {
@@ -276,12 +287,14 @@ export default function NotesPage() {
   };
 
   const handleUpdateGroupName = async (groupId: string, newName: string) => {
+    if (!data) return;
     const updatedGroups = data.groups.map((g) =>
       g.id === groupId ? { ...g, name: newName } : g
     );
 
-    const updatedData = {
-      ...data,
+    const d = data;
+    const updatedData: NotesData = {
+      ...d,
       groups: updatedGroups,
     };
 
@@ -293,14 +306,17 @@ export default function NotesPage() {
 
   // Tab Management
   const handleTabChange = (tabId: string) => {
-    setData({
-      ...data,
+    if (!data) return;
+    const d = data;
+    const updatedData: NotesData = {
+      ...d,
       activeTabId: tabId,
-    });
+    };
+    setData(updatedData);
   };
 
   const handleAddTab = async () => {
-    if (!activeGroup || activeGroup.tabs.length >= 3) return;
+    if (!data || !activeGroup || activeGroup.tabs.length >= 3) return;
 
     const newTab: Tab = {
       id: `tab-${Date.now()}`,
@@ -314,8 +330,9 @@ export default function NotesPage() {
         : g
     );
 
-    const updatedData = {
-      ...data,
+    const d = data;
+    const updatedData: NotesData = {
+      ...d,
       groups: updatedGroups,
       activeTabId: newTab.id,
     };
@@ -327,7 +344,7 @@ export default function NotesPage() {
   };
 
   const handleDeleteTab = async (tabId: string) => {
-    if (!activeGroup || activeGroup.tabs.length <= 1) return;
+    if (!data || !activeGroup || activeGroup.tabs.length <= 1) return;
 
     // Check if tab has notes
     const tabToDelete = activeGroup.tabs.find((t) => t.id === tabId);
@@ -341,8 +358,9 @@ export default function NotesPage() {
       g.id === data.activeGroupId ? { ...g, tabs: updatedTabs } : g
     );
 
-    const updatedData = {
-      ...data,
+    const d = data;
+    const updatedData: NotesData = {
+      ...d,
       groups: updatedGroups,
       activeTabId: updatedTabs[0].id,
     };
@@ -354,7 +372,7 @@ export default function NotesPage() {
   };
 
   const handleUpdateTabName = async (tabId: string, newName: string) => {
-    if (!activeGroup) return;
+    if (!data || !activeGroup) return;
 
     const updatedTabs = activeGroup.tabs.map((t) =>
       t.id === tabId ? { ...t, name: newName } : t
@@ -363,8 +381,9 @@ export default function NotesPage() {
       g.id === data.activeGroupId ? { ...g, tabs: updatedTabs } : g
     );
 
-    const updatedData = {
-      ...data,
+    const d = data;
+    const updatedData: NotesData = {
+      ...d,
       groups: updatedGroups,
     };
 
@@ -376,7 +395,7 @@ export default function NotesPage() {
 
   // Note Management
   const handleAddNote = async (title: string, blocks: TextBlock[]) => {
-    if (!activeGroup || !activeTab) return;
+    if (!data || !activeGroup || !activeTab) return;
 
     // Check note limit
     if (activeTab.notes.length >= 9) {
@@ -431,10 +450,12 @@ export default function NotesPage() {
           : g
       );
 
-      setData({
-        ...data,
+      const d = data;
+      const updatedData: NotesData = {
+        ...d,
         groups: updatedGroups,
-      });
+      };
+      setData(updatedData);
     } catch (error) {
       console.error('Error creating note:', error);
       toast.error('Failed to create note. Please try again.');
@@ -442,7 +463,7 @@ export default function NotesPage() {
   };
 
   const handleQuickAdd = async () => {
-    if (!activeGroup || !activeTab) return;
+    if (!data || !activeGroup || !activeTab) return;
 
     // Check note limit
     if (activeTab.notes.length >= 9) {
@@ -517,10 +538,12 @@ export default function NotesPage() {
           : g
       );
 
-      setData({
-        ...data,
+      const d = data;
+      const updatedData: NotesData = {
+        ...d,
         groups: updatedGroups,
-      });
+      };
+      setData(updatedData);
 
       console.log('✓ Note created from clipboard');
     } catch (error) {
@@ -529,6 +552,7 @@ export default function NotesPage() {
   };
 
   const handleAddBlock = async (noteId: string, type: NoteType, content: string, copyMode: CopyMode) => {
+    if (!data || !activeTab) return;
     const newBlock: TextBlock = {
       id: `block-${Date.now()}`,
       type,
@@ -538,7 +562,7 @@ export default function NotesPage() {
     };
 
     // Find the note to update
-    const noteToUpdate = activeTab?.notes.find(n => n.id === noteId);
+    const noteToUpdate = activeTab.notes.find(n => n.id === noteId);
     if (!noteToUpdate) return;
 
     const updatedNote: Note = {
@@ -591,10 +615,12 @@ export default function NotesPage() {
           : g
       );
 
-      setData({
-        ...data,
+      const d = data;
+      const updatedData: NotesData = {
+        ...d,
         groups: updatedGroups,
-      });
+      };
+      setData(updatedData);
     } catch (error) {
       console.error('Error adding block:', error);
       toast.error('Failed to add block. Please try again.');
@@ -603,7 +629,8 @@ export default function NotesPage() {
 
 
   const handleUpdateNoteTitle = async (noteId: string, newTitle: string) => {
-    const noteToUpdate = activeTab?.notes.find(n => n.id === noteId);
+    if (!data || !activeTab) return;
+    const noteToUpdate = activeTab.notes.find(n => n.id === noteId);
     if (!noteToUpdate) return;
 
     const updatedNote: Note = {
@@ -656,10 +683,12 @@ export default function NotesPage() {
           : g
       );
 
-      setData({
-        ...data,
+      const d = data;
+      const updatedData: NotesData = {
+        ...d,
         groups: updatedGroups,
-      });
+      };
+      setData(updatedData);
     } catch (error) {
       console.error('Error updating note title:', error);
       toast.error('Failed to update note title. Please try again.');
@@ -667,6 +696,7 @@ export default function NotesPage() {
   };
 
   const handleEditNote = async (updatedNote: Note) => {
+    if (!data || !activeTab) return;
     // Validate pin value (must be between 1-4)
     if (updatedNote.pin != null && updatedNote.pin > 0) {
       if (updatedNote.pin > 4) {
@@ -675,7 +705,7 @@ export default function NotesPage() {
       }
       
       // Validate pin uniqueness per tab
-      const existingNoteWithPin = activeTab?.notes.find(
+      const existingNoteWithPin = activeTab.notes.find(
         (n) => n.id !== updatedNote.id && n.pin === updatedNote.pin
       );
       if (existingNoteWithPin) {
@@ -684,7 +714,7 @@ export default function NotesPage() {
       }
       
       // Check total number of pinned notes (max 4)
-      const currentPinnedCount = activeTab?.notes.filter(
+      const currentPinnedCount = activeTab.notes.filter(
         (n) => n.id !== updatedNote.id && n.pin != null && n.pin > 0
       ).length || 0;
       
@@ -738,10 +768,12 @@ export default function NotesPage() {
           : g
       );
 
-      setData({
-        ...data,
+      const d = data;
+      const updatedData: NotesData = {
+        ...d,
         groups: updatedGroups,
-      });
+      };
+      setData(updatedData);
 
       setEditingNote(null);
     } catch (error) {
@@ -751,6 +783,7 @@ export default function NotesPage() {
   };
 
   const handleDeleteNote = async (noteId: string) => {
+    if (!data) return;
     try {
       // Call DELETE API to soft delete the note
       const response = await fetch(`/api/notes?id=${noteId}`, {
@@ -778,10 +811,12 @@ export default function NotesPage() {
           : g
       );
 
-      setData({
-        ...data,
+      const d = data;
+      const updatedData: NotesData = {
+        ...d,
         groups: updatedGroups,
-      });
+      };
+      setData(updatedData);
 
       setDeletingNoteId(null);
     } catch (error) {
@@ -791,8 +826,9 @@ export default function NotesPage() {
   };
 
   const handleToggleTodo = async (noteId: string, blockId: string) => {
+    if (!data || !activeTab) return;
     // Find the note to update
-    const noteToUpdate = activeTab?.notes.find(n => n.id === noteId);
+    const noteToUpdate = activeTab.notes.find(n => n.id === noteId);
     if (!noteToUpdate) return;
 
     const updatedNote: Note = {
@@ -848,10 +884,12 @@ export default function NotesPage() {
           : g
       );
 
-      setData({
-        ...data,
+      const d = data;
+      const updatedData: NotesData = {
+        ...d,
         groups: updatedGroups,
-      });
+      };
+      setData(updatedData);
     } catch (error) {
       console.error('Error toggling todo:', error);
     }
@@ -923,10 +961,12 @@ export default function NotesPage() {
           : g
       );
 
-      setData({
-        ...data,
+      const d = data;
+      const updatedData: NotesData = {
+        ...d,
         groups: updatedGroups,
-      });
+      };
+      setData(updatedData);
 
       setEditingBlock(null);
     } catch (error) {
@@ -936,7 +976,7 @@ export default function NotesPage() {
   };
 
   const handleDeleteBlock = () => {
-    if (!deletingBlock) return;
+    if (!deletingBlock || !data) return;
 
     const updatedGroups = data.groups.map((g) =>
       g.id === data.activeGroupId
@@ -962,10 +1002,12 @@ export default function NotesPage() {
         : g
     );
 
-    setData({
-      ...data,
+    const d = data;
+    const updatedData: NotesData = {
+      ...d,
       groups: updatedGroups,
-    });
+    };
+    setData(updatedData);
 
     setDeletingBlock(null);
   };
@@ -978,7 +1020,7 @@ export default function NotesPage() {
         {activeGroup && (
           <TabBar
             tabs={activeGroup.tabs}
-            activeTabId={data.activeTabId}
+            activeTabId={displayData.activeTabId}
             onTabChange={handleTabChange}
             onAddTab={handleAddTab}
             onDeleteTab={handleDeleteTab}
@@ -1141,8 +1183,8 @@ export default function NotesPage() {
             <span className="text-xs text-primary-foreground/80 ml-1 hidden md:inline">^K</span>
           </button>
           <GroupSelector
-            groups={data.groups}
-            activeGroupId={data.activeGroupId}
+            groups={displayData.groups}
+            activeGroupId={displayData.activeGroupId}
             onGroupChange={handleGroupChange}
             onAddGroup={handleAddGroup}
             onDeleteGroup={(groupId) => setDeletingGroupId(groupId)}
@@ -1155,6 +1197,7 @@ export default function NotesPage() {
           <NotesList
             notes={sortedNotes}
             viewMode={viewMode}
+            isLoading={isLoading}
             onEditNote={setEditingNote}
             onDeleteNote={setDeletingNoteId}
             onUpdateTitle={handleUpdateNoteTitle}

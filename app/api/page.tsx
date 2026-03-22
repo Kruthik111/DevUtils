@@ -777,7 +777,7 @@ export default function ApiPage() {
                                             <option>HEAD</option>
                                         </select>
                                     </div>
-                                    <div className="flex-[3]">
+                                    <div className="flex-3">
                                         <label className="block text-sm font-medium mb-2">URL</label>
                                         <div className="relative">
                                             {/* Overlay for highlighting - positioned behind input */}

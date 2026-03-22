@@ -112,15 +112,12 @@ export function NoteEditModal({
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
             {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/50 backdrop-blur-md"
-                onClick={onCancel}
-            />
-
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-100" onClick={onCancel} />
+            
             {/* Modal */}
-            <div className="relative bg-background border border-border/50 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[80vh] overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col">
+            <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl max-h-[80vh] p-4 z-100 bg-background border border-border/50 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-border/30">
                     <h2 className="text-xl font-bold">Edit Note</h2>

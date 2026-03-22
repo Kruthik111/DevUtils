@@ -4,6 +4,7 @@ import { useTheme } from "@/components/providers/theme-provider";
 import { themes, themeConfig, type Theme } from "@/lib/theme-config";
 import { cn } from "@/lib/utils";
 import { Palette, Check } from "lucide-react";
+import { useState, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +20,28 @@ interface ThemeSelectorProps {
 
 export function ThemeSelector({ collapsed }: ThemeSelectorProps) {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Avoid hydration mismatch by only rendering the interactive elements after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <button
+        className={cn(
+          "flex items-center gap-3 w-full px-4 py-3 rounded-2xl transition-all duration-300",
+          "text-foreground/50 opacity-50 cursor-default",
+          collapsed && "justify-center px-0"
+        )}
+        disabled
+      >
+        <Palette className="w-5 h-5 shrink-0" />
+        {!collapsed && <span className="text-sm font-medium">Appearance</span>}
+      </button>
+    );
+  }
 
   return (
     <DropdownMenu>
