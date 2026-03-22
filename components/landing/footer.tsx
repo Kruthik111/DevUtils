@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Github, Twitter, Linkedin, Mail } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const footerLinks = {
@@ -42,12 +43,13 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <button
+            <Button
+              variant="link"
               onClick={scrollToTop}
-              className="text-2xl font-bold text-foreground mb-4"
+              className="text-2xl font-bold text-foreground mb-4 p-0 h-auto"
             >
               DevUtils
-            </button>
+            </Button>
             <p className="text-foreground/60 mb-6 max-w-md">
               The all-in-one developer toolkit for notes, API testing, and team
               collaboration. Build faster, work smarter.

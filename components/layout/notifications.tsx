@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Bell, X, CheckCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
@@ -111,15 +112,17 @@ export function Notifications() {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-foreground/10 transition-colors relative"
+        className="relative h-8 w-8"
       >
         <Bell className="w-4 h-4 text-foreground/70" />
         {unreadCount > 0 && (
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-purple-600 rounded-full" />
         )}
-      </button>
+      </Button>
 
       {isOpen && (
         <>
@@ -143,20 +146,24 @@ export function Notifications() {
               </h3>
               <div className="flex items-center gap-2">
                 {unreadCount > 0 && (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={markAllAsRead}
-                    className="p-1.5 rounded-lg hover:bg-foreground/10 transition-colors"
+                    className="h-8 w-8"
                     title="Mark all as read"
                   >
                     <CheckCheck className="w-4 h-4 text-foreground/70" />
-                  </button>
+                  </Button>
                 )}
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setIsOpen(false)}
-                  className="p-1.5 rounded-lg hover:bg-foreground/10 transition-colors"
+                  className="h-8 w-8"
                 >
                   <X className="w-4 h-4 text-foreground/70" />
-                </button>
+                </Button>
               </div>
             </div>
 

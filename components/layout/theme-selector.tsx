@@ -4,6 +4,7 @@ import { useTheme } from "@/components/providers/theme-provider";
 import { themes, themeConfig, type Theme } from "@/lib/theme-config";
 import { cn } from "@/lib/utils";
 import { Palette, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import {
   DropdownMenu,
@@ -29,34 +30,34 @@ export function ThemeSelector({ collapsed }: ThemeSelectorProps) {
 
   if (!mounted) {
     return (
-      <button
+      <Button
+        disabled
+        variant="ghost"
         className={cn(
-          "flex items-center gap-3 w-full px-4 py-3 rounded-2xl transition-all duration-300",
-          "text-foreground/50 opacity-50 cursor-default",
+          "w-full justify-start px-4 py-3 h-auto opacity-50 cursor-default",
           collapsed && "justify-center px-0"
         )}
-        disabled
       >
         <Palette className="w-5 h-5 shrink-0" />
         {!collapsed && <span className="text-sm font-medium">Appearance</span>}
-      </button>
+      </Button>
     );
   }
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
+        <Button
+          variant="ghost"
           className={cn(
-            "flex items-center gap-3 w-full px-4 py-3 rounded-2xl transition-all duration-300",
-            "text-foreground/50 hover:text-foreground hover:bg-foreground/5",
+            "flex items-center gap-3 w-full px-4 py-3 h-auto text-foreground/50 hover:text-foreground",
             collapsed && "justify-center px-0"
           )}
           title="Change Theme"
         >
           <Palette className="w-5 h-5 shrink-0" />
           {!collapsed && <span className="text-sm font-medium">Appearance</span>}
-        </button>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align={collapsed ? "end" : "start"} className="w-56 p-2 bg-background border-border shadow-2xl rounded-2xl">
         <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-foreground/40 px-2 py-1.5">

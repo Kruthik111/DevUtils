@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -60,31 +61,28 @@ export function LandingNavbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
-              <button
+              <Button
                 key={link.name}
+                variant="ghost"
                 onClick={() => scrollToSection(link.href)}
-                className="text-gray-600 hover:text-black transition-colors font-medium"
+                className="text-gray-600 hover:text-black font-medium"
               >
                 {link.name}
-              </button>
+              </Button>
             ))}
-            <Link
-              href="/signin"
-              className={cn(
-                "px-6 py-2 rounded-lg",
-                "bg-linear-to-r from-purple-600 to-purple-700 text-white",
-                "hover:from-purple-700 hover:to-purple-800 transition-all duration-200",
-                "font-medium shadow-md shadow-purple-500/30"
-              )}
-            >
-              Sign In
-            </Link>
+            <Button asChild>
+              <Link href="/signin">
+                Sign In
+              </Link>
+            </Button>
           </div>
 
           {/* Mobile Menu Button */}
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="md:hidden"
             aria-label="Toggle menu"
           >
             {isMobileMenuOpen ? (
@@ -92,7 +90,7 @@ export function LandingNavbar() {
             ) : (
               <Menu className="w-6 h-6 text-black" />
             )}
-          </button>
+          </Button>
         </div>
 
         {/* Mobile Menu */}
@@ -105,25 +103,20 @@ export function LandingNavbar() {
           >
             <div className="flex flex-col gap-4 pt-4">
               {navLinks.map((link) => (
-                <button
+                <Button
                   key={link.name}
+                  variant="ghost"
                   onClick={() => scrollToSection(link.href)}
-                  className="text-left text-gray-600 hover:text-purple-700 transition-colors font-medium py-2"
+                  className="w-full justify-start text-gray-600 hover:text-purple-700 font-medium py-2"
                 >
                   {link.name}
-                </button>
+                </Button>
               ))}
-              <Link
-                href="/signin"
-                className={cn(
-                  "px-6 py-2 rounded-lg text-center",
-                  "bg-linear-to-r from-purple-600 to-purple-700 text-white",
-                  "hover:from-purple-700 hover:to-purple-800 transition-all duration-200",
-                  "font-medium mt-2 shadow-md shadow-purple-500/30"
-                )}
-              >
-                Sign In
-              </Link>
+              <Button asChild className="w-full mt-2">
+                <Link href="/signin">
+                  Sign In
+                </Link>
+              </Button>
             </div>
           </motion.div>
         )}

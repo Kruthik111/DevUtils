@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Pin, PinOff } from 'lucide-react';
 import { Note, TextBlock, NoteType, CopyMode } from '@/lib/notes/types';
+import { Button } from '@/components/ui/button';
 import { themes, themeConfig, type Theme } from "@/lib/theme-config";
 import { cn } from "@/lib/utils";
 
@@ -123,12 +124,13 @@ export function NoteEditModal({
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-border/30">
                     <h2 className="text-xl font-bold">Edit Note</h2>
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={onCancel}
-                        className="p-2 rounded-lg hover:bg-foreground/5 transition-colors"
                     >
                         <X className="w-5 h-5" />
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Content */}
@@ -157,8 +159,9 @@ export function NoteEditModal({
                                 const isActive = pin === p;
                                 
                                 return (
-                                    <button
+                                    <Button
                                         key={p}
+                                        variant={isActive ? 'default' : isUsed ? 'secondary' : 'outline'}
                                         onClick={() => {
                                             if (!isUsed) {
                                                 setPin(isActive ? null : p);
@@ -168,12 +171,9 @@ export function NoteEditModal({
                                         disabled={isUsed}
                                         title={isUsed ? `Pin ${p} is already taken` : `Pin to position ${p}`}
                                         className={cn(
-                                            "relative flex flex-col items-center justify-center w-14 h-14 rounded-2xl border transition-all duration-200",
-                                            isActive 
-                                                ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30 scale-105" 
-                                                : isUsed
-                                                    ? "bg-foreground/5 text-foreground/20 border-border/30 cursor-not-allowed opacity-50"
-                                                    : "bg-background text-foreground/70 border-border/50 hover:border-primary/50 hover:bg-primary/5 hover:text-primary"
+                                            "relative w-14 h-14 rounded-2xl p-0 flex flex-col items-center justify-center",
+                                            isActive && "shadow-lg shadow-primary/30 scale-105",
+                                            isUsed && "opacity-50 cursor-not-allowed"
                                         )}
                                     >
                                         <Pin className={cn("w-5 h-5 mb-1", isActive ? "fill-current" : "")} />
@@ -183,22 +183,23 @@ export function NoteEditModal({
                                                 <div className="w-full h-px bg-red-500/30" />
                                             </div>
                                         )}
-                                    </button>
+                                    </Button>
                                 );
                             })}
                             
                             {pin != null && pin > 0 && (
-                                <button
+                                <Button
+                                    variant="outline"
                                     onClick={() => {
                                         setPin(null);
                                         setPinError('');
                                     }}
-                                    className="flex flex-col items-center justify-center w-14 h-14 rounded-2xl border border-dashed border-border/50 hover:border-red-500/50 hover:bg-red-500/5 hover:text-red-500 transition-all duration-200 group"
+                                    className="w-14 h-14 rounded-2xl p-0 border-dashed hover:border-red-500/50 hover:bg-red-500/5 hover:text-red-500 flex flex-col items-center justify-center group"
                                     title="Remove Pin"
                                 >
                                     <PinOff className="w-5 h-5 mb-1 opacity-50 group-hover:opacity-100" />
                                     <span className="text-[10px] font-black uppercase tracking-widest opacity-50 group-hover:opacity-100">Clear</span>
-                                </button>
+                                </Button>
                             )}
                         </div>
                         {pinError && (
@@ -231,13 +232,15 @@ export function NoteEditModal({
                                             {block.content}
                                         </p>
                                     </div>
-                                    <button
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
                                         onClick={() => handleDeleteBlock(block.id)}
-                                        className="p-1.5 rounded-md hover:bg-red-500/20 transition-colors"
+                                        className="hover:bg-red-500/20 text-red-500"
                                         title="Delete block"
                                     >
-                                        <Trash2 className="w-4 h-4 text-red-500" />
-                                    </button>
+                                        <Trash2 className="w-4 h-4" />
+                                    </Button>
                                 </div>
                             ))}
                         </div>
@@ -248,16 +251,15 @@ export function NoteEditModal({
                         <div className="p-4 rounded-lg border border-border/30 bg-foreground/5 space-y-3">
                             <div className="flex gap-2">
                                 {(['link', 'snippet', 'todo'] as NoteType[]).map((type) => (
-                                    <button
+                                    <Button
                                         key={type}
+                                        variant={newBlockType === type ? 'default' : 'outline'}
+                                        size="sm"
                                         onClick={() => setNewBlockType(type)}
-                                        className={`px-3 py-1.5 text-sm rounded-lg border transition-colors capitalize font-medium ${newBlockType === type
-                                                ? 'bg-primary text-primary-foreground border-primary'
-                                                : 'border-border/50 hover:bg-foreground/5 text-foreground'
-                                            }`}
+                                        className="capitalize"
                                     >
                                         {type}
-                                    </button>
+                                    </Button>
                                 ))}
                             </div>
                             <textarea
@@ -270,63 +272,62 @@ export function NoteEditModal({
                             />
                             <div className="flex gap-2">
                                 {(['active', 'passive'] as CopyMode[]).map((mode) => (
-                                    <button
+                                    <Button
                                         key={mode}
+                                        variant={newBlockCopyMode === mode ? 'default' : 'outline'}
+                                        size="sm"
                                         onClick={() => setNewBlockCopyMode(mode)}
-                                        className={`px-3 py-1.5 text-xs rounded-lg border transition-colors capitalize font-medium ${newBlockCopyMode === mode
-                                                ? 'bg-primary text-primary-foreground border-primary'
-                                                : 'border-border/50 hover:bg-foreground/5 text-foreground'
-                                            }`}
+                                        className="capitalize h-7 px-3 text-[10px]"
                                     >
                                         {mode}
-                                    </button>
+                                    </Button>
                                 ))}
                             </div>
                             <div className="flex gap-2">
-                                <button
+                                <Button
                                     onClick={handleAddBlock}
                                     disabled={!newBlockContent.trim()}
-                                    className="flex-1 px-3 py-1.5 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all font-medium"
+                                    className="flex-1"
                                 >
                                     Add Block
-                                </button>
-                                <button
+                                </Button>
+                                <Button
+                                    variant="outline"
                                     onClick={() => {
                                         setShowAddBlock(false);
                                         setNewBlockContent('');
                                     }}
-                                    className="px-3 py-1.5 text-sm rounded-lg border border-border/50 hover:bg-foreground/5 transition-all text-foreground font-medium"
                                 >
                                     Cancel
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     ) : (
-                        <button
+                        <Button
+                            variant="outline"
                             onClick={() => setShowAddBlock(true)}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-dashed border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all text-sm text-foreground/60 hover:text-primary font-medium"
+                            className="w-full border-dashed text-foreground/60 hover:text-primary"
                         >
                             <Plus className="w-4 h-4" />
                             Add Block
-                        </button>
+                        </Button>
                     )}
                 </div>
 
                 {/* Footer */}
                 <div className="flex gap-3 justify-end px-6 py-4 border-t border-border/30">
-                    <button
+                    <Button
+                        variant="outline"
                         onClick={onCancel}
-                        className="px-4 py-2 rounded-lg border border-border/50 hover:bg-foreground/5 transition-colors font-medium"
                     >
                         Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={handleSave}
                         disabled={!title.trim() || blocks.length === 0}
-                        className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all font-medium"
                     >
                         Save Changes
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

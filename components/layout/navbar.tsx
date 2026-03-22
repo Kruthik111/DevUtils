@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTheme } from "@/components/providers/theme-provider";
 import { Palette, Menu, X, LogOut, Bell, Plus, User, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { themes, type Theme } from "@/lib/theme-config";
 import { ThemeCustomizer } from "./theme-customizer";
@@ -90,13 +91,15 @@ export function Navbar() {
         {/* Left side - DevUtils */}
         <div className="flex items-center gap-3">
           {/* Mobile Menu Button */}
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-foreground/10 transition-colors"
+            className="md:hidden"
             aria-label="Toggle menu"
           >
             <Menu className="w-5 h-5" />
-          </button>
+          </Button>
           
           {/* DevUtils */}
           <div className="flex items-center gap-2">
@@ -125,12 +128,14 @@ export function Navbar() {
           <div className="relative" ref={menuRef}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setShowThemeMenu(!showThemeMenu)}
-                  className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-foreground/10 transition-colors"
+                  className="h-8 w-8"
                 >
                   <Palette className="w-4 h-4 text-foreground/70" />
-                </button>
+                </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
                 <p>Change Theme</p>
@@ -153,35 +158,39 @@ export function Navbar() {
           {/* User Avatar with Dropdown */}
           {session?.user && (
             <div className="relative" ref={profileMenuRef}>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="w-8 h-8 rounded-full bg-linear-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-semibold cursor-pointer hover:ring-2 hover:ring-foreground/20 transition-all"
+                className="w-8 h-8 rounded-full bg-linear-to-br from-orange-400 to-pink-500 text-white text-xs font-semibold hover:ring-2 hover:ring-foreground/20"
               >
                 {session.user.name?.charAt(0) || 'U'}
-              </button>
+              </Button>
               
               {showProfileMenu && (
                 <div className="absolute right-0 top-full mt-2 w-48 bg-background border border-border/50 rounded-lg shadow-xl z-50 py-2 animate-in fade-in zoom-in duration-100">
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => {
                       router.push('/profile');
                       setShowProfileMenu(false);
                     }}
-                    className="w-full flex items-center gap-2 px-4 py-2 hover:bg-foreground/5 transition-colors text-left"
+                    className="w-full justify-start px-4 h-10"
                   >
                     <User className="w-4 h-4 text-foreground/70" />
                     <span className="text-sm text-foreground">Profile</span>
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
                     onClick={() => {
                       setShowLogoutConfirm(true);
                       setShowProfileMenu(false);
                     }}
-                    className="w-full flex items-center gap-2 px-4 py-2 hover:bg-foreground/5 transition-colors text-left text-red-500"
+                    className="w-full justify-start px-4 h-10 text-red-500 hover:text-red-500"
                   >
                     <LogOut className="w-4 h-4" />
                     <span className="text-sm">Sign Out</span>
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -209,12 +218,14 @@ export function Navbar() {
             >
               <div className="flex items-center justify-between p-6 border-b border-border/50">
                 <h3 className="text-lg font-bold">Theme</h3>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setShowThemeMenu(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-background/80 transition-all"
+                  className="h-8 w-8"
                 >
                   <X className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
               <div 
                 className="overflow-y-auto p-6 space-y-4 flex-1 min-h-0"

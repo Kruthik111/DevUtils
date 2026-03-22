@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Edit2, Trash2, Plus, Pin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Note, TextBlock } from '@/lib/notes/types';
 import { TextBlockItem } from './text-block-item';
 import { AddBlockForm } from './add-block-form';
@@ -126,26 +127,30 @@ export function NoteItem({
                     </div>
                     {/* Edit/Delete buttons - visible in header on mobile, below on desktop */}
                     <div className="flex gap-2 md:hidden">
-                        <button
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onEdit();
                             }}
-                            className="p-1.5 rounded-md hover:bg-primary/20 active:bg-primary/30 transition-colors touch-manipulation"
+                            className="h-8 w-8 text-primary hover:bg-primary/20"
                             title="Edit note"
                         >
-                            <Edit2 className="w-4 h-4 text-primary" />
-                        </button>
-                        <button
+                            <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onDelete();
                             }}
-                            className="p-1.5 rounded-md hover:bg-red-500/20 active:bg-red-500/30 transition-colors touch-manipulation"
+                            className="h-8 w-8 text-red-500 hover:bg-red-500/20"
                             title="Delete note"
                         >
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                        </button>
+                            <Trash2 className="w-4 h-4" />
+                        </Button>
                     </div>
                 </div>
 
@@ -167,26 +172,30 @@ export function NoteItem({
 
                 {/* Edit/Delete buttons - visible below note on desktop */}
                 <div className="hidden md:flex items-center justify-end gap-2 px-3 py-2 border-t border-border/30">
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={(e) => {
                             e.stopPropagation();
                             onEdit();
                         }}
-                        className="p-2 rounded-md hover:bg-primary/20 active:bg-primary/30 transition-colors"
+                        className="text-primary hover:bg-primary/20"
                         title="Edit note"
                     >
-                        <Edit2 className="w-4 h-4 text-primary" />
-                    </button>
-                    <button
+                        <Edit2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={(e) => {
                             e.stopPropagation();
                             onDelete();
                         }}
-                        className="p-2 rounded-md hover:bg-red-500/20 active:bg-red-500/30 transition-colors"
+                        className="text-red-500 hover:bg-red-500/20"
                         title="Delete note"
                     >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                    </button>
+                        <Trash2 className="w-4 h-4" />
+                    </Button>
                 </div>
 
                 {/* Add Block Section - Collapsible on mobile/tablet */}
@@ -201,16 +210,17 @@ export function NoteItem({
                             onCancel={() => setShowAddBlock(false)}
                         />
                     ) : (
-                        <button
+                        <Button
+                            variant="outline"
                             onClick={(e) => {
                                 e.stopPropagation();
                                 setShowAddBlock(true);
                             }}
-                            className="w-full flex items-center justify-center gap-2 px-3 md:px-4 py-2 rounded-lg border border-dashed border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all text-xs md:text-sm text-foreground/60 hover:text-primary font-medium"
+                            className="w-full border-dashed text-foreground/60 hover:text-primary"
                         >
-                            <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                            <Plus className="w-3.5 h-3.5 md:w-4 md:h-4 text-current" />
                             Add Block
-                        </button>
+                        </Button>
                     )}
                 </div>
             </div>

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/components/providers/sidebar-provider";
 import {
@@ -233,12 +234,14 @@ export function Sidebar() {
                 <span className="text-xs font-black text-foreground uppercase tracking-tighter">DevUtils</span>
               </div>
             </div>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setIsMobileSidebarOpen(false)}
-              className="p-2 text-foreground/30 hover:text-foreground transition-colors"
+              className="text-foreground/30 hover:text-foreground"
             >
               <X className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
 
           <div className="flex-1 overflow-y-auto py-6 space-y-8">

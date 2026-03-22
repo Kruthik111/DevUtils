@@ -18,6 +18,7 @@ import { NotesPageSkeleton } from '@/components/notes/notes-page-skeleton';
 import { useRefresh } from '@/components/providers/refresh-provider';
 import { useNotes } from '@/components/providers/notes-provider';
 import { RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, Search, Grid3x3, List, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
@@ -1056,30 +1057,30 @@ export default function NotesPage() {
           </button> */}
           {/* Grid/List View Toggle - Hidden on mobile */}
           <div className="hidden md:flex items-center gap-1 border border-border rounded-lg bg-background/50 p-1 shrink-0">
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setViewMode('grid')}
               className={cn(
-                "flex items-center justify-center w-8 h-8 rounded transition-all",
-                viewMode === 'grid' 
-                  ? "bg-foreground/10 text-foreground" 
-                  : "text-foreground/50 hover:text-foreground/70"
+                "w-8 h-8 rounded p-0",
+                viewMode === 'grid' && "bg-foreground/10"
               )}
               title="Grid view"
             >
               <Grid3x3 className="w-4 h-4" />
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setViewMode('list')}
               className={cn(
-                "flex items-center justify-center w-8 h-8 rounded transition-all",
-                viewMode === 'list' 
-                  ? "bg-foreground/10 text-foreground" 
-                  : "text-foreground/50 hover:text-foreground/70"
+                "w-8 h-8 rounded p-0",
+                viewMode === 'list' && "bg-foreground/10"
               )}
               title="List view"
             >
               <List className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
           {/* Sort Button - Commented out for now */}
           {/* <div className="relative">
@@ -1144,7 +1145,9 @@ export default function NotesPage() {
               </>
             )}
           </div> */}
-          <button
+          <Button
+            variant="outline"
+            size="icon"
             onClick={async () => {
               setIsRefreshing(true);
               try {
@@ -1153,18 +1156,13 @@ export default function NotesPage() {
                 setIsRefreshing(false);
               }
             }}
-            disabled={isRefreshing}
-            className={cn(
-              "flex items-center justify-center w-10 h-10 rounded-lg border border-border",
-              "bg-background/50 hover:bg-foreground/10 transition-all",
-              "disabled:opacity-50"
-            )}
+            isLoading={isRefreshing}
             title="Refresh"
           >
             <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
-          </button>
+          </Button>
           {/* Add New Button */}
-          <button
+          <Button
             onClick={() => {
               if (isNoteLimitReached) {
                 toast.error('You can only create 9 notes per tab. Please delete a note before adding a new one.');
@@ -1173,19 +1171,12 @@ export default function NotesPage() {
               setShowAddNoteModal(true);
             }}
             disabled={isNoteLimitReached}
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-2 rounded-lg",
-              "bg-primary text-primary-foreground",
-              "hover:bg-primary/90 transition-all font-medium text-sm shrink-0",
-              "shadow-md shadow-primary/30",
-              isNoteLimitReached && "opacity-50 cursor-not-allowed"
-            )}
             title={isNoteLimitReached ? "Note limit reached (9 notes per tab)" : "Add New Note (Ctrl+K)"}
           >
             <Plus className="w-4 h-4" />
-            <span className="inline">Add New...</span>
-            <span className="text-xs text-primary-foreground/80 ml-1 hidden md:inline">^K</span>
-          </button>
+            <span>Add New...</span>
+            <span className="text-xs opacity-80 hidden md:inline ml-1">^K</span>
+          </Button>
           <GroupSelector
             groups={displayData.groups}
             activeGroupId={displayData.activeGroupId}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Plus, Clipboard } from 'lucide-react';
 import { NoteType, CopyMode, TextBlock } from '@/lib/notes/types';
+import { Button } from '@/components/ui/button';
 
 interface AddNoteModalProps {
     isOpen: boolean;
@@ -66,12 +67,13 @@ export function AddNoteModal({
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-border/30">
                     <h2 className="text-xl font-bold">Add New Note</h2>
-                    <button
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={onCancel}
-                        className="p-2 rounded-lg hover:bg-foreground/5 transition-colors"
                     >
                         <X className="w-5 h-5" />
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Content */}
@@ -94,16 +96,14 @@ export function AddNoteModal({
                         <label className="block text-sm font-medium mb-2">First Block Type</label>
                         <div className="flex gap-2">
                             {(['link', 'snippet', 'todo'] as NoteType[]).map((type) => (
-                                <button
+                                <Button
                                     key={type}
+                                    variant={noteType === type ? 'default' : 'outline'}
                                     onClick={() => setNoteType(type)}
-                                    className={`px-4 py-2 rounded-lg border transition-colors capitalize font-medium ${noteType === type
-                                        ? 'bg-primary text-primary-foreground border-primary'
-                                        : 'border-border/50 hover:bg-foreground/5 text-foreground'
-                                        }`}
+                                    className="capitalize"
                                 >
                                     {type}
-                                </button>
+                                </Button>
                             ))}
                         </div>
                     </div>
@@ -132,16 +132,14 @@ export function AddNoteModal({
                             <label className="block text-sm font-medium mb-2">Copy Mode</label>
                             <div className="flex gap-2">
                                 {(['active', 'passive'] as CopyMode[]).map((mode) => (
-                                    <button
+                                    <Button
                                         key={mode}
+                                        variant={copyMode === mode ? 'default' : 'outline'}
                                         onClick={() => setCopyMode(mode)}
-                                        className={`px-4 py-2 rounded-lg border transition-colors capitalize font-medium ${copyMode === mode
-                                            ? 'bg-primary text-primary-foreground border-primary'
-                                            : 'border-border/50 hover:bg-foreground/5 text-foreground'
-                                            }`}
+                                        className="capitalize"
                                     >
                                         {mode}
-                                    </button>
+                                    </Button>
                                 ))}
                             </div>
                             <p className="text-xs text-foreground/50 mt-1">
@@ -155,27 +153,26 @@ export function AddNoteModal({
 
                 {/* Footer */}
                 <div className="flex gap-3 justify-end px-6 py-4 border-t border-border/30">
-                    <button
+                    <Button
+                        variant="outline"
                         onClick={handleQuickAdd}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border/50 hover:bg-foreground/5 transition-colors font-medium"
                     >
                         <Clipboard className="w-4 h-4" />
-                        Quick Add from Clipboard
-                    </button>
-                    <button
+                        Quick Add
+                    </Button>
+                    <Button
+                        variant="outline"
                         onClick={onCancel}
-                        className="px-4 py-2 rounded-lg border border-border/50 hover:bg-foreground/5 transition-colors font-medium"
                     >
                         Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                         onClick={handleAdd}
                         disabled={!title.trim() || !content.trim()}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all font-medium"
                     >
                         <Plus className="w-4 h-4" />
                         Create Note
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function HeroSection() {
@@ -74,32 +75,21 @@ export function HeroSection() {
           transition={{ delay: 0.7, duration: 0.8 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <Link
-            href="/signin"
-            className={cn(
-              "group relative inline-flex items-center gap-2 px-8 py-4 rounded-xl",
-              "bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold text-lg",
-              "hover:from-purple-700 hover:to-purple-800 transition-all duration-200",
-              "hover:scale-105 active:scale-95",
-              "shadow-lg hover:shadow-xl shadow-purple-500/30"
-            )}
-          >
-            Get Started Free
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </Link>
+          <Button asChild size="lg" className="h-14 px-8 text-lg font-semibold shadow-purple-500/30">
+            <Link href="/signin">
+              Get Started Free
+              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </Button>
 
-          <button
+          <Button
+            variant="outline"
+            size="lg"
             onClick={scrollToFeatures}
-            className={cn(
-              "inline-flex items-center gap-2 px-8 py-4 rounded-xl",
-              "bg-white border-2 border-purple-300",
-              "text-purple-700 font-semibold text-lg",
-              "hover:bg-purple-50 hover:border-purple-400 transition-all duration-200",
-              "hover:scale-105 active:scale-95"
-            )}
+            className="h-14 px-8 border-2 border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400 font-semibold text-lg"
           >
             Learn More
-          </button>
+          </Button>
         </motion.div>
 
         {/* Floating elements */}

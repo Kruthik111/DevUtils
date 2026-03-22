@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useTheme } from "@/components/providers/theme-provider";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ColorPicker } from "@/components/ui/color-picker";
 import type { CustomTheme } from "@/lib/theme-config";
@@ -92,19 +93,20 @@ export function ThemeCustomizer({ onOpen, isOpen: controlledIsOpen, onClose }: T
       {/* Always render button */}
       <Tooltip>
         <TooltipTrigger asChild>
-          <button
+          <Button
+            variant="ghost"
             onClick={handleOpen}
             className={cn(
-              "relative w-12 h-12 rounded-xl border-2 transition-all",
+              "relative w-12 h-12 rounded-xl border-2 transition-all p-0 overflow-hidden",
               "hover:scale-110 active:scale-95",
               theme === "custom" ? "border-primary shadow-lg" : "border-border/50"
             )}
           >
-            <div className="w-full h-full rounded-lg from-purple-400 via-pink-400 to-orange-400" />
+            <div className="w-full h-full from-purple-400 via-pink-400 to-orange-400" />
             {theme === "custom" && (
               <div className="absolute inset-0 rounded-xl border-2 border-primary" />
             )}
-          </button>
+          </Button>
         </TooltipTrigger>
         <TooltipContent side="bottom">
           <p>Custom Theme</p>
@@ -135,7 +137,9 @@ export function ThemeCustomizer({ onOpen, isOpen: controlledIsOpen, onClose }: T
           >
             <div className="flex items-center justify-between p-6 border-b border-border/50">
               <h3 className="text-lg font-bold">Custom Theme</h3>
-              <button
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => {
                   if (controlledIsOpen !== undefined) {
                     onClose?.();
@@ -143,10 +147,10 @@ export function ThemeCustomizer({ onOpen, isOpen: controlledIsOpen, onClose }: T
                     setIsOpen(false);
                   }
                 }}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-background/80 transition-all"
+                className="h-8 w-8"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
 
             <div className="overflow-y-auto p-6 space-y-4 flex-1 min-h-0">
@@ -178,13 +182,14 @@ export function ThemeCustomizer({ onOpen, isOpen: controlledIsOpen, onClose }: T
             </div>
 
             <div className="flex gap-2 p-6 border-t border-border/50">
-              <button
+              <Button
                 onClick={handleApply}
-                className="flex-1 px-4 py-2 bg-primary text-background rounded-xl hover:bg-primary/90 transition-all font-medium"
+                className="flex-1"
               >
                 Apply Theme
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
                 onClick={() => {
                   if (controlledIsOpen !== undefined) {
                     onClose?.();
@@ -192,10 +197,9 @@ export function ThemeCustomizer({ onOpen, isOpen: controlledIsOpen, onClose }: T
                     setIsOpen(false);
                   }
                 }}
-                className="px-4 py-2 rounded-xl border border-border/50 hover:bg-background/80 transition-all"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         </div>

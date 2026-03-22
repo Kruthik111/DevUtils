@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { NoteType, CopyMode } from '@/lib/notes/types';
+import { Button } from '@/components/ui/button';
 
 interface AddBlockFormProps {
     onAdd: (type: NoteType, content: string, copyMode: CopyMode) => void;
@@ -26,16 +27,15 @@ export function AddBlockForm({ onAdd, onCancel }: AddBlockFormProps) {
             {/* Block Type Selector */}
             <div className="flex gap-2">
                 {(['link', 'snippet', 'todo'] as NoteType[]).map((type) => (
-                    <button
+                    <Button
                         key={type}
+                        variant={blockType === type ? 'default' : 'outline'}
+                        size="sm"
                         onClick={() => setBlockType(type)}
-                        className={`px-3 py-1.5 text-sm rounded-lg border transition-colors capitalize font-medium ${blockType === type
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'border-border/50 hover:bg-foreground/5 text-foreground'
-                            }`}
+                        className="capitalize"
                     >
                         {type}
-                    </button>
+                    </Button>
                 ))}
             </div>
 
@@ -59,16 +59,15 @@ export function AddBlockForm({ onAdd, onCancel }: AddBlockFormProps) {
             {blockType === 'snippet' && (
                 < div className="flex gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
                     {(['active', 'passive'] as CopyMode[]).map((mode) => (
-                        <button
+                        <Button
                             key={mode}
+                            variant={copyMode === mode ? 'default' : 'outline'}
+                            size="sm"
                             onClick={() => setCopyMode(mode)}
-                            className={`px-3 py-1.5 text-xs rounded-lg border transition-colors capitalize font-medium ${copyMode === mode
-                                ? 'bg-primary text-primary-foreground border-primary'
-                                : 'border-border/50 hover:bg-foreground/5 text-foreground'
-                                }`}
+                            className="capitalize h-7 px-3 text-[10px]"
                         >
                             {mode}
-                        </button>
+                        </Button>
                     ))}
                 </div>
             )
@@ -76,20 +75,20 @@ export function AddBlockForm({ onAdd, onCancel }: AddBlockFormProps) {
 
             {/* Actions */}
             <div className="flex gap-2">
-                <button
+                <Button
                     onClick={handleAdd}
                     disabled={!content.trim()}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium"
+                    className="flex-1"
                 >
                     <Plus className="w-4 h-4" />
                     Add Block
-                </button>
-                <button
+                </Button>
+                <Button
+                    variant="outline"
                     onClick={onCancel}
-                    className="px-3 py-1.5 text-sm rounded-lg border border-border/50 hover:bg-foreground/5 transition-all text-foreground font-medium"
                 >
                     <X className="w-4 h-4" />
-                </button>
+                </Button>
             </div>
         </div>
     );

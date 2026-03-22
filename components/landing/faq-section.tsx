@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { StaggerContainer, StaggerItem } from "./scroll-animations";
 
@@ -89,18 +90,19 @@ export function FAQSection() {
                 "hover:border-purple-300 transition-all duration-300"
               )}
             >
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => toggleFAQ(index)}
-                className="w-full p-6 flex items-center justify-between text-left"
+                className="w-full p-6 flex items-center justify-between text-left h-auto hover:bg-transparent"
               >
                 <span className="text-lg font-semibold pr-8 text-black">{faq.question}</span>
                 <motion.div
                   animate={{ rotate: openIndex === index ? 180 : 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <ChevronDown className="w-5 h-5 text-purple-600 flex-shrink-0" />
+                  <ChevronDown className="w-5 h-5 text-purple-600 shrink-0" />
                 </motion.div>
-              </button>
+              </Button>
               <AnimatePresence>
                 {openIndex === index && (
                   <motion.div

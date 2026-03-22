@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Copy, Code, Check, Zap } from 'lucide-react';
 import { copyToClipboard } from '@/lib/notes/clipboard';
+import { Button } from '@/components/ui/button';
 
 interface SnippetNoteProps {
     content: string;
@@ -51,17 +52,19 @@ export function SnippetNote({ content, copyMode }: SnippetNoteProps) {
                 {content}
             </pre>
             {copyMode === 'passive' && (
-                <button
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={handleCopy}
-                    className="opacity-100 p-1.5 rounded-md hover:bg-purple-500/20 transition-all flex-shrink-0"
+                    className="h-8 w-8 text-purple-500 hover:bg-purple-500/20"
                     title="Copy snippet"
                 >
                     {copied ? (
                         <Check className="w-4 h-4 text-green-500" />
                     ) : (
-                        <Copy className="w-4 h-4 text-purple-500" />
+                        <Copy className="w-4 h-4" />
                     )}
-                </button>
+                </Button>
             )}
             {copyMode === 'active' && copied && (
                 <Check className="w-4 h-4 text-green-500" />

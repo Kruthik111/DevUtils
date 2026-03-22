@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { themeConfig, type Theme } from "@/lib/theme-config";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
@@ -19,22 +20,23 @@ export function ThemeSwatch({ themeKey, isActive, onClick }: ThemeSwatchProps) {
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <button
+          <Button
+            variant="ghost"
             onClick={(e) => {
-              e.stopPropagation();
+              e?.stopPropagation();
               onClick(e);
             }}
             className={cn(
-              "relative w-12 h-12 rounded-xl border-2 transition-all",
+              "relative w-12 h-12 rounded-xl border-2 transition-all p-0 overflow-hidden",
               "hover:scale-110 active:scale-95",
               isActive ? "border-primary shadow-lg" : "border-border/50"
             )}
           >
-            <div className="w-full h-full rounded-lg bg-gradient-to-br from-purple-400 via-pink-400 to-orange-400" />
+            <div className="w-full h-full bg-linear-to-br from-purple-400 via-pink-400 to-orange-400" />
             {isActive && (
               <div className="absolute inset-0 rounded-xl border-2 border-primary" />
             )}
-          </button>
+          </Button>
         </TooltipTrigger>
         <TooltipContent side="bottom">
           <p>Custom</p>
@@ -49,19 +51,20 @@ export function ThemeSwatch({ themeKey, isActive, onClick }: ThemeSwatchProps) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <button
+        <Button
+          variant="ghost"
           onClick={(e) => {
-            e.stopPropagation();
+            e?.stopPropagation();
             onClick(e);
           }}
           className={cn(
-            "relative w-12 h-12 rounded-xl border-2 transition-all",
+            "relative w-12 h-12 rounded-xl border-2 transition-all p-0 overflow-hidden",
             "hover:scale-110 active:scale-95",
             isActive ? "border-primary shadow-lg" : "border-border/50"
           )}
         >
           <div
-            className="w-full h-full rounded-lg"
+            className="w-full h-full"
             style={{
               background: `linear-gradient(135deg, ${theme.background} 0%, ${theme.secondary} 50%, ${theme.accent} 100%)`,
             }}
@@ -74,7 +77,7 @@ export function ThemeSwatch({ themeKey, isActive, onClick }: ThemeSwatchProps) {
           {isActive && (
             <div className="absolute inset-0 rounded-xl border-2 border-primary" />
           )}
-        </button>
+        </Button>
       </TooltipTrigger>
       <TooltipContent side="bottom">
         <p>{theme.name}</p>
