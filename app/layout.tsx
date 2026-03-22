@@ -27,6 +27,11 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "DevUtils",
   },
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/favicon.ico",
+    apple: "/apple-icon.png",
+  },
 };
 
 export const viewport = {

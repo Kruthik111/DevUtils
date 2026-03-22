@@ -166,8 +166,8 @@ export function Sidebar() {
         <div className="h-full w-full bg-background border-r border-border flex flex-col overflow-hidden">
           {/* Brand Logo */}
           <div className="p-6 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20 shrink-0">
-              <Sparkles className="w-6 h-6 fill-current" />
+            <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-border/50">
+              <img src="/logo.png" alt="DevUtils Logo" className="w-full h-full object-contain" />
             </div>
             {!isCollapsed && (
               <div className="flex flex-col">
@@ -226,8 +226,8 @@ export function Sidebar() {
           {/* Header */}
           <div className="p-6 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white">
-                <Sparkles className="w-5 h-5 fill-current" />
+              <div className="w-8 h-8 rounded-lg overflow-hidden border border-border/50">
+                <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col">
                 <span className="text-xs font-black text-foreground uppercase tracking-tighter">DevUtils</span>

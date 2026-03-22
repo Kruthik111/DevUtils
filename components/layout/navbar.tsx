@@ -100,8 +100,8 @@ export function Navbar() {
           
           {/* DevUtils */}
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
-              D
+            <div className="w-7 h-7 rounded overflow-hidden border border-border/50 flex items-center justify-center">
+              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <span className="text-lg font-bold text-foreground">DevUtils</span>
           </div>
@@ -155,7 +155,7 @@ export function Navbar() {
             <div className="relative" ref={profileMenuRef}>
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-semibold cursor-pointer hover:ring-2 hover:ring-foreground/20 transition-all"
+                className="w-8 h-8 rounded-full bg-linear-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-semibold cursor-pointer hover:ring-2 hover:ring-foreground/20 transition-all"
               >
                 {session.user.name?.charAt(0) || 'U'}
               </button>
@@ -195,11 +195,11 @@ export function Navbar() {
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-md z-[100]"
+            className="fixed inset-0 bg-black/50 backdrop-blur-md z-100"
             onClick={() => setShowThemeMenu(false)}
           />
           {/* Modal Content */}
-          <div className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none z-[101]">
+          <div className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none z-101">
             <div
               className="bg-background/95 backdrop-blur-xl border border-border/50 rounded-3xl shadow-2xl w-full max-w-md max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden pointer-events-auto"
               style={{

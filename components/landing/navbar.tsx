@@ -51,9 +51,10 @@ export function LandingNavbar() {
           {/* Logo */}
           <Link
             href="/"
-            className="text-2xl font-bold text-black"
+            className="flex items-center gap-3"
           >
-            DevUtils
+            <img src="/logo.png" alt="DevUtils Logo" className="w-10 h-10 object-contain" />
+            <span className="text-2xl font-bold text-black tracking-tight">DevUtils</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -71,7 +72,7 @@ export function LandingNavbar() {
               href="/signin"
               className={cn(
                 "px-6 py-2 rounded-lg",
-                "bg-gradient-to-r from-purple-600 to-purple-700 text-white",
+                "bg-linear-to-r from-purple-600 to-purple-700 text-white",
                 "hover:from-purple-700 hover:to-purple-800 transition-all duration-200",
                 "font-medium shadow-md shadow-purple-500/30"
               )}
@@ -116,7 +117,7 @@ export function LandingNavbar() {
                 href="/signin"
                 className={cn(
                   "px-6 py-2 rounded-lg text-center",
-                  "bg-gradient-to-r from-purple-600 to-purple-700 text-white",
+                  "bg-linear-to-r from-purple-600 to-purple-700 text-white",
                   "hover:from-purple-700 hover:to-purple-800 transition-all duration-200",
                   "font-medium mt-2 shadow-md shadow-purple-500/30"
                 )}

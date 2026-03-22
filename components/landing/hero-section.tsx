@@ -45,22 +45,6 @@ export function HeroSection() {
 
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="mb-6"
-        >
-          <motion.span
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-100 border border-purple-300 text-purple-700 text-sm font-medium mb-8"
-          >
-            <Sparkles className="w-4 h-4 text-purple-600" />
-            Developer Tools Reimagined
-          </motion.span>
-        </motion.div>
 
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
