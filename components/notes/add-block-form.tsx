@@ -30,7 +30,7 @@ export function AddBlockForm({ onAdd, onCancel }: AddBlockFormProps) {
                         key={type}
                         onClick={() => setBlockType(type)}
                         className={`px-3 py-1.5 text-sm rounded-lg border transition-colors capitalize font-medium ${blockType === type
-                            ? 'bg-blue-600 text-white border-blue-600'
+                            ? 'bg-primary text-primary-foreground border-primary'
                             : 'border-border/50 hover:bg-foreground/5 text-foreground'
                             }`}
                     >
@@ -43,7 +43,7 @@ export function AddBlockForm({ onAdd, onCancel }: AddBlockFormProps) {
             <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-lg border border-border/50 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-y font-mono"
+                className="w-full px-3 py-2 text-sm rounded-lg border border-border/50 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y font-mono"
                 placeholder={
                     blockType === 'link'
                         ? 'Enter URL...'
@@ -63,7 +63,7 @@ export function AddBlockForm({ onAdd, onCancel }: AddBlockFormProps) {
                             key={mode}
                             onClick={() => setCopyMode(mode)}
                             className={`px-3 py-1.5 text-xs rounded-lg border transition-colors capitalize font-medium ${copyMode === mode
-                                ? 'bg-blue-600 text-white border-blue-600'
+                                ? 'bg-primary text-primary-foreground border-primary'
                                 : 'border-border/50 hover:bg-foreground/5 text-foreground'
                                 }`}
                         >
@@ -79,7 +79,7 @@ export function AddBlockForm({ onAdd, onCancel }: AddBlockFormProps) {
                 <button
                     onClick={handleAdd}
                     disabled={!content.trim()}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium"
                 >
                     <Plus className="w-4 h-4" />
                     Add Block

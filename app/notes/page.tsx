@@ -1129,16 +1129,16 @@ export default function NotesPage() {
             disabled={isNoteLimitReached}
             className={cn(
               "flex items-center gap-1.5 px-3 py-2 rounded-lg",
-              "bg-gradient-to-r from-purple-600 to-purple-700 text-white",
-              "hover:from-purple-700 hover:to-purple-800 transition-all font-medium text-sm shrink-0",
-              "shadow-md shadow-purple-500/30",
+              "bg-primary text-primary-foreground",
+              "hover:bg-primary/90 transition-all font-medium text-sm shrink-0",
+              "shadow-md shadow-primary/30",
               isNoteLimitReached && "opacity-50 cursor-not-allowed"
             )}
             title={isNoteLimitReached ? "Note limit reached (9 notes per tab)" : "Add New Note (Ctrl+K)"}
           >
             <Plus className="w-4 h-4" />
             <span className="inline">Add New...</span>
-            <span className="text-xs text-white/80 ml-1 hidden md:inline">^K</span>
+            <span className="text-xs text-primary-foreground/80 ml-1 hidden md:inline">^K</span>
           </button>
           <GroupSelector
             groups={data.groups}

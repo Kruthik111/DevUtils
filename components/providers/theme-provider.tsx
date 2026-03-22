@@ -60,26 +60,29 @@ export function ThemeProvider({
     const config = theme === "custom" && customTheme ? customTheme : themeConfig[theme as keyof typeof themeConfig];
 
     if (config) {
-      // Apply CSS variables
+      // Set theme attribute
+      root.setAttribute("data-theme", theme);
+
+      // Apply CSS variables as override (for custom themes or if CSS doesn't have it)
       root.style.setProperty("--background", config.background);
       root.style.setProperty("--foreground", config.foreground);
       root.style.setProperty("--primary", config.primary);
       root.style.setProperty("--secondary", config.secondary);
       root.style.setProperty("--accent", config.accent);
       
-      // Calculate border color based on theme
+      // Calculate or apply border color
       let borderColor: string;
-      if (theme === "dark") {
+      if ("border" in config && config.border) {
+        borderColor = config.border;
+      } else if (theme === "dark") {
         borderColor = "rgba(255, 255, 255, 0.1)";
       } else if (theme === "custom" && customTheme) {
-        // For custom themes, convert hex to rgb and add opacity
         const hex = customTheme.primary.replace('#', '');
         const r = parseInt(hex.substr(0, 2), 16);
         const g = parseInt(hex.substr(2, 2), 16);
         const b = parseInt(hex.substr(4, 2), 16);
         borderColor = `rgba(${r}, ${g}, ${b}, 0.3)`;
       } else {
-        // For light themes, use foreground color with higher opacity for visibility
         const hex = config.foreground.replace('#', '');
         const r = parseInt(hex.substr(0, 2), 16);
         const g = parseInt(hex.substr(2, 2), 16);
@@ -88,9 +91,8 @@ export function ThemeProvider({
       }
       root.style.setProperty("--border", borderColor);
 
-      // Also apply as classes for Tailwind if needed, though variables are better
       root.classList.remove("light", "dark");
-      if (theme === "dark") {
+      if (theme === "dark" || theme === "professional") {
         root.classList.add("dark");
       } else {
         root.classList.add("light");

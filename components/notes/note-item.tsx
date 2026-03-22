@@ -131,10 +131,10 @@ export function NoteItem({
                                 e.stopPropagation();
                                 onEdit();
                             }}
-                            className="p-1.5 rounded-md hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors touch-manipulation"
+                            className="p-1.5 rounded-md hover:bg-primary/20 active:bg-primary/30 transition-colors touch-manipulation"
                             title="Edit note"
                         >
-                            <Edit2 className="w-4 h-4 text-blue-500" />
+                            <Edit2 className="w-4 h-4 text-primary" />
                         </button>
                         <button
                             onClick={(e) => {
@@ -172,10 +172,10 @@ export function NoteItem({
                             e.stopPropagation();
                             onEdit();
                         }}
-                        className="p-2 rounded-md hover:bg-blue-500/20 active:bg-blue-500/30 transition-colors"
+                        className="p-2 rounded-md hover:bg-primary/20 active:bg-primary/30 transition-colors"
                         title="Edit note"
                     >
-                        <Edit2 className="w-4 h-4 text-blue-500" />
+                        <Edit2 className="w-4 h-4 text-primary" />
                     </button>
                     <button
                         onClick={(e) => {
@@ -206,7 +206,7 @@ export function NoteItem({
                                 e.stopPropagation();
                                 setShowAddBlock(true);
                             }}
-                            className="w-full flex items-center justify-center gap-2 px-3 md:px-4 py-2 rounded-lg border border-dashed border-border/50 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all text-xs md:text-sm text-foreground/60 hover:text-blue-500 font-medium"
+                            className="w-full flex items-center justify-center gap-2 px-3 md:px-4 py-2 rounded-lg border border-dashed border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all text-xs md:text-sm text-foreground/60 hover:text-primary font-medium"
                         >
                             <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" />
                             Add Block

@@ -604,7 +604,7 @@ export default function ApiPage() {
                 </button>
                 <button
                     onClick={createNew}
-                    className="px-4 py-2 rounded-xl bg-primary text-background"
+                    className="px-4 py-2 rounded-xl bg-primary text-primary-foreground"
                 >
                     <Plus className="w-4 h-4" />
                 </button>
@@ -621,7 +621,7 @@ export default function ApiPage() {
                             onClick={createNew}
                             className={cn(
                                 "w-full flex items-center gap-2 px-4 py-2 rounded-xl",
-                                "bg-primary text-background",
+                                "bg-primary text-primary-foreground",
                                 "hover:bg-primary/90 transition-all",
                                 "font-medium"
                             )}
@@ -732,7 +732,7 @@ export default function ApiPage() {
                                 disabled={saving}
                                 className={cn(
                                     "flex items-center gap-2 px-4 py-2 rounded-xl",
-                                    "bg-primary text-background",
+                                    "bg-primary text-primary-foreground",
                                     "hover:bg-primary/90 transition-all",
                                     "font-medium disabled:opacity-50"
                                 )}
@@ -745,8 +745,8 @@ export default function ApiPage() {
                                 disabled={loading}
                                 className={cn(
                                     "flex items-center gap-2 px-4 py-2 rounded-xl",
-                                    "bg-green-500 text-background",
-                                    "hover:bg-green-600 transition-all",
+                                    "bg-green-600 text-white shadow-lg shadow-green-600/20",
+                                    "hover:bg-green-700 transition-all",
                                     "font-medium disabled:opacity-50"
                                 )}
                             >

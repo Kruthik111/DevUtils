@@ -141,7 +141,7 @@ export function NoteEditModal({
                             type="text"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium"
+                            className="w-full px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-medium"
                             placeholder="Enter note title..."
                         />
                     </div>
@@ -156,7 +156,7 @@ export function NoteEditModal({
                                 onChange={(e) => handlePinChange(e.target.value)}
                                 min="1"
                                 max="4"
-                                className="w-24 px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                                className="w-24 px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                                 placeholder="1-4"
                             />
                             {pin != null && pin > 0 && (
@@ -196,7 +196,7 @@ export function NoteEditModal({
                                 >
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-xs font-medium px-2 py-0.5 rounded bg-blue-500/20 text-blue-500 capitalize">
+                                            <span className="text-xs font-medium px-2 py-0.5 rounded bg-primary/20 text-primary capitalize">
                                                 {block.type}
                                             </span>
                                             <span className="text-xs text-foreground/50 capitalize">
@@ -228,7 +228,7 @@ export function NoteEditModal({
                                         key={type}
                                         onClick={() => setNewBlockType(type)}
                                         className={`px-3 py-1.5 text-sm rounded-lg border transition-colors capitalize font-medium ${newBlockType === type
-                                                ? 'bg-blue-600 text-white border-blue-600'
+                                                ? 'bg-primary text-primary-foreground border-primary'
                                                 : 'border-border/50 hover:bg-foreground/5 text-foreground'
                                             }`}
                                     >
@@ -239,7 +239,7 @@ export function NoteEditModal({
                             <textarea
                                 value={newBlockContent}
                                 onChange={(e) => setNewBlockContent(e.target.value)}
-                                className="w-full px-3 py-2 text-sm rounded-lg border border-border/50 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-y font-mono"
+                                className="w-full px-3 py-2 text-sm rounded-lg border border-border/50 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y font-mono"
                                 placeholder="Enter block content..."
                                 rows={2}
                                 autoFocus
@@ -250,7 +250,7 @@ export function NoteEditModal({
                                         key={mode}
                                         onClick={() => setNewBlockCopyMode(mode)}
                                         className={`px-3 py-1.5 text-xs rounded-lg border transition-colors capitalize font-medium ${newBlockCopyMode === mode
-                                                ? 'bg-blue-600 text-white border-blue-600'
+                                                ? 'bg-primary text-primary-foreground border-primary'
                                                 : 'border-border/50 hover:bg-foreground/5 text-foreground'
                                             }`}
                                     >
@@ -262,7 +262,7 @@ export function NoteEditModal({
                                 <button
                                     onClick={handleAddBlock}
                                     disabled={!newBlockContent.trim()}
-                                    className="flex-1 px-3 py-1.5 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-all font-medium"
+                                    className="flex-1 px-3 py-1.5 text-sm rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all font-medium"
                                 >
                                     Add Block
                                 </button>
@@ -280,7 +280,7 @@ export function NoteEditModal({
                     ) : (
                         <button
                             onClick={() => setShowAddBlock(true)}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-dashed border-border/50 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all text-sm text-foreground/60 hover:text-blue-500 font-medium"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-dashed border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all text-sm text-foreground/60 hover:text-primary font-medium"
                         >
                             <Plus className="w-4 h-4" />
                             Add Block
@@ -299,7 +299,7 @@ export function NoteEditModal({
                     <button
                         onClick={handleSave}
                         disabled={!title.trim() || blocks.length === 0}
-                        className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-all font-medium"
+                        className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all font-medium"
                     >
                         Save Changes
                     </button>

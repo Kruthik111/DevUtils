@@ -1,6 +1,6 @@
-export type Theme = "light" | "dark" | "orange" | "purple" | "blue" | "green" | "custom";
+export type Theme = "light" | "dark" | "orange" | "purple" | "blue" | "green" | "professional" | "custom";
 
-export const themes: Theme[] = ["light", "dark", "orange", "purple", "blue", "green", "custom"];
+export const themes: Theme[] = ["light", "dark", "orange", "purple", "blue", "green", "professional", "custom"];
 
 export interface CustomTheme {
   background: string;
@@ -8,6 +8,7 @@ export interface CustomTheme {
   primary: string;
   secondary: string;
   accent: string;
+  border?: string;
 }
 
 export const themeConfig = {
@@ -58,6 +59,15 @@ export const themeConfig = {
     primary: "#22c55e",
     secondary: "#dcfce7",
     accent: "#bbf7d0",
+  },
+  professional: {
+    name: "Professional",
+    background: "#1c1714",
+    foreground: "#ffffff",
+    primary: "#fb923c",
+    secondary: "#241e1a",
+    accent: "#2a231f",
+    border: "#2c241e",
   },
 };
 

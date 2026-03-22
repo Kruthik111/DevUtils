@@ -79,6 +79,7 @@ export default function JsonToolsPage() {
 
   // Validator state
   const [input, setInput] = useState("");
+  const [output, setOutput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [indentSize, setIndentSize] = useState(2);
   const [showExternalTools, setShowExternalTools] = useState(true);
@@ -104,7 +105,7 @@ export default function JsonToolsPage() {
       toast.error("Cannot prettify invalid JSON");
       return;
     }
-    setInput(JSON.stringify(validation.parsed, null, indentSize));
+    setOutput(JSON.stringify(validation.parsed, null, indentSize));
     toast.success("JSON prettified");
   };
 
@@ -113,7 +114,7 @@ export default function JsonToolsPage() {
       toast.error("Cannot minify invalid JSON");
       return;
     }
-    setInput(JSON.stringify(validation.parsed));
+    setOutput(JSON.stringify(validation.parsed));
     toast.success("JSON minified");
   };
 
@@ -123,7 +124,7 @@ export default function JsonToolsPage() {
       return;
     }
     const sorted = sortObjectKeys(validation.parsed);
-    setInput(JSON.stringify(sorted, null, indentSize));
+    setOutput(JSON.stringify(sorted, null, indentSize));
     toast.success("Keys sorted alphabetically");
   };
 
@@ -142,8 +143,9 @@ export default function JsonToolsPage() {
 
   const handleClear = () => {
     setInput("");
+    setOutput("");
     setSearchQuery("");
-    toast.success("Cleared");
+    toast.success("Cleared all");
   };
 
   const searchResults = useMemo(() => {
@@ -182,6 +184,7 @@ export default function JsonToolsPage() {
   }, [searchQuery, validation.valid, validation.parsed]);
 
   const lineCount = input.split("\n").length;
+  const outputLineCount = output.split("\n").length;
 
   // --- Encode / Decode logic ---
   const handleUrlEncode = () => {
@@ -222,7 +225,7 @@ export default function JsonToolsPage() {
   ];
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
+    <div className="min-h-screen p-6 md:p-12 bg-background">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <motion.div
@@ -230,12 +233,17 @@ export default function JsonToolsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
+          <div className="flex justify-center mb-4">
+            <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20">
+              <Braces className="w-8 h-8 text-primary" />
+            </div>
+          </div>
           <h1 className="text-3xl font-bold mb-2 text-foreground">
             JSON{" "}
-            <span className="text-gray-600 dark:text-gray-400">Tools</span>
+            <span className="text-primary">Tools</span>
           </h1>
-          <p className="text-foreground/60 max-w-2xl mx-auto text-sm md:text-base">
-            Validate, prettify, stringify, parse, and search your JSON data
+          <p className="text-foreground/40 max-w-2xl mx-auto text-sm md:text-base">
+            Professional JSON validation and formatting. Input on the left, results on the right.
           </p>
         </motion.div>
 
@@ -244,17 +252,17 @@ export default function JsonToolsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="flex gap-2 mb-6"
+          className="flex gap-2 mb-6 justify-center"
         >
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+                "px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 border",
                 activeTab === tab.id
-                  ? "bg-linear-to-r from-amber-500 to-orange-600 text-white shadow-md shadow-amber-500/20"
-                  : "border border-border/50 text-foreground/60 hover:bg-foreground/5 hover:text-foreground"
+                  ? "bg-primary border-primary/50 text-primary-foreground shadow-lg shadow-primary/20"
+                  : "bg-secondary border-border text-foreground/40 hover:text-foreground"
               )}
             >
               {tab.label}
@@ -265,228 +273,281 @@ export default function JsonToolsPage() {
         {/* ===== Validate & Prettify Tab ===== */}
         {activeTab === "validator" && (
           <>
-            {/* Validation Status */}
-            {input.trim() && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={cn(
-                  "mb-4 px-4 py-3 rounded-xl border flex items-center gap-3",
-                  validation.valid
-                    ? "bg-green-500/10 border-green-500/30 text-green-700 dark:text-green-400"
-                    : "bg-red-500/10 border-red-500/30 text-red-700 dark:text-red-400"
-                )}
-              >
-                {validation.valid ? (
-                  <>
-                    <Check className="w-5 h-5 shrink-0" />
-                    <span className="font-medium">Valid JSON</span>
-                  </>
-                ) : (
-                  <>
-                    <X className="w-5 h-5 shrink-0" />
-                    <span className="font-medium">Invalid JSON</span>
-                    <span className="text-sm opacity-80">— {validation.error}</span>
-                  </>
-                )}
-              </motion.div>
-            )}
-
             {/* Toolbar */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-2xl shadow-xl p-4 mb-4"
+              className="bg-secondary border border-border rounded-2xl shadow-xl p-4 mb-4"
             >
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  onClick={handlePrettify}
-                  disabled={!validation.valid}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                    "bg-linear-to-r from-amber-500 to-orange-600 text-white",
-                    "hover:from-amber-600 hover:to-orange-700",
-                    "hover:scale-105 active:scale-95",
-                    "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100",
-                    "shadow-md hover:shadow-lg shadow-amber-500/20"
-                  )}
-                >
-                  <Sparkles className="w-4 h-4" />
-                  Prettify
-                </button>
-
-                <button
-                  onClick={handleMinify}
-                  disabled={!validation.valid}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                    "border border-border/50 hover:bg-foreground/10",
-                    "disabled:opacity-40 disabled:cursor-not-allowed"
-                  )}
-                >
-                  Minify
-                </button>
-
-                <button
-                  onClick={handleSortKeys}
-                  disabled={!validation.valid}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                    "border border-border/50 hover:bg-foreground/10",
-                    "disabled:opacity-40 disabled:cursor-not-allowed"
-                  )}
-                >
-                  <SortAsc className="w-4 h-4" />
-                  Sort Keys
-                </button>
-
-                <div className="flex items-center gap-2 ml-auto">
-                  <select
-                    value={indentSize}
-                    onChange={(e) => setIndentSize(Number(e.target.value))}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handlePrettify}
+                    disabled={!validation.valid}
                     className={cn(
-                      "px-3 py-2 rounded-xl text-sm border border-border/50",
-                      "bg-background text-foreground",
-                      "focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                      "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-200",
+                      "bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-primary/10"
                     )}
                   >
-                    <option value={2}>2 spaces</option>
-                    <option value={4}>4 spaces</option>
-                    <option value={1}>1 tab</option>
-                  </select>
+                    <Sparkles className="w-4 h-4" />
+                    Format JSON
+                  </button>
 
                   <button
-                    onClick={() => handleCopy(input)}
+                    onClick={handleMinify}
+                    disabled={!validation.valid}
                     className={cn(
-                      "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                      "border border-border/50 hover:bg-foreground/10"
+                      "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200",
+                      "bg-secondary border border-border text-foreground/80 hover:text-foreground disabled:opacity-30"
                     )}
                   >
-                    <Copy className="w-4 h-4" />
-                    Copy
+                    Minify
                   </button>
+
+                  <button
+                    onClick={handleSortKeys}
+                    disabled={!validation.valid}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200",
+                      "bg-secondary border border-border text-foreground/80 hover:text-foreground disabled:opacity-30"
+                    )}
+                  >
+                    <SortAsc className="w-4 h-4" />
+                    Sort Keys
+                  </button>
+                </div>
+
+                <div className="h-8 w-px bg-border hidden sm:block mx-2" />
+
+                <div className="flex items-center gap-3 ml-auto">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-secondary rounded-xl border border-border">
+                    <span className="text-[10px] font-bold text-foreground/40 uppercase">Indent</span>
+                    <select
+                      value={indentSize}
+                      onChange={(e) => setIndentSize(Number(e.target.value))}
+                      className="bg-transparent text-xs font-bold text-foreground outline-none cursor-pointer"
+                    >
+                      <option value={2} className="bg-background">2 SPACES</option>
+                      <option value={4} className="bg-background">4 SPACES</option>
+                      <option value={1} className="bg-background">1 TAB</option>
+                    </select>
+                  </div>
 
                   <button
                     onClick={handleClear}
-                    className={cn(
-                      "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                      "border border-red-500/30 text-red-500 hover:bg-red-500/10"
-                    )}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-foreground/40 hover:text-red-400 hover:bg-red-400/5 transition-all"
                   >
                     <Trash2 className="w-4 h-4" />
-                    Clear
+                    CLEAR ALL
                   </button>
                 </div>
               </div>
             </motion.div>
 
-            {/* Search */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="mb-4"
-            >
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search keys or values in JSON..."
-                  className={cn(
-                    "w-full pl-11 pr-4 py-3 rounded-xl border border-border/50",
-                    "bg-background/80 backdrop-blur-xl text-foreground",
-                    "focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-transparent",
-                    "transition-all duration-200 text-sm"
-                  )}
-                />
-              </div>
-
-              {searchQuery.trim() && validation.valid && (
-                <div className="mt-2 bg-background/80 backdrop-blur-xl border border-border/50 rounded-xl p-3 max-h-48 overflow-y-auto">
-                  {searchResults.length > 0 ? (
-                    <div className="space-y-1">
-                      {searchResults.map((result, i) => (
-                        <div
-                          key={i}
-                          className="flex items-center gap-2 text-sm py-1 px-2 rounded-lg hover:bg-foreground/5"
-                        >
-                          <span className="text-amber-600 dark:text-amber-400 font-mono text-xs">
-                            {result.path}
-                          </span>
-                          <span className="text-foreground/40">→</span>
-                          <span className="text-foreground/70 font-mono text-xs truncate">
-                            {result.value}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-foreground/50">No matches found</p>
-                  )}
-                </div>
-              )}
-            </motion.div>
-
-            {/* Editor */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-2xl shadow-xl overflow-hidden mb-8"
-            >
-              <div className="flex items-center justify-between px-4 py-2 border-b border-border/50 bg-foreground/5">
-                <span className="text-xs font-medium text-foreground/50">
-                  JSON Input
-                </span>
-                <span className="text-xs text-foreground/40">
-                  {input.trim()
-                    ? `${lineCount} line${lineCount !== 1 ? "s" : ""} · ${input.length} chars`
-                    : "Paste your JSON here"}
-                </span>
-              </div>
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                spellCheck={false}
+            {/* Validation Status */}
+            {input.trim() && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
                 className={cn(
-                  "w-full min-h-[400px] p-4 font-mono text-sm",
-                  "bg-transparent text-foreground",
-                  "focus:outline-none resize-y",
-                  "placeholder:text-foreground/30"
+                  "mb-4 px-4 py-2.5 rounded-xl border flex items-center justify-between text-xs font-bold uppercase tracking-wider transition-colors",
+                  validation.valid
+                    ? "bg-green-500/10 border-green-500/20 text-green-400"
+                    : "bg-red-500/10 border-red-500/20 text-red-400"
                 )}
-                placeholder='{\n  "example": "Paste your JSON here",\n  "number": 42,\n  "nested": {\n    "key": "value"\n  }\n}'
-              />
-            </motion.div>
+              >
+                <div className="flex items-center gap-3">
+                  {validation.valid ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                  <span>{validation.valid ? "JSON is Valid" : `Error: ${validation.error}`}</span>
+                </div>
+              </motion.div>
+            )}
 
+            {/* Editors Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Left Column - Input */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-col h-full"
+              >
+                <div className="bg-background border border-border rounded-2xl shadow-xl overflow-hidden flex flex-col grow">
+                  <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-secondary">
+                    <div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-foreground/50">
+                      <div className="w-2 h-2 rounded-full bg-primary" />
+                      JSON Input
+                    </div>
+                    <span className="text-[10px] font-bold text-foreground/30">
+                      {input.trim() ? `${lineCount} LINES · ${input.length} CHARS` : "Paste below"}
+                    </span>
+                  </div>
+                  <textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    spellCheck={false}
+                    className={cn(
+                      "w-full min-h-[500px] p-6 font-mono text-sm",
+                      "bg-transparent text-foreground/90",
+                      "focus:outline-none resize-none leading-relaxed",
+                      "placeholder:text-foreground/20"
+                    )}
+                    placeholder='{
+  "name": "DevUtils",
+  "features": ["Validation", "Format"],
+  "active": true
+}'
+                  />
+                </div>
+              </motion.div>
+
+              {/* Right Column - Output */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-col h-full"
+              >
+                <div className="bg-background border border-border rounded-2xl shadow-xl overflow-hidden flex flex-col grow">
+                  <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-secondary">
+                    <div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-foreground/50">
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                      Formatted Output
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-[10px] font-bold text-foreground/30 uppercase">
+                        {output.trim() ? `${outputLineCount} LINES` : "Result here"}
+                      </span>
+                      {output && (
+                        <button
+                          onClick={() => handleCopy(output)}
+                          className="text-primary hover:text-primary/80 transition-colors"
+                          title="Copy results"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="relative grow min-h-[500px]">
+                    <textarea
+                      value={output}
+                      readOnly
+                      placeholder="Formatted JSON will appear here after you click 'Format JSON'..."
+                      className={cn(
+                        "w-full h-full p-6 font-mono text-sm leading-relaxed",
+                        "bg-background/20 text-foreground/90",
+                        "focus:outline-none resize-none",
+                        "placeholder:text-foreground/10"
+                      )}
+                    />
+                    {!output && validation.valid && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="bg-primary/5 border border-primary/10 px-4 py-2 rounded-lg text-[10px] font-bold text-primary/40 uppercase tracking-widest">
+                          Ready to format
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Search - Repositioned below editors */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+              className="mb-8"
+            >
+              <div className="bg-secondary border border-border rounded-2xl p-4">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search paths or values in your parsed JSON..."
+                    className={cn(
+                      "w-full pl-11 pr-4 py-3 rounded-xl border border-border",
+                      "bg-background text-foreground",
+                      "focus:outline-none focus:ring-1 focus:ring-primary/50",
+                      "transition-all duration-200 text-sm"
+                    )}
+                  />
+                </div>
+
+                {searchQuery.trim() && validation.valid && (
+                  <div className="mt-4 border-t border-border pt-4 max-h-64 overflow-y-auto custom-scrollbar">
+                    {searchResults.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {searchResults.map((result, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center justify-between gap-3 text-xs p-3 rounded-xl bg-background border border-border hover:border-primary/30 transition-all"
+                          >
+                            <div className="flex flex-col gap-1 overflow-hidden">
+                              <span className="text-primary font-black tracking-tighter truncate">
+                                {result.path}
+                              </span>
+                              <span className="text-foreground/40 font-mono truncate">
+                                {result.value}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => handleCopy(result.value)}
+                              className="shrink-0 p-2 text-foreground/20 hover:text-foreground transition-colors"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-center py-4 text-xs font-bold text-foreground/20 uppercase tracking-widest">No matching keys or values</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </motion.div>
             {/* External Tools */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-2xl shadow-xl p-6"
+              className="bg-secondary border border-border rounded-3xl shadow-2xl p-8"
             >
               <button
                 onClick={() => setShowExternalTools(!showExternalTools)}
-                className="flex items-center gap-2 w-full text-left"
+                className="flex items-center gap-3 w-full text-left group"
               >
-                <h2 className="text-lg font-semibold text-foreground">
-                  Other JSON Tools
-                </h2>
-                {showExternalTools ? (
-                  <ChevronUp className="w-4 h-4 text-foreground/50" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-foreground/50" />
-                )}
+                <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
+                  <ExternalLink className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-black text-foreground uppercase tracking-widest leading-none">
+                    External Utilities
+                  </h2>
+                  <p className="text-[10px] text-foreground/30 uppercase tracking-tighter mt-1 font-bold">
+                    Advanced tools for special use cases
+                  </p>
+                </div>
+                <div className="ml-auto">
+                  {showExternalTools ? (
+                    <ChevronUp className="w-4 h-4 text-foreground/20" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-foreground/20" />
+                  )}
+                </div>
               </button>
-              <p className="text-sm text-foreground/50 mt-1 mb-4">
-                More powerful JSON tools available online
-              </p>
-
+              
               {showExternalTools && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8"
+                >
                   {externalTools.map((tool) => (
                     <a
                       key={tool.name}
@@ -494,27 +555,28 @@ export default function JsonToolsPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className={cn(
-                        "flex items-start gap-3 p-4 rounded-xl border border-border/50",
-                        "hover:bg-foreground/5 transition-all duration-200",
-                        "group"
+                        "flex items-start gap-4 p-5 rounded-2xl border border-border bg-secondary/50",
+                        "hover:bg-accent hover:border-primary/30 transition-all duration-300",
+                        "group/tool"
                       )}
                     >
-                      <ExternalLink className="w-4 h-4 mt-0.5 text-foreground/40 group-hover:text-amber-500 transition-colors shrink-0" />
+                      <div className="mt-1 opacity-20 group-hover/tool:opacity-100 transition-opacity">
+                        <ExternalLink className="w-3.5 h-3.5 text-primary" />
+                      </div>
                       <div>
-                        <div className="font-medium text-sm text-foreground group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                        <div className="font-black text-[11px] text-foreground/70 group-hover/tool:text-primary transition-colors uppercase tracking-widest">
                           {tool.name}
                         </div>
-                        <div className="text-xs text-foreground/50 mt-0.5">
+                        <div className="text-[10px] text-foreground/30 mt-1.5 leading-relaxed font-medium">
                           {tool.description}
                         </div>
                       </div>
                     </a>
                   ))}
-                </div>
+                </motion.div>
               )}
             </motion.div>
-          </>
-        )}
+          </>        )}
 
         {/* ===== URL Encode / Decode Tab ===== */}
         {activeTab === "encode" && (
@@ -522,16 +584,17 @@ export default function JsonToolsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="space-y-4"
+            className="space-y-6"
           >
             {/* Input */}
-            <div className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-2xl shadow-xl overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2 border-b border-border/50 bg-foreground/5">
-                <span className="text-xs font-medium text-foreground/50">
-                  Input — Paste text or URL-encoded string
-                </span>
-                <span className="text-xs text-foreground/40">
-                  {encodeInput.length} chars
+            <div className="bg-background border border-border rounded-3xl shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-secondary/50">
+                <div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-foreground/50">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                  Source Text
+                </div>
+                <span className="text-[10px] font-bold text-foreground/30 uppercase tracking-tighter">
+                  {encodeInput.length} CHARACTERS
                 </span>
               </div>
               <textarea
@@ -539,55 +602,42 @@ export default function JsonToolsPage() {
                 onChange={(e) => setEncodeInput(e.target.value)}
                 spellCheck={false}
                 className={cn(
-                  "w-full min-h-[200px] p-4 font-mono text-sm",
-                  "bg-transparent text-foreground",
-                  "focus:outline-none resize-y",
-                  "placeholder:text-foreground/30"
+                  "w-full min-h-[250px] p-8 font-mono text-sm leading-relaxed",
+                  "bg-transparent text-foreground/90",
+                  "focus:outline-none resize-none",
+                  "placeholder:text-foreground/10"
                 )}
                 placeholder={'Paste text to encode or URL-encoded string to decode...\n\nExample: %7B%22status%22:%22Synced%22%7D'}
               />
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={handleUrlDecode}
-                className={cn(
-                  "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
-                  "bg-linear-to-r from-orange-500 to-red-500 text-white",
-                  "hover:from-orange-600 hover:to-red-600",
-                  "hover:scale-105 active:scale-95",
-                  "shadow-md hover:shadow-lg shadow-orange-500/20"
-                )}
-              >
-                <ArrowRightLeft className="w-4 h-4" />
-                URL Decode
-              </button>
+            <div className="flex flex-wrap items-center gap-4 bg-background p-4 rounded-2xl border border-border">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleUrlDecode}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-black uppercase tracking-widest bg-secondary border border-border text-foreground hover:bg-accent transition-all"
+                >
+                  <ArrowRightLeft className="w-4 h-4 text-primary" />
+                  Decode
+                </button>
 
-              <button
-                onClick={handleUrlEncode}
-                className={cn(
-                  "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
-                  "bg-linear-to-r from-amber-500 to-orange-600 text-white",
-                  "hover:from-amber-600 hover:to-orange-700",
-                  "hover:scale-105 active:scale-95",
-                  "shadow-md hover:shadow-lg shadow-amber-500/20"
-                )}
-              >
-                <ArrowRightLeft className="w-4 h-4" />
-                URL Encode
-              </button>
+                <button
+                  onClick={handleUrlEncode}
+                  className="flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-xl shadow-primary/20"
+                >
+                  <ArrowRightLeft className="w-4 h-4" />
+                  Encode
+                </button>
+              </div>
 
-              <div className="flex items-center gap-2 ml-auto">
+              <div className="h-8 w-px bg-border hidden sm:block mx-2" />
+
+              <div className="flex items-center gap-3 ml-auto">
                 <button
                   onClick={handleSwapEncode}
                   disabled={!encodeOutput}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                    "border border-border/50 hover:bg-foreground/10",
-                    "disabled:opacity-40 disabled:cursor-not-allowed"
-                  )}
-                  title="Move output to input"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-foreground/40 border border-border hover:bg-foreground/5 disabled:opacity-20 transition-all"
                 >
                   <ArrowDown className="w-4 h-4 rotate-180" />
                   Swap
@@ -595,21 +645,15 @@ export default function JsonToolsPage() {
 
                 <button
                   onClick={() => handleCopy(encodeOutput)}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                    "border border-border/50 hover:bg-foreground/10"
-                  )}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-primary border border-primary/20 hover:bg-primary/5 transition-all"
                 >
                   <Copy className="w-4 h-4" />
-                  Copy
+                  Copy Result
                 </button>
 
                 <button
                   onClick={handleClearEncode}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200",
-                    "border border-red-500/30 text-red-500 hover:bg-red-500/10"
-                  )}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-400 hover:bg-red-400/5 transition-all"
                 >
                   <Trash2 className="w-4 h-4" />
                   Clear
@@ -618,25 +662,26 @@ export default function JsonToolsPage() {
             </div>
 
             {/* Output */}
-            <div className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-2xl shadow-xl overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2 border-b border-border/50 bg-foreground/5">
-                <span className="text-xs font-medium text-foreground/50">
-                  Output
-                </span>
-                <span className="text-xs text-foreground/40">
-                  {encodeOutput.length} chars
+            <div className="bg-background border border-border rounded-3xl shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-secondary/50">
+                <div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-primary">
+                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  Processed Result
+                </div>
+                <span className="text-[10px] font-bold text-foreground/30 uppercase tracking-tighter">
+                  {encodeOutput.length} CHARACTERS
                 </span>
               </div>
               <textarea
                 value={encodeOutput}
                 readOnly
                 className={cn(
-                  "w-full min-h-[200px] p-4 font-mono text-sm",
-                  "bg-transparent text-foreground",
-                  "focus:outline-none resize-y",
-                  "placeholder:text-foreground/30"
+                  "w-full min-h-[250px] p-8 font-mono text-sm leading-relaxed",
+                  "bg-background/20 text-primary/80",
+                  "focus:outline-none resize-none",
+                  "placeholder:text-foreground/5"
                 )}
-                placeholder="Output will appear here..."
+                placeholder="Conversion result will appear here..."
               />
             </div>
           </motion.div>

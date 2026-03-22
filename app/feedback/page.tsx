@@ -62,8 +62,8 @@ export default function FeedbackPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-purple-700 mb-6">
-            <MessageSquare className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary mb-6 shadow-lg shadow-primary/20">
+            <MessageSquare className="w-8 h-8 text-primary-foreground" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
             Share Your{" "}
@@ -108,7 +108,7 @@ export default function FeedbackPage() {
                 rows={6}
                 className={cn(
                   "w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground",
-                  "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent",
+                  "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary",
                   "transition-all duration-200 resize-none"
                 )}
                 placeholder="Tell us what you think..."
@@ -120,10 +120,10 @@ export default function FeedbackPage() {
                 disabled={isSubmitting}
                 className={cn(
                   "flex items-center gap-2 px-8 py-3 rounded-xl",
-                  "bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold",
-                  "hover:from-purple-700 hover:to-purple-800 transition-all duration-200",
+                  "bg-primary text-primary-foreground font-semibold",
+                  "hover:bg-primary/90 transition-all duration-200",
                   "hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed",
-                  "shadow-lg hover:shadow-xl shadow-purple-500/30"
+                  "shadow-lg hover:shadow-xl shadow-primary/30"
                 )}
               >
                 {isSubmitting ? (

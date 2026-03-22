@@ -188,7 +188,7 @@ export default function ProfilePage() {
           {/* Profile Name */}
           <div className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-3xl p-6 shadow-xl">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 rounded-full bg-linear-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white">
+              <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
                 <User className="w-8 h-8" />
               </div>
               <div className="flex-1">
@@ -218,7 +218,7 @@ export default function ProfilePage() {
                       onClick={saveProfile}
                       className={cn(
                         "px-4 py-2 rounded-xl text-sm font-medium",
-                        "bg-primary text-background",
+                        "bg-primary text-primary-foreground",
                         "hover:bg-primary/90 transition-all"
                       )}
                     >
@@ -325,7 +325,7 @@ export default function ProfilePage() {
                   disabled={isExporting}
                   className={cn(
                     "flex items-center gap-2 px-6 py-3 rounded-xl",
-                    "bg-primary text-background",
+                    "bg-primary text-primary-foreground",
                     "hover:bg-primary/90 transition-all",
                     "font-medium",
                     "disabled:opacity-50"

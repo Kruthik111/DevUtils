@@ -15,7 +15,10 @@ import {
   Braces,
   Sparkles,
   Menu,
-  X
+  X,
+  LayoutDashboard,
+  ShieldCheck,
+  QrCode
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -28,6 +31,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { ThemeSelector } from "./theme-selector";
 
 interface NavItem {
   id: string;
@@ -38,17 +42,33 @@ interface NavItem {
   authRequired?: boolean;
 }
 
-const navItems: NavItem[] = [
-  { id: "notes", label: "Notes", icon: StickyNote, href: "/notes", authRequired: true },
-  { id: "api", label: "API", icon: Code, href: "/api", authRequired: true },
-  { id: "json-tools", label: "JSON Tools", icon: Braces, href: "/json-tools" },
-  { id: "better-prompts", label: "Better Prompts", icon: Sparkles, href: "/better-prompts" },
-  // { id: "test-tool", label: "Test Tool", icon: FlaskConical, href: "/test-tool" },
-  // { id: "extension", label: "Extension", icon: Puzzle, href: "/extension" },
-  { id: "feedback", label: "Feedback", icon: MessageSquare, href: "/feedback", authRequired: true },
-  { id: "admin-users", label: "Users", icon: Shield, href: "/admin/users", adminOnly: true, authRequired: true },
-  { id: "admin-notifications", label: "Notifications", icon: Bell, href: "/admin/notifications", adminOnly: true, authRequired: true },
-  { id: "profile", label: "Profile", icon: User, href: "/profile", authRequired: true },
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+const navGroups: NavGroup[] = [
+  {
+    label: "",
+    items: [
+      // { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", authRequired: true },
+      { id: "notes", label: "Notes", icon: StickyNote, href: "/notes", authRequired: true },
+      { id: "password-gen", label: "Password Gen", icon: ShieldCheck, href: "/password-generator" },
+      { id: "qr-generator", label: "Qr Code", icon: QrCode, href: "/qr-generator" },
+      { id: "api", label: "API", icon: Code, href: "/api", authRequired: true },
+      { id: "json-tools", label: "JSON Tools", icon: Braces, href: "/json-tools" },
+      { id: "better-prompts", label: "Better Prompts", icon: Sparkles, href: "/better-prompts" },
+    ]
+  },
+  {
+    label: "COMMUNITY",
+    items: [
+      { id: "feedback", label: "Feedback", icon: MessageSquare, href: "/feedback", authRequired: true },
+      { id: "admin-users", label: "Users", icon: Shield, href: "/admin/users", adminOnly: true, authRequired: true },
+      { id: "admin-notifications", label: "Notifications", icon: Bell, href: "/admin/notifications", adminOnly: true, authRequired: true },
+      { id: "profile", label: "Profile", icon: User, href: "/profile", authRequired: true },
+    ]
+  }
 ];
 
 export function Sidebar() {
@@ -62,7 +82,6 @@ export function Sidebar() {
     if (session?.user?.email === 'gokruthik2003@gmail.com') {
       setIsAdmin(true);
     } else if (session?.user?.email) {
-      // Check admin access
       fetch('/api/users/access')
         .then(res => {
           if (res.ok) {
@@ -73,201 +92,194 @@ export function Sidebar() {
     }
   }, [session]);
 
+  const renderNavItems = (items: NavItem[], mobile = false) => {
+    return items.map((item) => {
+      if (item.adminOnly && !isAdmin) return null;
+
+      const Icon = item.icon;
+      const isActive = pathname === item.href;
+
+      const content = (
+        <Link
+          key={item.id}
+          href={item.href}
+          onClick={(e) => {
+            if (item.authRequired && status === "unauthenticated") {
+              e.preventDefault();
+              if (mobile) setIsMobileSidebarOpen(false);
+              toast.error("Please sign in or sign up to access this feature.");
+              router.push("/signin");
+            } else if (mobile) {
+              setIsMobileSidebarOpen(false);
+            }
+          }}
+          className={cn(
+            "relative flex items-center gap-3 transition-all duration-300 ease-in-out px-4 py-3 rounded-2xl mx-2",
+            isActive 
+              ? "bg-primary/10 text-primary font-bold" 
+              : "text-foreground/50 hover:text-foreground hover:bg-foreground/5"
+          )}
+        >
+          <Icon className={cn("w-5 h-5 shrink-0 transition-transform duration-300", isActive && "scale-110")} />
+          {(!isCollapsed || mobile) && (
+            <span className="text-sm tracking-tight">{item.label}</span>
+          )}
+          {isActive && (
+            <div className="absolute left-0 w-1 h-4 bg-primary rounded-full" />
+          )}
+        </Link>
+      );
+
+      if (isCollapsed && !mobile) {
+        return (
+          <Tooltip key={item.id}>
+            <TooltipTrigger asChild>{content}</TooltipTrigger>
+            <TooltipContent side="right">
+              <p className="font-bold">{item.label}</p>
+            </TooltipContent>
+          </Tooltip>
+        );
+      }
+
+      return content;
+    });
+  };
+
   return (
     <TooltipProvider>
       {/* Mobile Backdrop */}
       {isMobileSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-5 md:hidden"
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-40 md:hidden"
           onClick={() => setIsMobileSidebarOpen(false)}
         />
       )}
 
-      {/* Desktop Sidebar - Left side, collapsible */}
+      {/* Desktop Sidebar */}
       <aside
         className={cn(
           "hidden md:flex fixed left-0 top-0 h-screen transition-all duration-500 ease-in-out",
-          isCollapsed ? "w-16" : "w-64"
+          isCollapsed ? "w-20" : "w-64"
         )}
-        style={{
-          zIndex: 10
-        }}
+        style={{ zIndex: 100 }}
       >
-        <div className={cn(
-          "h-full w-full bg-background/95 backdrop-blur-xl border-r border-border flex flex-col transition-all duration-500 ease-in-out",
-          "shadow-md"
-        )}>
-          {/* Hamburger Menu Button */}
-          <div className="flex items-center justify-between p-2  transition-all duration-500 ease-in-out">
+        <div className="h-full w-full bg-background border-r border-border flex flex-col overflow-hidden">
+          {/* Brand Logo */}
+          <div className="p-6 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20 shrink-0">
+              <Sparkles className="w-6 h-6 fill-current" />
+            </div>
             {!isCollapsed && (
-              <span className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
-                  D
-                </div>
-                <h2 className="text-lg font-bold text-foreground px-2 transition-opacity duration-500 ease-in-out">DevUtils</h2>
-              </span>
+              <div className="flex flex-col">
+                <span className="text-sm font-black text-foreground uppercase tracking-tighter leading-none">
+                  DevUtils
+                </span>
+              </div>
             )}
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className={cn(
-                "flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200",
-                "hover:bg-foreground/10",
-                "text-foreground hover:text-foreground"
-              )}
-              aria-label="Toggle sidebar"
-            >
-              {isCollapsed ? <Menu className="w-6 h-6" /> : <X className="w-6 h-6" />}
-            </button>
           </div>
 
-          {/* Navigation Items */}
-          <div className="flex-1 py-2 overflow-y-auto">
-            {navItems.map((item) => {
-              if (item.adminOnly && !isAdmin) return null;
-
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-
-              return (
-                <Tooltip key={item.id}>
-                  <TooltipTrigger asChild>
-                    <Link
-                      href={item.href}
-                      onClick={(e) => {
-                        if (item.authRequired && status === "unauthenticated") {
-                          e.preventDefault();
-                          toast.error("Please sign in or sign up to access this feature.");
-                          router.push("/signin");
-                        }
-                      }}
-                      className={cn(
-                        "relative flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg transition-all duration-500 ease-in-out",
-                        item.authRequired && status === "unauthenticated" ? "hover:cursor-not-allowed" : "hover:bg-foreground/10",
-                        isActive && "bg-foreground/10 text-foreground",
-                        !isActive && "text-foreground/70 hover:text-foreground"
-                      )}
-                    >
-                      <Icon className="w-6 h-6 shrink-0" />
-                      {!isCollapsed && (
-                        <span className="font-medium text-sm transition-opacity duration-500 ease-in-out">{item.label}</span>
-                      )}
-                    </Link>
-                  </TooltipTrigger>
-                  {isCollapsed && (
-                    <TooltipContent side="right">
-                      <p className="font-medium">{item.label}</p>
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              );
-            })}
+          {/* Nav Groups */}
+          <div className="flex-1 overflow-y-auto py-4 space-y-6 custom-scrollbar">
+            {navGroups.map((group, idx) => (
+              <div key={idx} className="space-y-1">
+                {group.label && !isCollapsed && (
+                  <div className="px-7 pb-2">
+                    <span className="text-[10px] font-black text-foreground/20 uppercase tracking-[0.2em]">
+                      {group.label}
+                    </span>
+                  </div>
+                )}
+                {renderNavItems(group.items)}
+              </div>
+            ))}
           </div>
-          <div className="p-4 border-t border-border/50 bg-background/95 backdrop-blur-sm shrink-0 mt-auto">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-linear-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-semibold">
+
+          {/* User Profile */}
+          <div className="p-4 bg-secondary/50 border-t border-border mt-auto">
+            <div className="mb-4">
+              <ThemeSelector collapsed={isCollapsed} />
+            </div>
+            <div className={cn("flex items-center gap-3", isCollapsed && "justify-center")}>
+              <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xs font-black shadow-inner">
                 {session?.user?.name?.charAt(0) || 'U'}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-foreground truncate">
-                  {session?.user?.name || 'User'}
+              {!isCollapsed && (
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-black text-foreground truncate uppercase">
+                    {session?.user?.name || 'User'}
+                  </div>
+                  <div className="text-[10px] text-foreground/60 truncate font-bold">
+                    {session?.user?.email}
+                  </div>
                 </div>
-                <div className="text-xs text-foreground/60 truncate">{session?.user?.email}</div>
-              </div>
+              )}
             </div>
           </div>
         </div>
       </aside>
 
-      {/* Mobile Sidebar - Overlay style */}
+      {/* Mobile Sidebar */}
       {isMobileSidebarOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-19 md:hidden"
-            onClick={() => setIsMobileSidebarOpen(false)}
-          />
-          <aside
-            className="fixed left-0 top-0 h-full w-80 max-w-[85vw] z-20 md:hidden bg-background border-r border-border shadow-2xl overflow-hidden"
-            style={{ zIndex: 20 }}
-          >
-            <div className="relative h-full w-full flex flex-col overflow-y-auto">
-              {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-border/50 bg-background/95 backdrop-blur-sm sticky top-0 z-10">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded bg-linear-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
-                    D
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-foreground">DevUtils</div>
-                    <div className="text-xs text-foreground/60">Development Tools</div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsMobileSidebarOpen(false)}
-                  className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 hover:bg-foreground/10"
-                  aria-label="Close menu"
-                >
-                  <X className="w-5 h-5 text-foreground" />
-                </button>
+        <aside
+          className="fixed left-0 top-0 h-full w-72 z-50 md:hidden bg-background border-r border-border shadow-2xl overflow-hidden flex flex-col"
+        >
+          {/* Header */}
+          <div className="p-6 border-b border-border flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white">
+                <Sparkles className="w-5 h-5 fill-current" />
               </div>
-
-              {/* Navigation Items */}
-              <div className="flex-1 py-2">
-                {navItems.map((item) => {
-                  if (item.adminOnly && !isAdmin) return null;
-
-                  const Icon = item.icon;
-                  const isActive = pathname === item.href;
-
-                  return (
-                    <Link
-                      key={item.id}
-                      href={item.href}
-                      onClick={(e) => {
-                        if (item.authRequired && status === "unauthenticated") {
-                          e.preventDefault();
-                          setIsMobileSidebarOpen(false);
-                          toast.error("Please sign in or sign up to access this feature.");
-                          router.push("/signin");
-                        } else {
-                          setIsMobileSidebarOpen(false);
-                        }
-                      }}
-                      className={cn(
-                        "relative flex items-center gap-3 mx-2 px-3 py-2.5 rounded-lg transition-all duration-200",
-                        item.authRequired && status === "unauthenticated" ? "hover:cursor-not-allowed" : "hover:bg-foreground/10",
-                        isActive && "bg-foreground/10 text-foreground",
-                        !isActive && "text-foreground/70 hover:text-foreground"
-                      )}
-                    >
-                      <Icon className="w-5 h-5 shrink-0" />
-                      <span className="font-medium text-sm">{item.label}</span>
-                    </Link>
-                  );
-                })}
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-foreground uppercase tracking-tighter">DevUtils</span>
               </div>
-
-              {/* Footer - User Info */}
-              {session?.user && (
-                <div className="p-4 border-t border-border/50 bg-background/95 backdrop-blur-sm">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-linear-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-semibold">
-                      {session.user.name?.charAt(0) || 'U'}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-foreground truncate">
-                        {session.user.name || 'User'}
-                      </div>
-                      <div className="text-xs text-foreground/60 truncate">
-                        {session.user.email}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
-          </aside>
-        </>
+            <button
+              onClick={() => setIsMobileSidebarOpen(false)}
+              className="p-2 text-foreground/30 hover:text-foreground transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto py-6 space-y-8">
+            {navGroups.map((group, idx) => (
+              <div key={idx} className="space-y-2">
+                {group.label && (
+                  <div className="px-6 pb-2">
+                    <span className="text-[10px] font-black text-foreground/20 uppercase tracking-[0.2em]">
+                      {group.label}
+                    </span>
+                  </div>
+                )}
+                <div className="space-y-1">
+                  {renderNavItems(group.items, true)}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Mobile User Footer */}
+          {session?.user && (
+            <div className="p-6 border-t border-border bg-secondary/50 mt-auto">
+              <div className="mb-6">
+                <ThemeSelector />
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xs font-black">
+                  {session.user.name?.charAt(0) || 'U'}
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="text-xs font-black text-foreground uppercase">
+                    {session.user.name || 'User'}
+                  </div>
+                  <div className="text-[10px] text-foreground/60 font-bold">
+                    {session.user.email}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </aside>
       )}
     </TooltipProvider>
   );

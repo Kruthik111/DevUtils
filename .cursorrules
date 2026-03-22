@@ -1,0 +1,45 @@
+# DevUtils Project Rules
+
+This project is a collection of developer utilities (notes, JSON tools, QR generator, etc.) built with a modern stack focusing on performance and aesthetics.
+
+## Tech Stack
+- **Framework**: Next.js 15 (App Router)
+- **Styling**: Tailwind CSS v4 (using `@theme` inline)
+- **Icons**: Lucide React
+- **Database**: Prisma with PostgreSQL
+- **Auth**: NextAuth.js
+- **UI Components**: Radix UI primitives, Shadcn UI style
+- **State Management**: React Context / Hooks
+
+## Project Structure
+- `app/`: Contains all routes and layouts.
+  - `(auth)/`: Authentication pages.
+  - `api/`: Backend API routes.
+  - `[tool-name]/`: Individual tool pages (e.g., `json-tools`, `qr-generator`).
+- `components/`:
+  - `ui/`: Reusable primitive components (buttons, inputs, etc.).
+  - `layout/`: Global layout components (Sidebar, Topbar).
+  - `providers/`: Context providers (Theme, Auth).
+- `lib/`: Shared utilities, database client, and validation schemas.
+- `public/`: Static assets (icons, manifest).
+
+## Layout & Design Guidelines
+- **Responsive Design**: All tools must be mobile-friendly. Use `md:` and `lg:` prefixes for desktop-specific layouts.
+- **Theming**:
+  - The app uses `next-themes` for theme management.
+  - Always use CSS variables (`--background`, `--foreground`, `--primary`, etc.) instead of hardcoded hex values.
+  - Support multiple themes: `light`, `dark`, and `professional` (the signature dark brown/orange theme).
+- **Aesthetics**: Maintain a premium feel with subtle gradients, glassmorphism (`.glass` class), and smooth transitions.
+- **Icons**: Use contextually relevant Lucide icons.
+
+## Coding Standards
+- Use **TypeScript** for all new files.
+- Prefer **Functional Components** with Hooks.
+- Use `cn()` utility from `lib/utils.ts` for conditional class names.
+- Ensure all interactive elements have unique IDs for testing.
+- Follow the existing pattern for tool-specific state management (e.g., separating input/output states).
+
+## Prohibited Actions
+- Do not use hardcoded colors (e.g., `bg-[#1c1714]`). Use theme variables instead.
+- Do not modify the database schema without updating Prisma models and running migrations.
+- Do not remove existing accessibility attributes (aria-labels, etc.).

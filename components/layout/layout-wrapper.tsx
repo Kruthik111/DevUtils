@@ -34,13 +34,13 @@ function MainContent({ children }: { children: React.ReactNode }) {
   
   return (
     <main 
-      className="pt-14 min-h-screen transition-all duration-500 ease-in-out"
+      className="pt-14 min-h-screen transition-all duration-500 ease-in-out bg-background"
       style={{ 
         paddingLeft,
         transition: 'padding-left 500ms ease-in-out'
       }}
     >
-      <div className="w-full">{children}</div>
+      <div className="w-full h-full px-4 md:px-8 pb-8">{children}</div>
     </main>
   );
 }

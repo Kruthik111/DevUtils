@@ -83,7 +83,7 @@ export function AddNoteModal({
                             type="text"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="w-full px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 font-medium"
+                            className="w-full px-4 py-2 rounded-lg border border-border/50 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-medium"
                             placeholder="Enter note title..."
                             autoFocus
                         />
@@ -98,7 +98,7 @@ export function AddNoteModal({
                                     key={type}
                                     onClick={() => setNoteType(type)}
                                     className={`px-4 py-2 rounded-lg border transition-colors capitalize font-medium ${noteType === type
-                                        ? 'bg-blue-600 text-white border-blue-600'
+                                        ? 'bg-primary text-primary-foreground border-primary'
                                         : 'border-border/50 hover:bg-foreground/5 text-foreground'
                                         }`}
                                 >
@@ -114,7 +114,7 @@ export function AddNoteModal({
                         <textarea
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
-                            className="w-full px-4 py-3 rounded-lg border border-border/50 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-y font-mono text-sm"
+                            className="w-full px-4 py-3 rounded-lg border border-border/50 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y font-mono text-sm"
                             placeholder={
                                 noteType === 'link'
                                     ? 'Enter URL...'
@@ -136,7 +136,7 @@ export function AddNoteModal({
                                         key={mode}
                                         onClick={() => setCopyMode(mode)}
                                         className={`px-4 py-2 rounded-lg border transition-colors capitalize font-medium ${copyMode === mode
-                                            ? 'bg-blue-600 text-white border-blue-600'
+                                            ? 'bg-primary text-primary-foreground border-primary'
                                             : 'border-border/50 hover:bg-foreground/5 text-foreground'
                                             }`}
                                     >
@@ -171,7 +171,7 @@ export function AddNoteModal({
                     <button
                         onClick={handleAdd}
                         disabled={!title.trim() || !content.trim()}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition-all font-medium"
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all font-medium"
                     >
                         <Plus className="w-4 h-4" />
                         Create Note
