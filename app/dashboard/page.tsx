@@ -13,7 +13,7 @@ import {
   Key,
   Lock,
   Eye,
-  Asterisk,
+
   Braces,
   QrCode,
   History,
@@ -105,7 +105,6 @@ export default function DashboardPage() {
             </div>
             
             <div className="grid grid-cols-2 gap-3">
-              <ToolCard icon={<Asterisk className="w-5 h-5 text-primary" />} label="GEN PASSWORD" href="/password-generator" />
               <ToolCard icon={<Braces className="w-5 h-5 text-primary" />} label="JSON FORMAT" href="/json-tools" />
               <ToolCard icon={<QrCode className="w-5 h-5 text-primary" />} label="QR GENERATOR" href="/qr-generator" />
               <ToolCard icon={<History className="w-5 h-5 text-primary" />} label="EPOCH CONV" href="/epoch-converter" />

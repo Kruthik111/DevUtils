@@ -17,7 +17,7 @@ import {
   Menu,
   X,
   LayoutDashboard,
-  ShieldCheck,
+
   QrCode
 } from "lucide-react";
 import Link from "next/link";
@@ -54,7 +54,6 @@ const navGroups: NavGroup[] = [
     items: [
       // { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", authRequired: true },
       { id: "notes", label: "Notes", icon: StickyNote, href: "/notes", authRequired: true },
-      { id: "password-gen", label: "Password Gen", icon: ShieldCheck, href: "/password-generator" },
       { id: "qr-generator", label: "Qr Code", icon: QrCode, href: "/qr-generator" },
       { id: "api", label: "API", icon: Code, href: "/api", authRequired: true },
       { id: "json-tools", label: "JSON Tools", icon: Braces, href: "/json-tools" },

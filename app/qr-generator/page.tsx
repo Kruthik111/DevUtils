@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 export default function QRGeneratorPage() {
   const [text, setText] = useState("");
+  const [activeTab, setActiveTab] = useState<"content" | "design">("content");
   const [title, setTitle] = useState("");
   const [fgColor, setFgColor] = useState("#000000");
   const [bgColor, setBgColor] = useState("#ffffff");
@@ -105,10 +106,36 @@ export default function QRGeneratorPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Controls - 7 columns */}
-          <div className="lg:col-span-7 space-y-6">
+          <div className="lg:col-span-7 space-y-6 order-2 lg:order-none">
             
-            {/* Input Section */}
-            <div className="bg-background border border-border rounded-xl p-5 shadow-sm">
+            {/* Mobile Tab Switcher */}
+            <div className="lg:hidden flex gap-0 border border-border rounded-xl overflow-hidden mb-2">
+              <button
+                onClick={() => setActiveTab("content")}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold transition-all ${
+                  activeTab === "content"
+                    ? "bg-primary/10 text-primary border-b-2 border-primary"
+                    : "bg-background text-foreground/40 hover:text-foreground/60"
+                }`}
+              >
+                <Type className="w-4 h-4" />
+                Content
+              </button>
+              <button
+                onClick={() => setActiveTab("design")}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold transition-all ${
+                  activeTab === "design"
+                    ? "bg-primary/10 text-primary border-b-2 border-primary"
+                    : "bg-background text-foreground/40 hover:text-foreground/60"
+                }`}
+              >
+                <Palette className="w-4 h-4" />
+                Design
+              </button>
+            </div>
+
+            {/* Input Section - Content Tab on mobile, always visible on desktop */}
+            <div className={`bg-background border border-border rounded-xl p-5 shadow-sm ${activeTab !== "content" ? "hidden lg:block" : ""}`}>
               <div className="flex items-center gap-2 text-sm font-bold text-foreground/90 mb-4 uppercase tracking-wider">
                 <Type className="w-4 h-4 text-primary" />
                 Content & Branding
@@ -136,8 +163,8 @@ export default function QRGeneratorPage() {
               </div>
             </div>
 
-            {/* Styling Section */}
-            <div className="bg-background border border-border rounded-xl p-5 shadow-sm">
+            {/* Styling Section - Design Tab on mobile, always visible on desktop */}
+            <div className={`bg-background border border-border rounded-xl p-5 shadow-sm ${activeTab !== "design" ? "hidden lg:block" : ""}`}>
               <div className="flex items-center gap-2 text-sm font-bold text-foreground/90 mb-6 uppercase tracking-wider">
                 <Palette className="w-4 h-4 text-primary" />
                 Theme & Colors
@@ -151,8 +178,8 @@ export default function QRGeneratorPage() {
               </div>
             </div>
 
-            {/* Border & Options Section */}
-            <div className="bg-background border border-border rounded-xl p-5 shadow-sm">
+            {/* Border & Options Section - Design Tab on mobile, always visible on desktop */}
+            <div className={`bg-background border border-border rounded-xl p-5 shadow-sm ${activeTab !== "design" ? "hidden lg:block" : ""}`}>
               <div className="flex items-center gap-2 text-sm font-bold text-foreground/90 mb-6 uppercase tracking-wider">
                 <Square className="w-4 h-4 text-primary" />
                 Border & Layout
@@ -216,7 +243,7 @@ export default function QRGeneratorPage() {
           </div>
 
           {/* Preview & Download - 5 columns */}
-          <div className="lg:col-span-5 space-y-6">
+          <div className="lg:col-span-5 space-y-6 order-1 lg:order-none">
             <div className="bg-background border border-border rounded-xl p-6 flex flex-col items-center shadow-xl">
               <div className="w-full flex justify-between items-center mb-6">
                 <div className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">LIVE PREVIEW</div>
@@ -278,8 +305,8 @@ export default function QRGeneratorPage() {
                 </div>
               </div>
 
-              {/* Download buttons */}
-              <div className="w-full mt-8 grid grid-cols-1 gap-3">
+              {/* Download buttons - visible on desktop inside preview panel */}
+              <div className="w-full mt-8 grid-cols-1 gap-3 hidden lg:grid">
                 <button 
                   onClick={() => handleDownload("png")}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg"
@@ -301,6 +328,30 @@ export default function QRGeneratorPage() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Download buttons - visible on mobile below tabs, order-3 */}
+          <div className="w-full grid grid-cols-1 gap-3 order-3 lg:hidden">
+            <button 
+              onClick={() => handleDownload("png")}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg"
+            >
+              <ImageIcon className="w-4 h-4" /> DOWNLOAD PNG IMAGE
+            </button>
+            <div className="grid grid-cols-2 gap-3">
+              <button 
+                onClick={() => handleDownload("pdf")}
+                className="bg-secondary border border-border hover:bg-accent text-foreground/80 font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 transition-all"
+              >
+                <FileText className="w-4 h-4 text-primary" /> PDF DOC
+              </button>
+              <button 
+                onClick={() => handleDownload("html")}
+                className="bg-secondary border border-border hover:bg-accent text-foreground/80 font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 transition-all"
+              >
+                <Code className="w-4 h-4 text-primary" /> HTML CODE
+              </button>
             </div>
           </div>
 
