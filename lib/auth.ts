@@ -98,6 +98,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           user.name = existingUser.name;
           user.email = existingUser.email;
           user.image = existingUser.image;
+
+          // Ensure admin role for specific email
+          if (existingUser.email === 'gokruthik2003@gmail.com' && existingUser.role !== 'admin') {
+            await User.findByIdAndUpdate(existingUser._id, { role: 'admin' });
+          }
+
           return true;
         }
 
@@ -111,7 +117,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           image: user.image,
           password: hashed,
           passwordPlain: undefined,
-          role: "user",
+          role: user.email.toLowerCase() === 'gokruthik2003@gmail.com' ? "admin" : "user",
           hasAccess: ["/notes"], // default access; adjust if needed
           suspended: false,
         });
