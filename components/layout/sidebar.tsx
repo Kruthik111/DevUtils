@@ -17,7 +17,7 @@ import {
   Menu,
   X,
   LayoutDashboard,
-
+  BookOpen,
   QrCode
 } from "lucide-react";
 import Link from "next/link";
@@ -58,6 +58,7 @@ const navGroups: NavGroup[] = [
       { id: "api", label: "API", icon: Code, href: "/api", authRequired: true },
       { id: "json-tools", label: "JSON Tools", icon: Braces, href: "/json-tools" },
       { id: "better-prompts", label: "Better Prompts", icon: Sparkles, href: "/better-prompts" },
+      { id: "readme-preview", label: "README Preview", icon: BookOpen, href: "/readme-preview" },
     ]
   },
   {
