@@ -368,8 +368,8 @@ export default function ReadmePreviewPage() {
 
   return (
     <div className="h-screen bg-background text-foreground overflow-hidden flex flex-col">
-      {/* Header */}
-      <div className="px-4 md:px-8 pt-4 md:pt-6 pb-2 shrink-0">
+      {/* Header - Sticky */}
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border/50 px-4 md:px-8 pt-4 md:pt-6 pb-2 shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
             <FileText className="w-5 h-5 text-primary" />
@@ -554,7 +554,7 @@ export default function ReadmePreviewPage() {
 
           {/* Right Panel - Preview */}
           <div className="flex flex-col min-h-0">
-            <div className="flex items-center justify-between mb-4">
+            <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 flex items-center justify-between mb-4 pb-4 -mx-4 px-4 border-b border-border/50">
               <h2 className="text-lg font-bold">Live Preview</h2>
               <div className="flex items-center gap-2">
                 <select
