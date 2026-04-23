@@ -442,7 +442,8 @@ export default function QuickSharePage() {
           if (dc.readyState !== 'open') {
             throw new Error('Data channel is not open');
           }
-          dc.send(part);
+          // Copy so BufferSource matches strict RTCDataChannel.send (subarray can be ArrayBufferLike)
+          dc.send(new Uint8Array(part));
           offset = end;
           bytesSent += part.length;
           setTransferProgress((bytesSent / file.size) * 100);
