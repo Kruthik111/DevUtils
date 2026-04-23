@@ -18,7 +18,8 @@ import {
   X,
   LayoutDashboard,
   BookOpen,
-  QrCode
+  QrCode,
+  Share2
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -55,6 +56,7 @@ const navGroups: NavGroup[] = [
       // { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", authRequired: true },
       { id: "notes", label: "Notes", icon: StickyNote, href: "/notes", authRequired: true },
       { id: "qr-generator", label: "Qr Code", icon: QrCode, href: "/qr-generator" },
+      { id: "quick-share", label: "Quick Share", icon: Share2, href: "/quick-share" },
       { id: "api", label: "API", icon: Code, href: "/api", authRequired: true },
       { id: "json-tools", label: "JSON Tools", icon: Braces, href: "/json-tools" },
       { id: "better-prompts", label: "Better Prompts", icon: Sparkles, href: "/better-prompts" },
