@@ -1,4 +1,4 @@
-const CACHE_NAME = 'devutils-v2';
+const CACHE_NAME = 'devutils-v3';
 const isFileProtocol = self.location.protocol === 'file:';
 const urlsToCache = [
   '/',
@@ -29,7 +29,13 @@ self.addEventListener('fetch', (event) => {
   }
   
   const url = new URL(event.request.url);
-  
+
+  // Do not handle quick-share (EventSource / SSE, WebRTC signaling). Calling respondWith(fetch())
+  // in a service worker can break or interrupt long-lived EventSource connections.
+  if (url.pathname.startsWith('/api/quick-share/')) {
+    return;
+  }
+
   // Skip service worker for Next.js dev chunks and HMR in development
   const isDevChunk = url.pathname.includes('/_next/static/chunks/') || 
                      url.pathname.includes('/_next/webpack-hmr') ||
