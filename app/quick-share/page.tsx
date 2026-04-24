@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
+import Peer, { DataConnection } from 'peerjs';
 import {
   Share2,
   Link2,
@@ -12,9 +13,7 @@ import {
   Send,
   AlertCircle,
   Loader,
-  X,
   Wifi,
-  WifiOff,
 } from 'lucide-react';
 
 type ShareState =
@@ -38,55 +37,58 @@ interface ReceivedText {
   timestamp: number;
 }
 
-const ICE_SERVERS = [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' },
-];
-/** Per SCTP/WebRTC data channel message; stream reads are split to this. */
-const CHUNK_SIZE = 32 * 1024;
+// Namespace peer IDs so codes don't collide with other apps using the public PeerJS signaling
+const PEER_ID_PREFIX = 'devutils-quickshare-';
+const CHUNK_SIZE = 64 * 1024;
 const SEND_BUFFER_TARGET = 256 * 1024;
 
-/** Resolves when bufferedAmount is low enough, or rejects if the channel is not open. */
-function waitDataChannelBackpressure(dc: RTCDataChannel): Promise<void> {
-  if (dc.readyState !== 'open') {
-    return Promise.reject(new Error('Data channel is not open'));
+function generateRoomCode(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  if (dc.bufferedAmount <= SEND_BUFFER_TARGET) {
-    return Promise.resolve();
-  }
+  return code;
+}
+
+/** Waits until the underlying RTCDataChannel drains below SEND_BUFFER_TARGET. */
+function waitBackpressure(conn: DataConnection): Promise<void> {
+  const dc = conn.dataChannel;
+  if (!dc || dc.readyState !== 'open') return Promise.resolve();
+  if (dc.bufferedAmount <= SEND_BUFFER_TARGET) return Promise.resolve();
   return new Promise((resolve, reject) => {
     let t: ReturnType<typeof setInterval> | null = null;
-    const finish = (fn: () => void) => {
-      if (t != null) {
+    const cleanup = () => {
+      if (t) {
         clearInterval(t);
         t = null;
       }
       dc.removeEventListener('bufferedamountlow', onLow);
-      fn();
     };
     const onLow = () => {
       if (dc.readyState !== 'open') {
-        finish(() => reject(new Error('Data channel is not open')));
+        cleanup();
+        reject(new Error('Data channel is not open'));
         return;
       }
       if (dc.bufferedAmount <= SEND_BUFFER_TARGET) {
-        finish(() => resolve());
+        cleanup();
+        resolve();
       }
     };
-    if (dc.bufferedAmount <= SEND_BUFFER_TARGET) {
-      finish(() => resolve());
-      return;
-    }
+    dc.bufferedAmountLowThreshold = SEND_BUFFER_TARGET;
+    dc.addEventListener('bufferedamountlow', onLow);
     t = setInterval(() => {
       if (dc.readyState !== 'open') {
-        finish(() => reject(new Error('Data channel is not open')));
+        cleanup();
+        reject(new Error('Data channel is not open'));
         return;
       }
       if (dc.bufferedAmount <= SEND_BUFFER_TARGET) {
-        finish(() => resolve());
+        cleanup();
+        resolve();
       }
-    }, 8);
-    dc.addEventListener('bufferedamountlow', onLow);
+    }, 20);
   });
 }
 
@@ -94,10 +96,8 @@ export default function QuickSharePage() {
   const [state, setState] = useState<ShareState>('idle');
   const [roomCode, setRoomCode] = useState('');
   const [joinCode, setJoinCode] = useState('');
-  const [peerId, setPeerId] = useState<'a' | 'b'>('a');
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
-  const [connectedPeerId, setConnectedPeerId] = useState('');
 
   const [textInput, setTextInput] = useState('');
   const [receivedTexts, setReceivedTexts] = useState<ReceivedText[]>([]);
@@ -105,294 +105,205 @@ export default function QuickSharePage() {
   const [transferProgress, setTransferProgress] = useState(0);
   const [transferFileName, setTransferFileName] = useState('');
 
-  const pcRef = useRef<RTCPeerConnection | null>(null);
-  const dcRef = useRef<RTCDataChannel | null>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const peerRef = useRef<Peer | null>(null);
+  const connRef = useRef<DataConnection | null>(null);
   const fileBufferRef = useRef<{ [key: string]: Uint8Array[] }>({});
   const fileSizeRef = useRef<{ [key: string]: number }>({});
   const fileBytesReceivedRef = useRef<{ [key: string]: number }>({});
+  const currentIncomingFileRef = useRef<string | null>(null);
 
-  const setupDataChannel = (dc: RTCDataChannel, otherPeer: 'a' | 'b') => {
-    dcRef.current = dc;
-    dc.binaryType = 'arraybuffer';
-    // Below this, `bufferedamountlow` can fire; keeps backpressure from deadlocking
-    dc.bufferedAmountLowThreshold = SEND_BUFFER_TARGET;
-
-    dc.onopen = () => {
-      setState('connected');
-      setConnectedPeerId(otherPeer);
-      toast.success('Connected! You can now share files and text.');
-    };
-
-    dc.onclose = () => {
-      setState('error');
-      setError('Connection closed');
-      setConnectedPeerId('');
-    };
-
-    dc.onmessage = (event) => {
-      try {
-        if (typeof event.data === 'string') {
-          const msg = JSON.parse(event.data);
-
-          if (msg.type === 'file-meta') {
-            setTransferFileName(msg.name);
-            setTransferProgress(0);
-            fileBufferRef.current[msg.name] = [];
-            fileSizeRef.current[msg.name] = msg.size;
-            fileBytesReceivedRef.current[msg.name] = 0;
-          } else if (msg.type === 'file-done') {
-            const chunks = fileBufferRef.current[msg.name] || [];
-            const blob = new Blob(chunks as BlobPart[], {
-              type: 'application/octet-stream',
-            });
-            setReceivedFiles((prev) => [
-              ...prev,
-              { name: msg.name, blob, size: fileSizeRef.current[msg.name] || 0 },
-            ]);
-            delete fileBufferRef.current[msg.name];
-            delete fileSizeRef.current[msg.name];
-            delete fileBytesReceivedRef.current[msg.name];
-            setTransferFileName('');
-            setTransferProgress(0);
-            toast.success(`File received: ${msg.name}`);
-          } else if (msg.type === 'text') {
-            setReceivedTexts((prev) => [
-              ...prev,
-              { content: msg.content, timestamp: Date.now() },
-            ]);
-          }
-        } else {
-          // File chunk (binaryType is "arraybuffer"); handle views if present
-          let bytes: Uint8Array;
-          if (event.data instanceof ArrayBuffer) {
-            bytes = new Uint8Array(event.data);
-          } else if (ArrayBuffer.isView(event.data)) {
-            const v = event.data;
-            bytes = new Uint8Array(
-              v.buffer,
-              v.byteOffset,
-              v.byteLength
-            );
-          } else {
-            return;
-          }
-          const lastFileName = transferFileName || Object.keys(fileBufferRef.current)[0];
-          if (lastFileName && fileBufferRef.current[lastFileName]) {
-            const buf = new Uint8Array(bytes);
-            fileBufferRef.current[lastFileName].push(buf);
-            const total = fileSizeRef.current[lastFileName] || 0;
-            fileBytesReceivedRef.current[lastFileName] =
-              (fileBytesReceivedRef.current[lastFileName] || 0) + buf.length;
-            const progress =
-              total > 0
-                ? Math.min((fileBytesReceivedRef.current[lastFileName] / total) * 100, 99)
-                : 0;
-            setTransferProgress(progress);
-          }
-        }
-      } catch (err) {
-        console.error('DataChannel message error:', err);
-      }
-    };
-
-    dc.onerror = (e) => {
-      // Often followed by onclose; avoid tearing down UI so send() can still surface a clear error
-      console.error('Data channel error:', e);
-    };
-  };
-
-  const otherFrom = (id: 'a' | 'b') => (id === 'a' ? 'b' : 'a');
-
-  async function setupWebRTC(
-    isInitiator: boolean,
-    code: string,
-    myPeerId: 'a' | 'b'
-  ) {
-    const targetPeerId = otherFrom(myPeerId);
-    if (!isInitiator) {
-      setState('connecting');
-    }
+  const handleIncomingData = (data: unknown) => {
     try {
-      const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-      pcRef.current = pc;
+      if (typeof data === 'string') {
+        const msg = JSON.parse(data);
 
-      pc.onicecandidate = async (event) => {
-        if (event.candidate) {
-          await fetch('/api/quick-share/signal', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              code,
-              fromPeerId: myPeerId,
-              targetPeerId,
-              payload: {
-                type: 'ice-candidate',
-                candidate: event.candidate,
-              },
-            }),
+        if (msg.type === 'file-meta') {
+          currentIncomingFileRef.current = msg.name;
+          setTransferFileName(msg.name);
+          setTransferProgress(0);
+          fileBufferRef.current[msg.name] = [];
+          fileSizeRef.current[msg.name] = msg.size;
+          fileBytesReceivedRef.current[msg.name] = 0;
+        } else if (msg.type === 'file-done') {
+          const chunks = fileBufferRef.current[msg.name] || [];
+          const blob = new Blob(chunks as BlobPart[], {
+            type: 'application/octet-stream',
           });
+          setReceivedFiles((prev) => [
+            ...prev,
+            { name: msg.name, blob, size: fileSizeRef.current[msg.name] || 0 },
+          ]);
+          delete fileBufferRef.current[msg.name];
+          delete fileSizeRef.current[msg.name];
+          delete fileBytesReceivedRef.current[msg.name];
+          currentIncomingFileRef.current = null;
+          setTransferFileName('');
+          setTransferProgress(0);
+          toast.success(`File received: ${msg.name}`);
+        } else if (msg.type === 'text') {
+          setReceivedTexts((prev) => [
+            ...prev,
+            { content: msg.content, timestamp: Date.now() },
+          ]);
         }
-      };
-
-      if (isInitiator) {
-        const dc = pc.createDataChannel('share', { ordered: true });
-        setupDataChannel(dc, targetPeerId);
-      }
-
-      pc.ondatachannel = (event) => {
-        setupDataChannel(event.channel, targetPeerId);
-      };
-
-      if (isInitiator) {
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-
-        await fetch('/api/quick-share/signal', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            code,
-            fromPeerId: myPeerId,
-            targetPeerId,
-            payload: {
-              type: 'offer',
-              offer: { type: offer.type, sdp: offer.sdp },
-            },
-          }),
-        });
-      }
-    } catch (err) {
-      console.error('WebRTC setup error:', err);
-      setError('Failed to establish connection');
-      setState('error');
-    }
-  }
-
-  function subscribeToSignaling(code: string, myPeerId: 'a' | 'b') {
-    const targetPeerId = otherFrom(myPeerId);
-    const eventSource = new EventSource(
-      `/api/quick-share/room?code=${encodeURIComponent(code)}&peerId=${myPeerId}`
-    );
-
-    eventSourceRef.current = eventSource;
-
-    eventSource.onmessage = async (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-
-        if (msg.type === 'connected') {
-          // Initial connection ACK
-        } else if (msg.type === 'offer') {
-          if (pcRef.current) {
-            await pcRef.current.setRemoteDescription(
-              new RTCSessionDescription({ type: 'offer', sdp: msg.offer.sdp })
-            );
-            const answer = await pcRef.current.createAnswer();
-            await pcRef.current.setLocalDescription(answer);
-
-            await fetch('/api/quick-share/signal', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                code,
-                fromPeerId: myPeerId,
-                targetPeerId,
-                payload: {
-                  type: 'answer',
-                  answer: { type: answer.type, sdp: answer.sdp },
-                },
-              }),
-            });
-          }
-        } else if (msg.type === 'answer') {
-          if (pcRef.current) {
-            await pcRef.current.setRemoteDescription(
-              new RTCSessionDescription({ type: 'answer', sdp: msg.answer.sdp })
-            );
-          }
-        } else if (msg.type === 'ice-candidate') {
-          if (pcRef.current && msg.candidate) {
-            try {
-              await pcRef.current.addIceCandidate(new RTCIceCandidate(msg.candidate));
-            } catch (e) {
-              console.warn('ICE candidate error:', e);
-            }
-          }
-        }
-      } catch (err) {
-        console.error('Signaling error:', err);
-      }
-    };
-
-    eventSource.onerror = () => {
-      eventSource.close();
-      setError('Signaling connection lost');
-      setState('error');
-    };
-  }
-
-  const createRoom = async () => {
-    setState('creating');
-    try {
-      const res = await fetch('/api/quick-share/room', { method: 'POST' });
-      if (!res.ok) throw new Error('Failed to create room');
-
-      const data = await res.json();
-      const newCode = data.code as string;
-      setRoomCode(newCode);
-      setPeerId('a');
-      setState('waiting');
-
-      subscribeToSignaling(newCode, 'a');
-      await setupWebRTC(true, newCode, 'a');
-    } catch (err) {
-      setError('Failed to create room');
-      setState('error');
-      console.error(err);
-    }
-  };
-
-  const joinRoom = async () => {
-    if (!joinCode.trim()) {
-      setError('Please enter a room code');
-      return;
-    }
-
-    setState('joining');
-    try {
-      const codeUpper = joinCode.toUpperCase();
-      const res = await fetch(
-        `/api/quick-share/room?code=${encodeURIComponent(codeUpper)}&verify=1`,
-        { method: 'GET', headers: { 'Cache-Control': 'no-cache' } }
-      );
-
-      if (res.status === 404) {
-        setError('Room not found');
-        setState('idle');
         return;
       }
 
-      if (!res.ok) throw new Error('Failed to join room');
+      // Binary chunk — PeerJS may deliver ArrayBuffer or a typed array
+      let bytes: Uint8Array | null = null;
+      if (data instanceof ArrayBuffer) {
+        bytes = new Uint8Array(data);
+      } else if (data instanceof Uint8Array) {
+        bytes = data;
+      } else if (ArrayBuffer.isView(data)) {
+        const v = data as ArrayBufferView;
+        bytes = new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
+      }
+      if (!bytes) return;
 
-      setRoomCode(codeUpper);
-      setPeerId('b');
-      setState('connecting');
-
-      // PC must exist before SSE delivers the offer; host queues signals until b connects.
-      await setupWebRTC(false, codeUpper, 'b');
-      subscribeToSignaling(codeUpper, 'b');
+      const name = currentIncomingFileRef.current;
+      if (name && fileBufferRef.current[name]) {
+        const copy = new Uint8Array(bytes);
+        fileBufferRef.current[name].push(copy);
+        const total = fileSizeRef.current[name] || 0;
+        fileBytesReceivedRef.current[name] =
+          (fileBytesReceivedRef.current[name] || 0) + copy.length;
+        const progress =
+          total > 0
+            ? Math.min((fileBytesReceivedRef.current[name] / total) * 100, 99)
+            : 0;
+        setTransferProgress(progress);
+      }
     } catch (err) {
-      setError('Failed to join room');
-      setState('idle');
-      console.error(err);
+      console.error('Data receive error:', err);
     }
   };
 
-  const sendText = async () => {
-    if (!textInput.trim() || !dcRef.current) return;
+  const setupConnection = (conn: DataConnection) => {
+    connRef.current = conn;
 
-    dcRef.current.send(
+    conn.on('open', () => {
+      // Tune underlying data channel for efficient binary transfer
+      const dc = conn.dataChannel;
+      if (dc) {
+        dc.binaryType = 'arraybuffer';
+        dc.bufferedAmountLowThreshold = SEND_BUFFER_TARGET;
+      }
+      setState('connected');
+      toast.success('Connected! You can now share files and text.');
+    });
+
+    conn.on('data', handleIncomingData);
+
+    conn.on('close', () => {
+      setState((prev) => (prev === 'error' ? prev : 'error'));
+      setError((prev) => prev || 'Peer disconnected');
+    });
+
+    conn.on('error', (err) => {
+      console.error('DataConnection error:', err);
+    });
+  };
+
+  const createRoom = async () => {
+    setState('creating');
+    setError('');
+
+    const attempt = (attemptsLeft: number) => {
+      const code = generateRoomCode();
+      const fullId = PEER_ID_PREFIX + code;
+      const peer = new Peer(fullId, { debug: 1 });
+      peerRef.current = peer;
+
+      let opened = false;
+
+      peer.on('open', () => {
+        opened = true;
+        setRoomCode(code);
+        setState('waiting');
+      });
+
+      peer.on('connection', (conn) => {
+        setState('connecting');
+        setupConnection(conn);
+      });
+
+      peer.on('disconnected', () => {
+        if (!peer.destroyed) {
+          try {
+            peer.reconnect();
+          } catch {
+            // reconnect may throw if already reconnecting
+          }
+        }
+      });
+
+      peer.on('error', (err: unknown) => {
+        const e = err as { type?: string; message?: string };
+        console.error('Peer error:', err);
+        if (!opened && e?.type === 'unavailable-id' && attemptsLeft > 0) {
+          try {
+            peer.destroy();
+          } catch {
+            /* noop */
+          }
+          attempt(attemptsLeft - 1);
+          return;
+        }
+        setError(
+          e?.type === 'network' || e?.type === 'server-error'
+            ? 'Signaling service unavailable, please try again.'
+            : `Failed to create room${e?.type ? ` (${e.type})` : ''}`
+        );
+        setState('error');
+      });
+    };
+
+    attempt(5);
+  };
+
+  const joinRoom = async () => {
+    const code = joinCode.trim().toUpperCase();
+    if (!code) {
+      setError('Please enter a room code');
+      return;
+    }
+    setState('joining');
+    setError('');
+
+    const hostId = PEER_ID_PREFIX + code;
+    const peer = new Peer({ debug: 1 });
+    peerRef.current = peer;
+
+    peer.on('open', () => {
+      setRoomCode(code);
+      setState('connecting');
+      const conn = peer.connect(hostId, {
+        reliable: true,
+        serialization: 'binary',
+      });
+      setupConnection(conn);
+    });
+
+    peer.on('error', (err: unknown) => {
+      const e = err as { type?: string; message?: string };
+      console.error('Peer error:', err);
+      if (e?.type === 'peer-unavailable') {
+        setError('Room not found or host is offline');
+      } else if (e?.type === 'network' || e?.type === 'server-error') {
+        setError('Signaling service unavailable, please try again.');
+      } else {
+        setError(`Failed to join room${e?.type ? ` (${e.type})` : ''}`);
+      }
+      setState('error');
+    });
+  };
+
+  const sendText = () => {
+    const conn = connRef.current;
+    if (!textInput.trim() || !conn || !conn.open) return;
+
+    conn.send(
       JSON.stringify({
         type: 'text',
         content: textInput,
@@ -407,8 +318,8 @@ export default function QuickSharePage() {
   };
 
   const sendFile = async (file: File) => {
-    const dc = dcRef.current;
-    if (!dc || dc.readyState !== 'open') {
+    const conn = connRef.current;
+    if (!conn || !conn.open) {
       toast.error('Not connected');
       return;
     }
@@ -420,7 +331,7 @@ export default function QuickSharePage() {
     try {
       const totalChunks = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
 
-      dc.send(
+      conn.send(
         JSON.stringify({
           type: 'file-meta',
           name: file.name,
@@ -438,12 +349,10 @@ export default function QuickSharePage() {
         while (offset < u8.length) {
           const end = Math.min(offset + CHUNK_SIZE, u8.length);
           const part = u8.subarray(offset, end);
-          await waitDataChannelBackpressure(dc);
-          if (dc.readyState !== 'open') {
-            throw new Error('Data channel is not open');
-          }
-          // Copy so BufferSource matches strict RTCDataChannel.send (subarray can be ArrayBufferLike)
-          dc.send(new Uint8Array(part));
+          await waitBackpressure(conn);
+          if (!conn.open) throw new Error('Connection closed');
+          // Copy so BufferSource matches strict RTCDataChannel.send typing
+          conn.send(new Uint8Array(part));
           offset = end;
           bytesSent += part.length;
           setTransferProgress((bytesSent / file.size) * 100);
@@ -458,10 +367,8 @@ export default function QuickSharePage() {
         if (done) break;
       }
 
-      if (dc.readyState !== 'open') {
-        throw new Error('Data channel is not open');
-      }
-      dc.send(
+      if (!conn.open) throw new Error('Connection closed');
+      conn.send(
         JSON.stringify({
           type: 'file-done',
           name: file.name,
@@ -505,25 +412,58 @@ export default function QuickSharePage() {
     setRoomCode('');
     setJoinCode('');
     setError('');
-    setConnectedPeerId('');
     setTextInput('');
     setReceivedTexts([]);
     setReceivedFiles([]);
-    if (pcRef.current) pcRef.current.close();
-    if (eventSourceRef.current) eventSourceRef.current.close();
-    if (dcRef.current) dcRef.current.close();
+
+    if (connRef.current) {
+      try {
+        connRef.current.close();
+      } catch {
+        /* noop */
+      }
+      connRef.current = null;
+    }
+    if (peerRef.current) {
+      try {
+        peerRef.current.destroy();
+      } catch {
+        /* noop */
+      }
+      peerRef.current = null;
+    }
     fileBufferRef.current = {};
     fileSizeRef.current = {};
     fileBytesReceivedRef.current = {};
+    currentIncomingFileRef.current = null;
   };
 
-  // Handle room code from URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('room');
     if (code && state === 'idle') {
       setJoinCode(code);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (connRef.current) {
+        try {
+          connRef.current.close();
+        } catch {
+          /* noop */
+        }
+      }
+      if (peerRef.current) {
+        try {
+          peerRef.current.destroy();
+        } catch {
+          /* noop */
+        }
+      }
+    };
   }, []);
 
   return (
@@ -551,6 +491,7 @@ export default function QuickSharePage() {
                 Start a new P2P session. Share the code or link with someone else.
               </p>
               <button
+                id="quick-share-create-room"
                 onClick={createRoom}
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 rounded-xl transition"
               >
@@ -567,6 +508,7 @@ export default function QuickSharePage() {
                 Enter a room code to connect with someone already sharing.
               </p>
               <input
+                id="quick-share-join-code"
                 type="text"
                 placeholder="Enter room code (e.g., X7K2MN)"
                 value={joinCode}
@@ -575,6 +517,7 @@ export default function QuickSharePage() {
                 onKeyDown={(e) => e.key === 'Enter' && joinRoom()}
               />
               <button
+                id="quick-share-join-room"
                 onClick={joinRoom}
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 rounded-xl transition"
               >
@@ -601,6 +544,7 @@ export default function QuickSharePage() {
             </div>
 
             <button
+              id="quick-share-copy-code"
               onClick={copyCode}
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 rounded-xl transition mb-3 flex items-center justify-center gap-2"
             >
@@ -618,6 +562,7 @@ export default function QuickSharePage() {
             </button>
 
             <button
+              id="quick-share-copy-link"
               onClick={copyLink}
               className="w-full bg-secondary border border-border hover:bg-accent text-foreground font-bold py-3 rounded-xl transition flex items-center justify-center gap-2"
             >
@@ -656,6 +601,7 @@ export default function QuickSharePage() {
                 <span className="font-semibold text-foreground">Connected</span>
               </div>
               <button
+                id="quick-share-disconnect"
                 onClick={reset}
                 className="bg-secondary hover:bg-accent border border-border text-foreground font-semibold text-xs py-2 px-4 rounded-lg transition"
               >
@@ -664,16 +610,17 @@ export default function QuickSharePage() {
             </div>
 
             <div className="grid lg:grid-cols-2 gap-6">
-              {/* Text Share */}
               <div className="bg-background border border-border rounded-xl p-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">Share Text</h3>
                 <textarea
+                  id="quick-share-text-input"
                   placeholder="Enter text to share..."
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
                   className="w-full bg-secondary border border-border rounded-lg px-4 py-2.5 text-foreground mb-4 focus:ring-1 focus:ring-primary/50 outline-none h-24 resize-none"
                 />
                 <button
+                  id="quick-share-send-text"
                   onClick={sendText}
                   disabled={!textInput.trim()}
                   className="w-full bg-primary hover:bg-primary/90 disabled:bg-primary/50 text-primary-foreground font-bold py-3 rounded-xl transition flex items-center justify-center gap-2"
@@ -702,7 +649,6 @@ export default function QuickSharePage() {
                 )}
               </div>
 
-              {/* File Share */}
               <div className="bg-background border border-border rounded-xl p-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">Share Files</h3>
                 <label className="block w-full border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:bg-secondary/50 transition">
@@ -712,6 +658,7 @@ export default function QuickSharePage() {
                   </p>
                   <p className="text-xs text-foreground/60">Max 100 MB per file</p>
                   <input
+                    id="quick-share-file-input"
                     type="file"
                     onChange={(e) => {
                       const file = e.currentTarget.files?.[0];
@@ -757,6 +704,7 @@ export default function QuickSharePage() {
                           </p>
                         </div>
                         <button
+                          id={`quick-share-download-${i}`}
                           onClick={() => downloadFile(file)}
                           className="ml-3 bg-primary hover:bg-primary/90 text-primary-foreground p-2 rounded-lg transition"
                         >
@@ -779,6 +727,7 @@ export default function QuickSharePage() {
             </h2>
             <p className="text-foreground/60 mb-6">{error}</p>
             <button
+              id="quick-share-retry"
               onClick={reset}
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 rounded-xl transition"
             >
