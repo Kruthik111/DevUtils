@@ -438,7 +438,7 @@ export default function ReadmePreviewPage() {
                     "focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
                     "font-mono text-xs resize-none min-h-0",
                     "placeholder:text-foreground/40",
-                    "text-foreground overflow-y-auto min-h-screen"
+                    "text-foreground overflow-y-auto"
                   )}
                 />
 
