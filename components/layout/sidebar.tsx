@@ -16,6 +16,8 @@ import {
   Sparkles,
   Menu,
   X,
+  PanelLeftClose,
+  PanelLeftOpen,
   LayoutDashboard,
   BookOpen,
   QrCode,
@@ -168,18 +170,52 @@ export function Sidebar() {
       >
         <div className="h-full w-full bg-background border-r border-border flex flex-col overflow-hidden">
           {/* Brand Logo */}
-          <div className="p-6 flex items-center gap-3">
+          <div className={cn("p-6 flex items-center gap-3", isCollapsed && "justify-center")}>
             <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 border border-border/50">
               <img src="/logo.png" alt="DevUtils Logo" className="w-full h-full object-contain" />
             </div>
             {!isCollapsed && (
-              <div className="flex flex-col">
-                <span className="text-sm font-black text-foreground uppercase tracking-tighter leading-none">
-                  DevUtils
-                </span>
-              </div>
+              <>
+                <div className="flex flex-col flex-1 min-w-0">
+                  <span className="text-sm font-black text-foreground uppercase tracking-tighter leading-none">
+                    DevUtils
+                  </span>
+                </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setIsCollapsed(true)}
+                      className="p-1.5 rounded-lg text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors"
+                      aria-label="Collapse sidebar"
+                    >
+                      <PanelLeftClose className="w-4 h-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p className="font-bold">Collapse sidebar (Ctrl+B)</p>
+                  </TooltipContent>
+                </Tooltip>
+              </>
             )}
           </div>
+          {isCollapsed && (
+            <div className="px-4 pb-2 flex justify-center">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setIsCollapsed(false)}
+                    className="p-1.5 rounded-lg text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors"
+                    aria-label="Expand sidebar"
+                  >
+                    <PanelLeftOpen className="w-4 h-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p className="font-bold">Expand sidebar (Ctrl+B)</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          )}
 
           {/* Nav Groups */}
           <div className="flex-1 overflow-y-auto py-4 space-y-6 custom-scrollbar">
