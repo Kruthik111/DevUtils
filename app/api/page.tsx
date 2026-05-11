@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Send, Plus, Trash2, Save, Loader2, ChevronDown, ChevronUp, Settings, X } from 'lucide-react';
+import { Send, Plus, Trash2, Save, Loader2, ChevronDown, ChevronUp, Settings, X, Terminal } from 'lucide-react';
+import { parseCurl } from '@/lib/parse-curl';
 import { cn } from '@/lib/utils';
 import { Loading } from '@/components/ui/loading';
 import { ConfirmDialog } from '@/components/notes/confirm-dialog';
@@ -63,6 +64,9 @@ export default function ApiPage() {
     const [selectedEnvironment, setSelectedEnvironment] = useState<Environment | null>(null);
     const [showEnvModal, setShowEnvModal] = useState(false);
     const [showApiListModal, setShowApiListModal] = useState(false);
+    const [showCurlModal, setShowCurlModal] = useState(false);
+    const [curlInput, setCurlInput] = useState('');
+    const [curlError, setCurlError] = useState<string | null>(null);
     const [envName, setEnvName] = useState('');
     const [envVars, setEnvVars] = useState<{ id: string; key: string; value: string }[]>([]);
     const [editingEnv, setEditingEnv] = useState<Environment | null>(null);
@@ -540,6 +544,42 @@ export default function ApiPage() {
         setError(null);
     };
 
+    const handleImportCurl = (input: string = curlInput) => {
+        setCurlError(null);
+        try {
+            const parsed = parseCurl(input);
+            setSelectedConfig(null);
+            setName('');
+            setMethod(parsed.method);
+            setUrl(parsed.url);
+            setHeaderRows(
+                Object.entries(parsed.headers).map(([key, value]) => ({
+                    id: `${Date.now()}-${Math.random()}`,
+                    key,
+                    value,
+                    enabled: true,
+                }))
+            );
+            setQueryRows(
+                Object.entries(parsed.queryParams).map(([key, value]) => ({
+                    id: `${Date.now()}-${Math.random()}`,
+                    key,
+                    value,
+                }))
+            );
+            setPayload(parsed.body || '');
+            setResponse(null);
+            setError(null);
+            setShowCurlModal(false);
+            setCurlInput('');
+            setShowApiListModal(false);
+        } catch (e) {
+            const msg = e instanceof Error ? e.message : 'Failed to parse cURL';
+            console.error('cURL import failed:', e);
+            setCurlError(msg);
+        }
+    };
+
     const saveEnvironment = async () => {
         if (!envName.trim()) {
             alert('Environment name is required');
@@ -602,12 +642,25 @@ export default function ApiPage() {
                         <>APIs ({apiConfigs.length})</>
                     )}
                 </button>
-                <button
-                    onClick={createNew}
-                    className="px-4 py-2 rounded-xl bg-primary text-primary-foreground"
-                >
-                    <Plus className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => {
+                            setCurlInput('');
+                            setCurlError(null);
+                            setShowCurlModal(true);
+                        }}
+                        className="px-4 py-2 rounded-xl bg-background/50 border border-border/50"
+                        title="Import from cURL"
+                    >
+                        <Terminal className="w-4 h-4" />
+                    </button>
+                    <button
+                        onClick={createNew}
+                        className="px-4 py-2 rounded-xl bg-primary text-primary-foreground"
+                    >
+                        <Plus className="w-4 h-4" />
+                    </button>
+                </div>
             </div>
 
             <div className="flex-1 flex overflow-hidden">
@@ -616,7 +669,7 @@ export default function ApiPage() {
                     "w-64 bg-background/80 backdrop-blur-xl border-r border-border/50 flex flex-col",
                     "hidden lg:flex"
                 )}>
-                    <div className="p-4 border-b border-border/50">
+                    <div className="p-4 border-b border-border/50 space-y-2">
                         <button
                             onClick={createNew}
                             className={cn(
@@ -628,6 +681,21 @@ export default function ApiPage() {
                         >
                             <Plus className="w-4 h-4" />
                             New API
+                        </button>
+                        <button
+                            onClick={() => {
+                                setCurlInput('');
+                                setCurlError(null);
+                                setShowCurlModal(true);
+                            }}
+                            className={cn(
+                                "w-full flex items-center gap-2 px-4 py-2 rounded-xl",
+                                "bg-background/50 border border-border/50 hover:bg-background/80",
+                                "transition-all text-sm font-medium"
+                            )}
+                        >
+                            <Terminal className="w-4 h-4" />
+                            Import from cURL
                         </button>
                     </div>
                     <div className="flex-1 overflow-y-auto p-2">
@@ -1370,6 +1438,68 @@ export default function ApiPage() {
                         <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-primary/30"></div>
                     </div>
                 </>
+            )}
+
+            {/* Import cURL Modal */}
+            {showCurlModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                    onClick={() => setShowCurlModal(false)}
+                >
+                    <div
+                        className="bg-background border border-border/50 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="p-4 md:p-6 border-b border-border/50 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Terminal className="w-5 h-5 text-primary" />
+                                <h2 className="text-lg font-semibold">Import from cURL</h2>
+                            </div>
+                            <button
+                                onClick={() => setShowCurlModal(false)}
+                                className="p-1 rounded-lg hover:bg-background/80"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-4 md:p-6 flex-1 overflow-y-auto space-y-3">
+                            <p className="text-sm text-foreground/60">
+                                Paste a cURL command to populate the request fields.
+                            </p>
+                            <textarea
+                                value={curlInput}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setCurlInput(value);
+                                    if (!value.trim()) {
+                                        setCurlError(null);
+                                        return;
+                                    }
+                                    handleImportCurl(value);
+                                }}
+                                placeholder={`curl -X POST https://api.example.com/users \\\n  -H "Content-Type: application/json" \\\n  -d '{"name":"John"}'`}
+                                className={cn(
+                                    "w-full min-h-[200px] px-4 py-3 rounded-xl border border-border/50",
+                                    "bg-background/50 focus:outline-none focus:border-primary",
+                                    "font-mono text-xs resize-y"
+                                )}
+                            />
+                            {curlError && (
+                                <div className="text-sm text-red-500 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
+                                    {curlError}
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-4 md:p-6 border-t border-border/50 flex justify-end gap-2">
+                            <button
+                                onClick={() => setShowCurlModal(false)}
+                                className="px-4 py-2 rounded-xl bg-background/50 border border-border/50 hover:bg-background/80 text-sm font-medium"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Delete Confirmation Dialog */}
