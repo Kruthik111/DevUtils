@@ -5,14 +5,20 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { name: "Features", href: "#features" },
-  { name: "How It Works", href: "#how-it-works" },
-  { name: "Showcase", href: "#showcase" },
-  { name: "Testimonials", href: "#testimonials" },
-  { name: "FAQ", href: "#faq" },
+  { name: "Notes", href: "/signin", requiresAuth: true },
+  { name: "Quick Share", href: "/quick-share" },
+  { name: "QR Code", href: "/qr-generator" },
+  { name: "JSON Tools", href: "/json-tools" },
+  { name: "Readme Preview", href: "/readme-preview" },
 ];
 
 export function LandingNavbar() {
@@ -26,14 +32,6 @@ export function LandingNavbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const scrollToSection = (href: string) => {
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-      setIsMobileMenuOpen(false);
-    }
-  };
 
   return (
     <motion.nav
@@ -60,16 +58,33 @@ export function LandingNavbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <Button
-                key={link.name}
-                variant="ghost"
-                onClick={() => scrollToSection(link.href)}
-                className="text-gray-600 hover:text-black font-medium"
-              >
-                {link.name}
-              </Button>
-            ))}
+            <TooltipProvider delayDuration={150}>
+              {navLinks.map((link) =>
+                link.requiresAuth ? (
+                  <Tooltip key={link.name}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        asChild
+                        className="text-gray-600 hover:text-black font-medium"
+                      >
+                        <Link href={link.href}>{link.name}</Link>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Need sign in to access</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Button
+                    key={link.name}
+                    variant="ghost"
+                    asChild
+                    className="text-gray-600 hover:text-black font-medium"
+                  >
+                    <Link href={link.href}>{link.name}</Link>
+                  </Button>
+                )
+              )}
+            </TooltipProvider>
             <Button asChild>
               <Link href="/signin">
                 Sign In
@@ -106,10 +121,19 @@ export function LandingNavbar() {
                 <Button
                   key={link.name}
                   variant="ghost"
-                  onClick={() => scrollToSection(link.href)}
+                  asChild
                   className="w-full justify-start text-gray-600 hover:text-purple-700 font-medium py-2"
+                  title={link.requiresAuth ? "Need sign in to access" : undefined}
                 >
-                  {link.name}
+                  <Link
+                    href={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {link.name}
+                    {link.requiresAuth && (
+                      <span className="ml-2 text-xs text-gray-400">(sign in required)</span>
+                    )}
+                  </Link>
                 </Button>
               ))}
               <Button asChild className="w-full mt-2">
