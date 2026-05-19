@@ -17,10 +17,74 @@ function markdownToHtml(markdown: string): string {
   // First, split by double newlines to get blocks
   const blocks = html.split(/\n{2,}/);
 
+  // Inline formatting applied to a small chunk of text (e.g. table cells)
+  const applyInline = (text: string): string => {
+    return text
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      .replace(/__(.+?)__/g, "<strong>$1</strong>")
+      .replace(/\*(.*?)\*/g, "<em>$1</em>")
+      .replace(/_(.+?)_/g, "<em>$1</em>")
+      .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" />')
+      .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
+  };
+
   html = blocks.map((block) => {
     // Code blocks with syntax highlighting
     if (block.includes("```")) {
       return block.replace(/```([\s\S]*?)```/g, "<pre><code>$1</code></pre>");
+    }
+
+    // Tables (GitHub-flavored markdown)
+    {
+      const lines = block.split("\n").filter((l) => l.trim() !== "");
+      const isTable =
+        lines.length >= 2 &&
+        lines[0].trim().startsWith("|") &&
+        /^\|?[\s:|-]+\|?$/.test(lines[1].trim()) &&
+        lines[1].includes("-");
+
+      if (isTable) {
+        const splitRow = (row: string) =>
+          row
+            .trim()
+            .replace(/^\|/, "")
+            .replace(/\|$/, "")
+            .split("|")
+            .map((c) => c.trim());
+
+        // Column alignment from the separator row
+        const aligns = splitRow(lines[1]).map((spec) => {
+          const left = spec.startsWith(":");
+          const right = spec.endsWith(":");
+          if (left && right) return "center";
+          if (right) return "right";
+          if (left) return "left";
+          return "";
+        });
+
+        const headerCells = splitRow(lines[0])
+          .map((cell, i) => {
+            const align = aligns[i] ? ` style="text-align:${aligns[i]}"` : "";
+            return `<th${align}>${applyInline(cell)}</th>`;
+          })
+          .join("");
+
+        const bodyRows = lines
+          .slice(2)
+          .map((line) => {
+            const cells = splitRow(line)
+              .map((cell, i) => {
+                const align = aligns[i] ? ` style="text-align:${aligns[i]}"` : "";
+                return `<td${align}>${applyInline(cell)}</td>`;
+              })
+              .join("");
+            return `<tr>${cells}</tr>`;
+          })
+          .join("");
+
+        return `<table><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table>`;
+      }
     }
 
     // Process inline code first
@@ -300,6 +364,29 @@ export default function ReadmePreviewPage() {
       margin: 24px 0;
       background-color: #e1e4e8;
       border: 0;
+    }
+
+    table {
+      border-collapse: collapse;
+      margin: 16px 0;
+      display: block;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    th, td {
+      border: 1px solid #d0d7de;
+      padding: 6px 13px;
+      text-align: left;
+    }
+
+    th {
+      font-weight: 600;
+      background-color: #f6f8fa;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #f6f8fa;
     }
   </style>
 </head>
@@ -732,6 +819,53 @@ export default function ReadmePreviewPage() {
                 height: 2px;
                 margin: 20px 0;
                 opacity: 0.3;
+              }
+
+              .readme-preview table {
+                border-collapse: collapse;
+                width: auto;
+                max-width: 100%;
+                margin: 12px 0;
+                display: block;
+                overflow-x: auto;
+                font-size: 0.95em;
+              }
+
+              .readme-preview th,
+              .readme-preview td {
+                border: 1px solid currentColor;
+                padding: 6px 13px;
+                text-align: left;
+              }
+
+              .readme-preview th {
+                font-weight: 600;
+              }
+
+              .readme-preview.light th,
+              .readme-preview.light td {
+                border-color: #d0d7de;
+              }
+
+              .readme-preview.light th {
+                background-color: #f6f8fa;
+              }
+
+              .readme-preview.light tbody tr:nth-child(even) {
+                background-color: #f6f8fa;
+              }
+
+              .readme-preview.dark th,
+              .readme-preview.dark td {
+                border-color: #3d3d3d;
+              }
+
+              .readme-preview.dark th {
+                background-color: #2d2d2d;
+              }
+
+              .readme-preview.dark tbody tr:nth-child(even) {
+                background-color: #232323;
               }
             `}</style>
 
