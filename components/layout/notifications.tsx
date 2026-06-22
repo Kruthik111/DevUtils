@@ -120,7 +120,9 @@ export function Notifications() {
       >
         <Bell className="w-4 h-4 text-foreground/70" />
         {unreadCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-purple-600 rounded-full" />
+          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-purple-600 px-1 text-[10px] font-medium leading-none text-white">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
         )}
       </Button>
 
