@@ -13,12 +13,16 @@ export async function GET(req: Request) {
 
         await connectDB();
 
-        // Fetch groups and notes for the user (exclude soft-deleted notes)
-        const groups = await Group.find({ userId: session.user.id });
-        const notes = await Note.find({ 
-            userId: session.user.id,
-            deleted: { $ne: true } // Exclude soft-deleted notes
-        });
+        // Fetch groups and notes for the user (exclude soft-deleted notes).
+        // Run both queries in parallel and use .lean() to skip Mongoose
+        // document hydration — the result is only serialized to JSON.
+        const [groups, notes] = await Promise.all([
+            Group.find({ userId: session.user.id }).lean(),
+            Note.find({
+                userId: session.user.id,
+                deleted: { $ne: true }, // Exclude soft-deleted notes
+            }).lean(),
+        ]);
 
         // If no groups exist, return default structure or empty
         // The frontend expects a specific structure, so we might need to construct it here

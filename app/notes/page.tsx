@@ -53,24 +53,13 @@ export default function NotesPage() {
   const loadData = async (forceFetch = false) => {
     // If not a force fetch and we already have data, skip
     if (!forceFetch && data) return;
-    
-    // First, check if user has any data in DB
-    let hasExistingData = false;
-    try {
-      const checkRes = await fetch('/api/notes');
-      if (checkRes.ok) {
-        const { groups } = await checkRes.json();
-        hasExistingData = groups && groups.length > 0;
-      }
-    } catch (error) {
-      console.error('Error checking existing data:', error);
-    }
-    
-    const loadedData = await fetchNotesData();
+
+    // Single fetch: fetchNotesData reports whether the data came from the DB
+    const { data: loadedData, fromDB } = await fetchNotesData();
     setData(loadedData);
     
     // If no existing data was found and we loaded default data, persist it
-    if (!hasExistingData && loadedData.groups.length > 0) {
+    if (!fromDB && loadedData.groups.length > 0) {
       await persistNotesData(loadedData);
     }
   };

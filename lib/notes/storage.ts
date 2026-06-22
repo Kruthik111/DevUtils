@@ -51,13 +51,19 @@ export function createDefaultData(): NotesData {
     };
 }
 
-export async function fetchNotesData(): Promise<NotesData> {
+export interface FetchNotesResult {
+    data: NotesData;
+    /** true when the data came from the database, false when default data was returned */
+    fromDB: boolean;
+}
+
+export async function fetchNotesData(): Promise<FetchNotesResult> {
     try {
         const res = await fetch('/api/notes');
         if (!res.ok) {
             if (res.status === 401) {
                 // Not authenticated, return default data or handle redirect
-                return createDefaultData();
+                return { data: createDefaultData(), fromDB: false };
             }
             throw new Error('Failed to fetch notes');
         }
@@ -66,7 +72,7 @@ export async function fetchNotesData(): Promise<NotesData> {
 
         // If no groups, return default data
         if (!groups || groups.length === 0) {
-            return createDefaultData();
+            return { data: createDefaultData(), fromDB: false };
         }
 
         // Reconstruct the nested structure
@@ -99,13 +105,16 @@ export async function fetchNotesData(): Promise<NotesData> {
         }));
 
         return {
-            groups: reconstructedGroups,
-            activeGroupId: groups[0].id,
-            activeTabId: groups[0].tabs[0].id,
+            data: {
+                groups: reconstructedGroups,
+                activeGroupId: groups[0].id,
+                activeTabId: groups[0].tabs[0].id,
+            },
+            fromDB: true,
         };
     } catch (error) {
         console.error('Error loading notes data:', error);
-        return createDefaultData();
+        return { data: createDefaultData(), fromDB: false };
     }
 }
 
