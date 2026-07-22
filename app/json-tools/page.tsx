@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import {
-  Braces,
   Check,
   X,
   Copy,
@@ -14,11 +13,11 @@ import {
   ChevronDown,
   ChevronUp,
   ArrowRightLeft,
-  ArrowDown,
+  Link,
+  Unlink,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Loading } from "@/components/ui/loading";
 import { toast } from "sonner";
 
 interface ExternalTool {
@@ -72,21 +71,15 @@ function sortObjectKeys(obj: unknown): unknown {
   return obj;
 }
 
-type ActiveTab = "validator" | "encode";
+type Action = "prettify" | "minify" | "sort" | "encode" | "decode";
 
 export default function JsonToolsPage() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>("validator");
-
-  // Validator state
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
+  const [activeAction, setActiveAction] = useState<Action>("decode");
   const [searchQuery, setSearchQuery] = useState("");
   const [indentSize, setIndentSize] = useState(2);
   const [showExternalTools, setShowExternalTools] = useState(true);
-
-  // Encode/Decode state
-  const [encodeInput, setEncodeInput] = useState("");
-  const [encodeOutput, setEncodeOutput] = useState("");
 
   // --- Validator logic ---
   const validation = useMemo(() => {
@@ -100,31 +93,48 @@ export default function JsonToolsPage() {
     }
   }, [input]);
 
+  // JSON actions work on the input, or fall back to the result pane (so
+  // decode → minify/sort chains work without swapping first)
+  const outputJson = useMemo(() => {
+    if (!output.trim()) return null;
+    try {
+      return { value: JSON.parse(output) as unknown };
+    } catch {
+      return null;
+    }
+  }, [output]);
+
+  const jsonSource = validation.valid
+    ? { value: validation.parsed as unknown }
+    : outputJson;
+
   const handlePrettify = () => {
-    if (!validation.valid || !validation.parsed) {
-      toast.error("Cannot prettify invalid JSON");
+    setActiveAction("prettify");
+    if (!jsonSource) {
+      toast.error(validation.error ?? "No valid JSON to format");
       return;
     }
-    setOutput(JSON.stringify(validation.parsed, null, indentSize));
+    setOutput(JSON.stringify(jsonSource.value, null, indentSize));
     toast.success("JSON prettified");
   };
 
   const handleMinify = () => {
-    if (!validation.valid || !validation.parsed) {
-      toast.error("Cannot minify invalid JSON");
+    setActiveAction("minify");
+    if (!jsonSource) {
+      toast.error("No valid JSON to minify");
       return;
     }
-    setOutput(JSON.stringify(validation.parsed));
+    setOutput(JSON.stringify(jsonSource.value));
     toast.success("JSON minified");
   };
 
   const handleSortKeys = () => {
-    if (!validation.valid || !validation.parsed) {
-      toast.error("Cannot sort keys in invalid JSON");
+    setActiveAction("sort");
+    if (!jsonSource) {
+      toast.error("No valid JSON to sort");
       return;
     }
-    const sorted = sortObjectKeys(validation.parsed);
-    setOutput(JSON.stringify(sorted, null, indentSize));
+    setOutput(JSON.stringify(sortObjectKeys(jsonSource.value), null, indentSize));
     toast.success("Keys sorted alphabetically");
   };
 
@@ -186,165 +196,47 @@ export default function JsonToolsPage() {
   const lineCount = input.split("\n").length;
   const outputLineCount = output.split("\n").length;
 
+  const actionBtn = (active: boolean) =>
+    cn(
+      "flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 w-full disabled:opacity-30 disabled:cursor-not-allowed",
+      active
+        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+        : "bg-secondary border border-border text-foreground/80 hover:text-foreground"
+    );
+
   // --- Encode / Decode logic ---
   const handleUrlEncode = () => {
-    if (!encodeInput.trim()) {
-      toast.error("Please enter text to encode");
+    setActiveAction("encode");
+    if (!input.trim()) {
+      toast.error("Nothing to encode");
       return;
     }
-    setEncodeOutput(encodeURIComponent(encodeInput));
+    setOutput(encodeURIComponent(input));
     toast.success("URL encoded");
   };
 
   const handleUrlDecode = () => {
-    if (!encodeInput.trim()) {
-      toast.error("Please enter text to decode");
+    setActiveAction("decode");
+    if (!input.trim()) {
+      toast.error("Nothing to decode");
       return;
     }
     try {
-      setEncodeOutput(decodeURIComponent(encodeInput));
+      setOutput(decodeURIComponent(input));
       toast.success("URL decoded");
     } catch {
       toast.error("Invalid URL-encoded string");
     }
   };
 
-  const handleSwapEncode = () => {
-    setEncodeInput(encodeOutput);
-    setEncodeOutput("");
+  const handleSwap = () => {
+    setInput(output);
+    setOutput(input);
   };
-
-  const handleClearEncode = () => {
-    setEncodeInput("");
-    setEncodeOutput("");
-  };
-
-  const tabs: { id: ActiveTab; label: string }[] = [
-    { id: "validator", label: "Validate & Prettify" },
-    { id: "encode", label: "URL Encode / Decode" },
-  ];
 
   return (
-    <div className="min-h-screen p-6 md:p-12 bg-background">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20">
-              <Braces className="w-8 h-8 text-primary" />
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold mb-2 text-foreground">
-            JSON{" "}
-            <span className="text-primary">Tools</span>
-          </h1>
-          <p className="text-foreground/40 max-w-2xl mx-auto text-sm md:text-base">
-            Professional JSON validation and formatting. Input on the left, results on the right.
-          </p>
-        </motion.div>
-
-        {/* Tab Switcher */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="flex gap-2 mb-6 justify-center"
-        >
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 border",
-                activeTab === tab.id
-                  ? "bg-primary border-primary/50 text-primary-foreground shadow-lg shadow-primary/20"
-                  : "bg-secondary border-border text-foreground/40 hover:text-foreground"
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </motion.div>
-
-        {/* ===== Validate & Prettify Tab ===== */}
-        {activeTab === "validator" && (
-          <>
-            {/* Toolbar */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-secondary border border-border rounded-2xl shadow-xl p-4 mb-4"
-            >
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handlePrettify}
-                    disabled={!validation.valid}
-                    className={cn(
-                      "flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-200",
-                      "bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed shadow-lg shadow-primary/10"
-                    )}
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    Format JSON
-                  </button>
-
-                  <button
-                    onClick={handleMinify}
-                    disabled={!validation.valid}
-                    className={cn(
-                      "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200",
-                      "bg-secondary border border-border text-foreground/80 hover:text-foreground disabled:opacity-30"
-                    )}
-                  >
-                    Minify
-                  </button>
-
-                  <button
-                    onClick={handleSortKeys}
-                    disabled={!validation.valid}
-                    className={cn(
-                      "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200",
-                      "bg-secondary border border-border text-foreground/80 hover:text-foreground disabled:opacity-30"
-                    )}
-                  >
-                    <SortAsc className="w-4 h-4" />
-                    Sort Keys
-                  </button>
-                </div>
-
-                <div className="h-8 w-px bg-border hidden sm:block mx-2" />
-
-                <div className="flex items-center gap-3 ml-auto">
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-secondary rounded-xl border border-border">
-                    <span className="text-[10px] font-bold text-foreground/40 uppercase">Indent</span>
-                    <select
-                      value={indentSize}
-                      onChange={(e) => setIndentSize(Number(e.target.value))}
-                      className="bg-transparent text-xs font-bold text-foreground outline-none cursor-pointer"
-                    >
-                      <option value={2} className="bg-background">2 SPACES</option>
-                      <option value={4} className="bg-background">4 SPACES</option>
-                      <option value={1} className="bg-background">1 TAB</option>
-                    </select>
-                  </div>
-
-                  <button
-                    onClick={handleClear}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-foreground/40 hover:text-red-400 hover:bg-red-400/5 transition-all"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    CLEAR ALL
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-
+    <div className="min-h-screen p-4 md:p-8 bg-background">
+      <div className="max-w-[1800px] mx-auto">
             {/* Validation Status */}
             {input.trim() && (
               <motion.div
@@ -354,112 +246,22 @@ export default function JsonToolsPage() {
                   "mb-4 px-4 py-2.5 rounded-xl border flex items-center justify-between text-xs font-bold uppercase tracking-wider transition-colors",
                   validation.valid
                     ? "bg-green-500/10 border-green-500/20 text-green-400"
-                    : "bg-red-500/10 border-red-500/20 text-red-400"
+                    : "bg-secondary border-border text-foreground/40"
                 )}
               >
                 <div className="flex items-center gap-3">
                   {validation.valid ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
-                  <span>{validation.valid ? "JSON is Valid" : `Error: ${validation.error}`}</span>
+                  <span>{validation.valid ? "JSON is Valid" : `Not valid JSON: ${validation.error}`}</span>
                 </div>
               </motion.div>
             )}
 
-            {/* Editors Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              {/* Left Column - Input */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="flex flex-col h-full"
-              >
-                <div className="bg-background border border-border rounded-2xl shadow-xl overflow-hidden flex flex-col grow">
-                  <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-secondary">
-                    <div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-foreground/50">
-                      <div className="w-2 h-2 rounded-full bg-primary" />
-                      JSON Input
-                    </div>
-                    <span className="text-[10px] font-bold text-foreground/30">
-                      {input.trim() ? `${lineCount} LINES · ${input.length} CHARS` : "Paste below"}
-                    </span>
-                  </div>
-                  <textarea
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    spellCheck={false}
-                    className={cn(
-                      "w-full min-h-[500px] p-6 font-mono text-sm",
-                      "bg-transparent text-foreground/90",
-                      "focus:outline-none resize-none leading-relaxed",
-                      "placeholder:text-foreground/20"
-                    )}
-                    placeholder='{
-  "name": "DevUtils",
-  "features": ["Validation", "Format"],
-  "active": true
-}'
-                  />
-                </div>
-              </motion.div>
-
-              {/* Right Column - Output */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="flex flex-col h-full"
-              >
-                <div className="bg-background border border-border rounded-2xl shadow-xl overflow-hidden flex flex-col grow">
-                  <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-secondary">
-                    <div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-foreground/50">
-                      <div className="w-2 h-2 rounded-full bg-green-500" />
-                      Formatted Output
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-[10px] font-bold text-foreground/30 uppercase">
-                        {output.trim() ? `${outputLineCount} LINES` : "Result here"}
-                      </span>
-                      {output && (
-                        <button
-                          onClick={() => handleCopy(output)}
-                          className="text-primary hover:text-primary/80 transition-colors"
-                          title="Copy results"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="relative grow min-h-[500px]">
-                    <textarea
-                      value={output}
-                      readOnly
-                      placeholder="Formatted JSON will appear here after you click 'Format JSON'..."
-                      className={cn(
-                        "w-full h-full p-6 font-mono text-sm leading-relaxed",
-                        "bg-background/20 text-foreground/90",
-                        "focus:outline-none resize-none",
-                        "placeholder:text-foreground/10"
-                      )}
-                    />
-                    {!output && validation.valid && (
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="bg-primary/5 border border-primary/10 px-4 py-2 rounded-lg text-[10px] font-bold text-primary/40 uppercase tracking-widest">
-                          Ready to format
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Search - Repositioned below editors */}
+            {/* Search - above the editors */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-              className="mb-8"
+              transition={{ delay: 0.1 }}
+              className="mb-4"
             >
               <div className="bg-secondary border border-border rounded-2xl p-4">
                 <div className="relative">
@@ -511,6 +313,182 @@ export default function JsonToolsPage() {
                 )}
               </div>
             </motion.div>
+
+            {/* Editors Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_200px_1fr] gap-4 items-stretch mb-8">
+              {/* Left Column - Input */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-col h-full"
+              >
+                <div className="bg-background border border-border rounded-2xl shadow-xl overflow-hidden flex flex-col grow">
+                  <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-secondary">
+                    <div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-foreground/50">
+                      <div className="w-2 h-2 rounded-full bg-primary" />
+                      Input
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-[10px] font-bold text-foreground/30">
+                        {input.trim() ? `${lineCount} LINES · ${input.length} CHARS` : "Paste below"}
+                      </span>
+                      {input && (
+                        <button
+                          onClick={() => handleCopy(input)}
+                          className="text-primary hover:text-primary/80 transition-colors"
+                          title="Copy input"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    spellCheck={false}
+                    className={cn(
+                      "w-full min-h-[500px] p-6 font-mono text-sm",
+                      "bg-secondary/50 text-foreground/90",
+                      "focus:outline-none resize-none leading-relaxed",
+                      "placeholder:text-foreground/20"
+                    )}
+                    placeholder={'Paste JSON to validate/format, or any text to URL encode/decode...\n\n{\n  "name": "DevUtils",\n  "active": true\n}'}
+                  />
+                </div>
+              </motion.div>
+
+              {/* Middle action column */}
+              <div className="flex lg:flex-col flex-wrap gap-3 lg:justify-center lg:py-8">
+                <button
+                  onClick={handlePrettify}
+                  disabled={!jsonSource}
+                  className={actionBtn(activeAction === "prettify")}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Validate & Prettify
+                </button>
+
+                <button
+                  onClick={handleSwap}
+                  disabled={!input && !output}
+                  className={actionBtn(false)}
+                >
+                  <ArrowRightLeft className="w-4 h-4" />
+                  Swap
+                </button>
+
+                <button
+                  onClick={handleUrlEncode}
+                  className={actionBtn(activeAction === "encode")}
+                >
+                  <Link className="w-4 h-4" />
+                  URL Encode
+                </button>
+
+                <button
+                  onClick={handleUrlDecode}
+                  className={actionBtn(activeAction === "decode")}
+                >
+                  <Unlink className="w-4 h-4" />
+                  URL Decode
+                </button>
+
+                <div className="hidden lg:block h-px w-full bg-border my-2" />
+
+                <button
+                  onClick={handleMinify}
+                  disabled={!jsonSource}
+                  className={actionBtn(activeAction === "minify")}
+                >
+                  Minify
+                </button>
+
+                <button
+                  onClick={handleSortKeys}
+                  disabled={!jsonSource}
+                  className={actionBtn(activeAction === "sort")}
+                >
+                  <SortAsc className="w-4 h-4" />
+                  Sort Keys
+                </button>
+
+                <div className="hidden lg:block h-px w-full bg-border my-2" />
+
+                <button
+                  onClick={handleClear}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-foreground/40 hover:text-red-400 hover:bg-red-400/5 transition-all w-full"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  CLEAR ALL
+                </button>
+              </div>
+
+              {/* Right Column - Output */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-col h-full"
+              >
+                <div className="bg-background border border-border rounded-2xl shadow-xl overflow-hidden flex flex-col grow">
+                  <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-secondary">
+                    <div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-foreground/50">
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                      Result
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-[10px] font-bold text-foreground/30 uppercase">
+                        {output.trim() ? `${outputLineCount} LINES` : "Result here"}
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-foreground/40 uppercase">Indent</span>
+                        <select
+                          value={indentSize}
+                          onChange={(e) => setIndentSize(Number(e.target.value))}
+                          className="bg-transparent text-[10px] font-bold text-foreground outline-none cursor-pointer"
+                        >
+                          <option value={2} className="bg-background">2 SPACES</option>
+                          <option value={4} className="bg-background">4 SPACES</option>
+                          <option value={1} className="bg-background">1 TAB</option>
+                        </select>
+                      </div>
+                      {output && (
+                        <button
+                          onClick={() => handleCopy(output)}
+                          className="text-primary hover:text-primary/80 transition-colors"
+                          title="Copy results"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="relative grow min-h-[500px]">
+                    <textarea
+                      value={output}
+                      readOnly
+                      placeholder="Result will appear here..."
+                      className={cn(
+                        "w-full h-full p-6 font-mono text-sm leading-relaxed",
+                        "bg-secondary/50 text-foreground/90",
+                        "focus:outline-none resize-none",
+                        "placeholder:text-foreground/10"
+                      )}
+                    />
+                    {!output && validation.valid && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="bg-primary/5 border border-primary/10 px-4 py-2 rounded-lg text-[10px] font-bold text-primary/40 uppercase tracking-widest">
+                          Ready to format
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
             {/* External Tools */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -576,116 +554,6 @@ export default function JsonToolsPage() {
                 </motion.div>
               )}
             </motion.div>
-          </>        )}
-
-        {/* ===== URL Encode / Decode Tab ===== */}
-        {activeTab === "encode" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="space-y-6"
-          >
-            {/* Input */}
-            <div className="bg-background border border-border rounded-3xl shadow-2xl overflow-hidden">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-secondary/50">
-                <div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-foreground/50">
-                  <div className="w-2 h-2 rounded-full bg-primary" />
-                  Source Text
-                </div>
-                <span className="text-[10px] font-bold text-foreground/30 uppercase tracking-tighter">
-                  {encodeInput.length} CHARACTERS
-                </span>
-              </div>
-              <textarea
-                value={encodeInput}
-                onChange={(e) => setEncodeInput(e.target.value)}
-                spellCheck={false}
-                className={cn(
-                  "w-full min-h-[250px] p-8 font-mono text-sm leading-relaxed",
-                  "bg-transparent text-foreground/90",
-                  "focus:outline-none resize-none",
-                  "placeholder:text-foreground/10"
-                )}
-                placeholder={'Paste text to encode or URL-encoded string to decode...\n\nExample: %7B%22status%22:%22Synced%22%7D'}
-              />
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-4 bg-background p-4 rounded-2xl border border-border">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleUrlDecode}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-black uppercase tracking-widest bg-secondary border border-border text-foreground hover:bg-accent transition-all"
-                >
-                  <ArrowRightLeft className="w-4 h-4 text-primary" />
-                  Decode
-                </button>
-
-                <button
-                  onClick={handleUrlEncode}
-                  className="flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-black uppercase tracking-widest bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-xl shadow-primary/20"
-                >
-                  <ArrowRightLeft className="w-4 h-4" />
-                  Encode
-                </button>
-              </div>
-
-              <div className="h-8 w-px bg-border hidden sm:block mx-2" />
-
-              <div className="flex items-center gap-3 ml-auto">
-                <button
-                  onClick={handleSwapEncode}
-                  disabled={!encodeOutput}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-foreground/40 border border-border hover:bg-foreground/5 disabled:opacity-20 transition-all"
-                >
-                  <ArrowDown className="w-4 h-4 rotate-180" />
-                  Swap
-                </button>
-
-                <button
-                  onClick={() => handleCopy(encodeOutput)}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-primary border border-primary/20 hover:bg-primary/5 transition-all"
-                >
-                  <Copy className="w-4 h-4" />
-                  Copy Result
-                </button>
-
-                <button
-                  onClick={handleClearEncode}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-red-400 hover:bg-red-400/5 transition-all"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Clear
-                </button>
-              </div>
-            </div>
-
-            {/* Output */}
-            <div className="bg-background border border-border rounded-3xl shadow-2xl overflow-hidden">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-secondary/50">
-                <div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-primary">
-                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  Processed Result
-                </div>
-                <span className="text-[10px] font-bold text-foreground/30 uppercase tracking-tighter">
-                  {encodeOutput.length} CHARACTERS
-                </span>
-              </div>
-              <textarea
-                value={encodeOutput}
-                readOnly
-                className={cn(
-                  "w-full min-h-[250px] p-8 font-mono text-sm leading-relaxed",
-                  "bg-background/20 text-primary/80",
-                  "focus:outline-none resize-none",
-                  "placeholder:text-foreground/5"
-                )}
-                placeholder="Conversion result will appear here..."
-              />
-            </div>
-          </motion.div>
-        )}
       </div>
     </div>
   );
