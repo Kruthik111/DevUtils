@@ -20,8 +20,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DevUtils - Developer Tools",
-  description: "A collection of developer tools for notes, testing, server management, and more",
+  title: {
+    default: "DevUtils – Free Online Developer Tools",
+    template: "%s | DevUtils",
+  },
+  description:
+    "Free online developer tools: JSON formatter & validator, URL encoder/decoder, QR code generator, README markdown preview, notes, and more.",
+  keywords: [
+    "developer tools",
+    "JSON formatter",
+    "URL decoder",
+    "QR code generator",
+    "markdown preview",
+    "online dev utils",
+  ],
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

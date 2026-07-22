@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { NotesData, Note, TextBlock, NoteType, CopyMode, Tab, Group } from '@/lib/notes/types';
-import { fetchNotesData, persistNotesData, createDefaultData } from '@/lib/notes/storage';
+import { fetchNotesData, persistNotesData, createDefaultData, readNotesCache, clearNotesCache } from '@/lib/notes/storage';
 import { GroupSelector } from '@/components/notes/group-selector';
 import { TabBar } from '@/components/notes/tab-bar';
 import { AddNoteModal } from '@/components/notes/add-note-modal';
@@ -54,10 +54,17 @@ export default function NotesPage() {
     // If not a force fetch and we already have data, skip
     if (!forceFetch && data) return;
 
+    // Show cached data instantly, then refresh from the DB in the background
+    if (!data) {
+      const cached = readNotesCache();
+      if (cached) setData(cached);
+    }
+
     // Single fetch: fetchNotesData reports whether the data came from the DB
+    // (it also updates the local cache on success)
     const { data: loadedData, fromDB } = await fetchNotesData();
     setData(loadedData);
-    
+
     // If no existing data was found and we loaded default data, persist it
     if (!fromDB && loadedData.groups.length > 0) {
       await persistNotesData(loadedData);
@@ -67,6 +74,7 @@ export default function NotesPage() {
   // Redirect to login if not authenticated
   useEffect(() => {
     if (status === 'unauthenticated') {
+      clearNotesCache();
       router.push('/signin');
     }
   }, [status, router]);

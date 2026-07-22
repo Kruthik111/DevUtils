@@ -2,6 +2,33 @@ import { NotesData, Group, Tab, Note, TextBlock } from './types';
 
 const STORAGE_KEY = 'devutils-notes-data';
 
+// Local cache so the notes page can render instantly while fresh data
+// loads in the background (stale-while-revalidate)
+export function readNotesCache(): NotesData | null {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? (JSON.parse(raw) as NotesData) : null;
+    } catch {
+        return null;
+    }
+}
+
+export function writeNotesCache(data: NotesData): void {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch {
+        // storage full or unavailable — cache is best-effort
+    }
+}
+
+export function clearNotesCache(): void {
+    try {
+        localStorage.removeItem(STORAGE_KEY);
+    } catch {
+        // ignore
+    }
+}
+
 export function createDefaultData(): NotesData {
     // Create sample note with multiple blocks
     const sampleBlocks: TextBlock[] = [
@@ -104,14 +131,13 @@ export async function fetchNotesData(): Promise<FetchNotesResult> {
             })
         }));
 
-        return {
-            data: {
-                groups: reconstructedGroups,
-                activeGroupId: groups[0].id,
-                activeTabId: groups[0].tabs[0].id,
-            },
-            fromDB: true,
+        const data: NotesData = {
+            groups: reconstructedGroups,
+            activeGroupId: groups[0].id,
+            activeTabId: groups[0].tabs[0].id,
         };
+        writeNotesCache(data);
+        return { data, fromDB: true };
     } catch (error) {
         console.error('Error loading notes data:', error);
         return { data: createDefaultData(), fromDB: false };

@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Loading } from "@/components/ui/loading";
-import { LandingPage } from "@/components/landing/landing-page";
 
 export default function Home() {
   const router = useRouter();
@@ -12,20 +11,11 @@ export default function Home() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.push("/notes");
+      router.replace("/notes");
+    } else if (status === "unauthenticated") {
+      router.replace("/json-tools");
     }
   }, [status, router]);
 
-  // Show loading while checking auth status
-  if (status === "loading") {
-    return <Loading fullScreen />;
-  }
-
-  // Show landing page for unauthenticated users
-  if (status === "unauthenticated") {
-    return <LandingPage />;
-  }
-
-  // Fallback (shouldn't reach here)
   return <Loading fullScreen />;
 }

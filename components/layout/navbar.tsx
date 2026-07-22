@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "@/components/providers/theme-provider";
 import { Palette, Menu, X, LogOut, Bell, Plus, User, ChevronDown } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { themes, type Theme } from "@/lib/theme-config";
@@ -22,10 +22,29 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+const pageTitles: [string, string][] = [
+  ["/notes", "Notes"],
+  ["/json-tools", "JSON Tools"],
+  ["/qr-generator", "QR Code"],
+  ["/quick-share", "Quick Share"],
+  ["/api-builder", "API Builder"],
+  ["/api", "API"],
+  ["/better-prompts", "Better Prompts"],
+  ["/readme-preview", "README Preview"],
+  ["/feedback", "Feedback"],
+  ["/admin/users", "Users"],
+  ["/admin/notifications", "Notifications"],
+  ["/profile", "Profile"],
+  ["/settings", "Settings"],
+];
+
 export function Navbar() {
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
+  const pageTitle =
+    pageTitles.find(([prefix]) => pathname.startsWith(prefix))?.[1] ?? "DevUtils";
   const [mounted, setMounted] = useState(false);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showCustomTheme, setShowCustomTheme] = useState(false);
@@ -101,12 +120,12 @@ export function Navbar() {
             <Menu className="w-5 h-5" />
           </Button>
           
-          {/* DevUtils */}
+          {/* Current page name */}
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded overflow-hidden border border-border/50 flex items-center justify-center">
-              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+              <img src="/logo.png" alt="DevUtils" className="w-full h-full object-contain" />
             </div>
-            <span className="text-lg font-bold text-foreground">DevUtils</span>
+            <span className="text-lg font-bold text-foreground">{pageTitle}</span>
           </div>
         </div>
 
