@@ -17,6 +17,8 @@ import { Loading } from '@/components/ui/loading';
 import { NotesPageSkeleton } from '@/components/notes/notes-page-skeleton';
 import { useRefresh } from '@/components/providers/refresh-provider';
 import { useNotes } from '@/components/providers/notes-provider';
+import { EnvironmentProvider } from '@/components/providers/environment-provider';
+import { EnvironmentBar } from '@/components/notes/environment-bar';
 import { RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, Search, Grid3x3, List, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -1015,6 +1017,7 @@ export default function NotesPage() {
   };
 
   return (
+    <EnvironmentProvider>
     <div className="p-2 md:p-4 min-h-screen">
       <div className="w-full mx-auto">
 
@@ -1182,6 +1185,7 @@ export default function NotesPage() {
             onDeleteGroup={(groupId) => setDeletingGroupId(groupId)}
             onUpdateGroupName={handleUpdateGroupName}
           />
+          <EnvironmentBar />
         </div>
 
         {/* Notes List */}
@@ -1278,5 +1282,6 @@ export default function NotesPage() {
         />
       </div>
     </div>
+    </EnvironmentProvider>
   );
 }

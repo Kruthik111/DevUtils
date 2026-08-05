@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Copy, CheckSquare, Square, Check } from 'lucide-react';
 import { copyToClipboard } from '@/lib/notes/clipboard';
 import { Button } from '@/components/ui/button';
+import { useEnvironment } from '@/components/providers/environment-provider';
+import { HighlightedContent } from '@/components/notes/highlighted-content';
 
 interface TodoNoteProps {
     content: string;
@@ -15,10 +17,13 @@ interface TodoNoteProps {
 export function TodoNote({ content, completed, copyMode, onToggle }: TodoNoteProps) {
     const [copied, setCopied] = useState(false);
     const [isGlowing, setIsGlowing] = useState(false);
+    const env = useEnvironment();
+    // Resolve {{variables}} against the selected environment for the copied value.
+    const resolvedContent = env ? env.substitute(content) : content;
 
     const handleCopy = async (e?: React.MouseEvent) => {
         e?.stopPropagation();
-        const success = await copyToClipboard(content);
+        const success = await copyToClipboard(resolvedContent);
         if (success) {
             setCopied(true);
             setIsGlowing(true);
@@ -60,7 +65,7 @@ export function TodoNote({ content, completed, copyMode, onToggle }: TodoNotePro
                 className={`flex-1 text-sm ${completed ? 'line-through text-foreground/50' : 'text-foreground/90'
                     }`}
             >
-                {content}
+                <HighlightedContent text={content} environment={env?.selectedEnvironment ?? null} />
             </span>
             {copyMode === 'passive' && (
                 <Button

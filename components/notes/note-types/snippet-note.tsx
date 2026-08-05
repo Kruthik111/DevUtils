@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Copy, Code, Check, Zap } from 'lucide-react';
 import { copyToClipboard } from '@/lib/notes/clipboard';
 import { Button } from '@/components/ui/button';
+import { useEnvironment } from '@/components/providers/environment-provider';
+import { HighlightedContent } from '@/components/notes/highlighted-content';
 
 interface SnippetNoteProps {
     content: string;
@@ -13,10 +15,13 @@ interface SnippetNoteProps {
 export function SnippetNote({ content, copyMode }: SnippetNoteProps) {
     const [copied, setCopied] = useState(false);
     const [isGlowing, setIsGlowing] = useState(false);
+    const env = useEnvironment();
+    // Resolve {{variables}} against the selected environment for the copied value.
+    const resolvedContent = env ? env.substitute(content) : content;
 
     const handleCopy = async (e?: React.MouseEvent) => {
         e?.stopPropagation();
-        const success = await copyToClipboard(content);
+        const success = await copyToClipboard(resolvedContent);
         if (success) {
             setCopied(true);
             setIsGlowing(true);
@@ -49,7 +54,7 @@ export function SnippetNote({ content, copyMode }: SnippetNoteProps) {
             )
          }   
             <pre className="flex-1 text-xs md:text-sm font-mono whitespace-pre-wrap break-words text-foreground/90 min-w-0 overflow-x-auto">
-                {content}
+                <HighlightedContent text={content} environment={env?.selectedEnvironment ?? null} />
             </pre>
             {copyMode === 'passive' && (
                 <Button

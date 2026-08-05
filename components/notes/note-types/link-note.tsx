@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Copy, ExternalLink, Check } from 'lucide-react';
 import { copyToClipboard } from '@/lib/notes/clipboard';
 import { Button } from '@/components/ui/button';
+import { useEnvironment } from '@/components/providers/environment-provider';
+import { HighlightedContent } from '@/components/notes/highlighted-content';
 
 interface LinkNoteProps {
     content: string;
@@ -13,10 +15,13 @@ interface LinkNoteProps {
 export function LinkNote({ content, copyMode }: LinkNoteProps) {
     const [copied, setCopied] = useState(false);
     const [isGlowing, setIsGlowing] = useState(false);
+    const env = useEnvironment();
+    // Resolve {{variables}} against the selected environment for the real link/copy value.
+    const resolvedContent = env ? env.substitute(content) : content;
 
     const handleCopy = async (e?: React.MouseEvent) => {
         e?.stopPropagation();
-        const success = await copyToClipboard(content);
+        const success = await copyToClipboard(resolvedContent);
         if (success) {
             setCopied(true);
             setIsGlowing(true);
@@ -30,7 +35,7 @@ export function LinkNote({ content, copyMode }: LinkNoteProps) {
     const handleClick = (e: React.MouseEvent) => {
             e.preventDefault();
             //redirect to the link
-            window.open(content, '_blank');
+            window.open(resolvedContent, '_blank');
     };
 
     return (
@@ -43,13 +48,13 @@ export function LinkNote({ content, copyMode }: LinkNoteProps) {
         >
             <ExternalLink className="w-4 h-4 text-blue-500 shrink-0" />
             <a
-                href={content}
+                href={resolvedContent}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 text-sm text-blue-500 break-all min-w-0"
                 onClick={(e) => e.preventDefault()}
             >
-                {content}
+                <HighlightedContent text={content} environment={env?.selectedEnvironment ?? null} />
             </a>
                 <Button
                     variant="ghost"
