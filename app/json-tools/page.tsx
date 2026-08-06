@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Check,
   X,
@@ -108,35 +108,63 @@ export default function JsonToolsPage() {
     ? { value: validation.parsed as unknown }
     : outputJson;
 
-  const handlePrettify = () => {
-    setActiveAction("prettify");
-    if (!jsonSource) {
-      toast.error(validation.error ?? "No valid JSON to format");
+  // One entry point for every action. Button clicks run it loud (toasts);
+  // the auto-run effect below re-runs the active action silently as you type.
+  const applyAction = (action: Action, silent = false) => {
+    setActiveAction(action);
+
+    if (!input.trim()) {
+      setOutput("");
+      if (!silent) toast.error(action === "decode" ? "Nothing to decode" : action === "encode" ? "Nothing to encode" : "Nothing to process");
       return;
     }
-    setOutput(JSON.stringify(jsonSource.value, null, indentSize));
-    toast.success("JSON prettified");
+
+    switch (action) {
+      case "encode":
+        setOutput(encodeURIComponent(input));
+        if (!silent) toast.success("URL encoded");
+        return;
+      case "decode":
+        try {
+          setOutput(decodeURIComponent(input));
+          if (!silent) toast.success("URL decoded");
+        } catch {
+          if (!silent) toast.error("Invalid URL-encoded string");
+        }
+        return;
+      case "prettify":
+        if (!jsonSource) {
+          if (!silent) toast.error(validation.error ?? "No valid JSON to format");
+          return;
+        }
+        setOutput(JSON.stringify(jsonSource.value, null, indentSize));
+        if (!silent) toast.success("JSON prettified");
+        return;
+      case "minify":
+        if (!jsonSource) {
+          if (!silent) toast.error("No valid JSON to minify");
+          return;
+        }
+        setOutput(JSON.stringify(jsonSource.value));
+        if (!silent) toast.success("JSON minified");
+        return;
+      case "sort":
+        if (!jsonSource) {
+          if (!silent) toast.error("No valid JSON to sort");
+          return;
+        }
+        setOutput(JSON.stringify(sortObjectKeys(jsonSource.value), null, indentSize));
+        if (!silent) toast.success("Keys sorted alphabetically");
+        return;
+    }
   };
 
-  const handleMinify = () => {
-    setActiveAction("minify");
-    if (!jsonSource) {
-      toast.error("No valid JSON to minify");
-      return;
-    }
-    setOutput(JSON.stringify(jsonSource.value));
-    toast.success("JSON minified");
-  };
-
-  const handleSortKeys = () => {
-    setActiveAction("sort");
-    if (!jsonSource) {
-      toast.error("No valid JSON to sort");
-      return;
-    }
-    setOutput(JSON.stringify(sortObjectKeys(jsonSource.value), null, indentSize));
-    toast.success("Keys sorted alphabetically");
-  };
+  // Auto-run: pasting or editing the input immediately produces output for the
+  // selected action — no button click needed.
+  useEffect(() => {
+    applyAction(activeAction, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [input, indentSize]);
 
   const handleCopy = async (text: string) => {
     if (!text.trim()) {
@@ -203,31 +231,6 @@ export default function JsonToolsPage() {
         ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
         : "bg-secondary border border-border text-foreground/80 hover:text-foreground"
     );
-
-  // --- Encode / Decode logic ---
-  const handleUrlEncode = () => {
-    setActiveAction("encode");
-    if (!input.trim()) {
-      toast.error("Nothing to encode");
-      return;
-    }
-    setOutput(encodeURIComponent(input));
-    toast.success("URL encoded");
-  };
-
-  const handleUrlDecode = () => {
-    setActiveAction("decode");
-    if (!input.trim()) {
-      toast.error("Nothing to decode");
-      return;
-    }
-    try {
-      setOutput(decodeURIComponent(input));
-      toast.success("URL decoded");
-    } catch {
-      toast.error("Invalid URL-encoded string");
-    }
-  };
 
   const handleSwap = () => {
     setInput(output);
@@ -362,7 +365,7 @@ export default function JsonToolsPage() {
               {/* Middle action column */}
               <div className="flex lg:flex-col flex-wrap gap-3 lg:justify-center lg:py-8">
                 <button
-                  onClick={handlePrettify}
+                  onClick={() => applyAction("prettify")}
                   disabled={!jsonSource}
                   className={actionBtn(activeAction === "prettify")}
                 >
@@ -380,7 +383,7 @@ export default function JsonToolsPage() {
                 </button>
 
                 <button
-                  onClick={handleUrlEncode}
+                  onClick={() => applyAction("encode")}
                   className={actionBtn(activeAction === "encode")}
                 >
                   <Link className="w-4 h-4" />
@@ -388,7 +391,7 @@ export default function JsonToolsPage() {
                 </button>
 
                 <button
-                  onClick={handleUrlDecode}
+                  onClick={() => applyAction("decode")}
                   className={actionBtn(activeAction === "decode")}
                 >
                   <Unlink className="w-4 h-4" />
@@ -398,7 +401,7 @@ export default function JsonToolsPage() {
                 <div className="hidden lg:block h-px w-full bg-border my-2" />
 
                 <button
-                  onClick={handleMinify}
+                  onClick={() => applyAction("minify")}
                   disabled={!jsonSource}
                   className={actionBtn(activeAction === "minify")}
                 >
@@ -406,7 +409,7 @@ export default function JsonToolsPage() {
                 </button>
 
                 <button
-                  onClick={handleSortKeys}
+                  onClick={() => applyAction("sort")}
                   disabled={!jsonSource}
                   className={actionBtn(activeAction === "sort")}
                 >
