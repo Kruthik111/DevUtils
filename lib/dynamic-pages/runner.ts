@@ -72,7 +72,15 @@ export function buildUrl(config: DynamicPageConfig, state: QueryState): string {
     const url = new URL(rawUrl);
 
     Object.entries(activePairs(endpoint.queryParams)).forEach(([k, v]) => {
-        url.searchParams.set(k, v);
+        // Template mode also reaches query param values, so a param can carry a
+        // JSON payload built around the search text, e.g. {"search":"{{search}}"}.
+        // Escaped for a JSON-string context (quotes/backslashes) — URLSearchParams
+        // handles the URL encoding on top.
+        const value =
+            controls.searchEnabled && searchMode === 'template'
+                ? v.replaceAll('{{search}}', JSON.stringify(search).slice(1, -1))
+                : v;
+        url.searchParams.set(k, value);
     });
 
     if (controls.searchEnabled && searchMode === 'param' && controls.searchParam && search) {

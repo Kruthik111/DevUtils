@@ -800,9 +800,10 @@ export function PageBuilder({ initial, pageId }: { initial: DynamicPageConfig; p
                                 )}
                                 {config.controls.searchMode === 'template' && (
                                     <p className="text-xs text-foreground/50">
-                                        Put <code className="text-primary">{'{{search}}'}</code> anywhere in the URL or
-                                        request body and it will be replaced with the search text — e.g.{' '}
-                                        <code>https://api.example.com/search/{'{{search}}'}</code>.
+                                        Put <code className="text-primary">{'{{search}}'}</code> anywhere in the URL, a
+                                        query param value, or the request body and it will be replaced with the search
+                                        text — e.g. <code>https://api.example.com/search/{'{{search}}'}</code> or a{' '}
+                                        <code>filter</code> param set to <code>{'{"search":"{{search}}"}'}</code>.
                                     </p>
                                 )}
                             </div>
