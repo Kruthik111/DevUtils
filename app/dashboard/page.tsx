@@ -138,13 +138,13 @@ export default function DashboardPage() {
           <div className="bg-background border border-border rounded-xl p-5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div className="text-sm font-bold text-foreground/90">LAST SNIPPET</div>
-              <div className="text-[10px] text-foreground/40">2h ago</div>
+              <div className="text-[10px] text-foreground/60">2h ago</div>
             </div>
             
             <div className="bg-background/50 border border-border/50 rounded-lg p-4 font-mono text-sm overflow-x-auto">
-              <span className="text-blue-400">const</span> <span className="text-foreground">config</span> <span className="text-blue-400">=</span> <span className="text-yellow-300">{`{`}</span><br/>
-              &nbsp;&nbsp;<span className="text-orange-300">apiKey</span><span className="text-foreground">:</span> <span className="text-green-400">"dev_92...281"</span>,<br/>
-              &nbsp;&nbsp;<span className="text-orange-300">env</span><span className="text-foreground">:</span> <span className="text-green-400">"production"</span><br/>
+              <span className="text-blue-600">const</span> <span className="text-foreground">config</span> <span className="text-blue-600">=</span> <span className="text-yellow-300">{`{`}</span><br/>
+              &nbsp;&nbsp;<span className="text-orange-300">apiKey</span><span className="text-foreground">:</span> <span className="text-green-600">"dev_92...281"</span>,<br/>
+              &nbsp;&nbsp;<span className="text-orange-300">env</span><span className="text-foreground">:</span> <span className="text-green-600">"production"</span><br/>
               <span className="text-yellow-300">{`}`}</span><span className="text-foreground">;</span>
             </div>
           </div>
@@ -164,14 +164,14 @@ function BookmarkItem({ icon, title, url }: { icon: React.ReactNode, title: stri
         </div>
         <div>
           <div className="text-sm font-semibold text-foreground/90">{title}</div>
-          <div className="text-xs text-foreground/40">{url}</div>
+          <div className="text-xs text-foreground/60">{url}</div>
         </div>
       </div>
       <div className="flex items-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
         <button className="text-xs font-semibold text-foreground/60 hover:text-foreground flex items-center gap-1.5 transition-colors">
           Copy
         </button>
-        <button className="text-foreground/40 hover:text-foreground transition-colors">
+        <button className="text-foreground/60 hover:text-foreground transition-colors">
           <ExternalLink className="w-4 h-4" />
         </button>
       </div>

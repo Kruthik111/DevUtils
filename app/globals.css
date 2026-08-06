@@ -1,13 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fef9f3;
-  --foreground: #2d2d2d;
-  --primary: #3b3b3b;
+  --background: #f7f6f3;
+  --foreground: #1a1a1a;
+  --primary: #1f1f1f;
   --primary-foreground: #ffffff;
-  --secondary: #f5f0e8;
-  --accent: #e8e0d4;
-  --border: rgba(0, 0, 0, 0.15);
+  --secondary: #ffffff;
+  --accent: #eceae5;
+  --border: rgba(0, 0, 0, 0.14);
+  --footer: #26241f;
+  --footer-foreground: #f5f3ef;
 }
 
 @theme inline {
@@ -18,6 +20,8 @@
   --color-secondary: var(--secondary);
   --color-accent: var(--accent);
   --color-border: var(--border);
+  --color-footer: var(--footer);
+  --color-footer-foreground: var(--footer-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -31,6 +35,8 @@
   --secondary: #2d2d2d;
   --accent: #3a3a3a;
   --border: rgba(255, 255, 255, 0.1);
+  --footer: #0a0a0a;
+  --footer-foreground: #e5e5e5;
 }
 
 /* Custom Theme - variables set via JavaScript */
@@ -40,46 +46,54 @@
 
 /* Orange Theme */
 [data-theme="orange"] {
-  --background: #fff7ed;
-  --foreground: #431407;
-  --primary: #ea580c;
+  --background: #fdf7f1;
+  --foreground: #2a1408;
+  --primary: #c2410c;
   --primary-foreground: #ffffff;
-  --secondary: #ffedd5;
-  --accent: #fed7aa;
-  --border: rgba(234, 88, 12, 0.3);
+  --secondary: #ffffff;
+  --accent: #f9e7d6;
+  --border: rgba(194, 65, 12, 0.22);
+  --footer: #3a1d0b;
+  --footer-foreground: #fdf1e6;
 }
 
 /* Purple Theme */
 [data-theme="purple"] {
-  --background: #faf5ff;
-  --foreground: #3b0764;
-  --primary: #9333ea;
+  --background: #f9f6fd;
+  --foreground: #1e1029;
+  --primary: #7e22ce;
   --primary-foreground: #ffffff;
-  --secondary: #f3e8ff;
-  --accent: #e9d5ff;
-  --border: rgba(147, 51, 234, 0.3);
+  --secondary: #ffffff;
+  --accent: #ece0fa;
+  --border: rgba(126, 34, 206, 0.22);
+  --footer: #251437;
+  --footer-foreground: #f3ebfd;
 }
 
 /* Blue Theme */
 [data-theme="blue"] {
-  --background: #eff6ff;
-  --foreground: #1e3a8a;
-  --primary: #3b82f6;
+  --background: #f5f9fe;
+  --foreground: #0f1b2d;
+  --primary: #1d4ed8;
   --primary-foreground: #ffffff;
-  --secondary: #dbeafe;
-  --accent: #bfdbfe;
-  --border: rgba(59, 130, 246, 0.3);
+  --secondary: #ffffff;
+  --accent: #dbe9fb;
+  --border: rgba(29, 78, 216, 0.22);
+  --footer: #10233f;
+  --footer-foreground: #e6eefb;
 }
 
 /* Green Theme */
 [data-theme="green"] {
-  --background: #f0fdf4;
-  --foreground: #14532d;
-  --primary: #22c55e;
-  --primary-foreground: #14532d;
-  --secondary: #dcfce7;
-  --accent: #bbf7d0;
-  --border: rgba(34, 197, 94, 0.3);
+  --background: #f5fbf7;
+  --foreground: #0e2216;
+  --primary: #15803d;
+  --primary-foreground: #ffffff;
+  --secondary: #ffffff;
+  --accent: #d9f0e2;
+  --border: rgba(21, 128, 61, 0.22);
+  --footer: #0d2a19;
+  --footer-foreground: #e6f4ec;
 }
 
 /* Professional Dark Theme */
@@ -91,6 +105,8 @@
   --secondary: #241e1a;
   --accent: #2a231f;
   --border: #2c241e;
+  --footer: #14100e;
+  --footer-foreground: #ffffff;
 }
 
 html {

@@ -157,7 +157,7 @@ export function PageRenderer({ config, compact = false }: { config: DynamicPageC
                 <div className="flex flex-wrap items-center gap-2">
                     {controls.searchEnabled && (
                         <div className="relative flex-1 min-w-52">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/60" />
                             <input
                                 value={searchInput}
                                 onChange={(e) => setSearchInput(e.target.value)}
@@ -260,7 +260,7 @@ export function PageRenderer({ config, compact = false }: { config: DynamicPageC
             {/* Empty */}
             {result?.ok && rows.length === 0 && !loading && (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <Inbox className="w-10 h-10 text-foreground/20 mb-3" />
+                    <Inbox className="w-10 h-10 text-foreground/45 mb-3" />
                     <div className="font-medium">No records</div>
                     <div className="text-sm text-foreground/60 mt-1">
                         {searchInput || state.search || activeFilterCount > 0
@@ -487,7 +487,7 @@ export function PageRenderer({ config, compact = false }: { config: DynamicPageC
             )}
 
             {result && (
-                <div className="text-xs text-foreground/40 space-y-0.5">
+                <div className="text-xs text-foreground/60 space-y-0.5">
                     <div>
                         {rows.length} record{rows.length === 1 ? '' : 's'} · {result.durationMs}ms
                         {result.status ? ` · HTTP ${result.status}` : ''}

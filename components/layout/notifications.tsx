@@ -223,7 +223,7 @@ export function Notifications() {
                           >
                             {notification.message}
                           </div>
-                          <div className="text-xs text-foreground/40 mt-1">
+                          <div className="text-xs text-foreground/60 mt-1">
                             {new Date(notification.createdAt).toLocaleDateString(
                               "en-US",
                               {

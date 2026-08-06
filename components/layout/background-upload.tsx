@@ -97,7 +97,7 @@ export function BackgroundUpload({ onClose }: BackgroundUploadProps) {
               "flex-1 px-3 py-2 rounded-xl text-sm",
               "bg-background/50 border border-border/50",
               "focus:outline-none focus:border-primary",
-              "placeholder:text-foreground/40"
+              "placeholder:text-foreground/60"
             )}
             onKeyDown={(e) => {
               if (e.key === "Enter") {

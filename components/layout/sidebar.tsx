@@ -225,7 +225,7 @@ export function Sidebar() {
               <div key={idx} className="space-y-1">
                 {group.label && !isCollapsed && (
                   <div className="px-7 pb-2">
-                    <span className="text-[10px] font-black text-foreground/40 uppercase tracking-[0.2em]">
+                    <span className="text-[10px] font-black text-foreground/60 uppercase tracking-[0.2em]">
                       {group.label}
                     </span>
                   </div>
@@ -278,7 +278,7 @@ export function Sidebar() {
               variant="ghost"
               size="icon"
               onClick={() => setIsMobileSidebarOpen(false)}
-              className="text-foreground/30 hover:text-foreground"
+              className="text-foreground/55 hover:text-foreground"
             >
               <X className="w-5 h-5" />
             </Button>
@@ -289,7 +289,7 @@ export function Sidebar() {
               <div key={idx} className="space-y-2">
                 {group.label && (
                   <div className="px-6 pb-2">
-                    <span className="text-[10px] font-black text-foreground/40 uppercase tracking-[0.2em]">
+                    <span className="text-[10px] font-black text-foreground/60 uppercase tracking-[0.2em]">
                       {group.label}
                     </span>
                   </div>

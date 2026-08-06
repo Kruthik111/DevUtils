@@ -524,7 +524,7 @@ export default function ReadmePreviewPage() {
                     "flex-1 w-full p-3 rounded-lg border border-border bg-secondary/50",
                     "focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent",
                     "font-mono text-xs resize-none min-h-0",
-                    "placeholder:text-foreground/40",
+                    "placeholder:text-foreground/60",
                     "text-foreground overflow-y-auto"
                   )}
                 />

@@ -304,7 +304,7 @@ function AdminNotificationsContent() {
               <Loading fullScreen={false} text="Loading feedbacks..." />
             ) : feedbacks.length === 0 ? (
               <div className="bg-background/80 backdrop-blur-xl border border-border/50 rounded-2xl p-12 text-center">
-                <MessageSquare className="w-12 h-12 text-foreground/30 mx-auto mb-4" />
+                <MessageSquare className="w-12 h-12 text-foreground/55 mx-auto mb-4" />
                 <p className="text-foreground/60">No feedbacks received yet</p>
               </div>
             ) : (
@@ -334,7 +334,7 @@ function AdminNotificationsContent() {
                               <h3 className="font-semibold text-foreground">
                                 {userName}
                               </h3>
-                              <span className="text-xs text-foreground/40">
+                              <span className="text-xs text-foreground/60">
                                 {new Date(feedback.createdAt).toLocaleDateString(
                                   "en-US",
                                   {

@@ -115,7 +115,7 @@ export default function QRGeneratorPage() {
                 className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold transition-all ${
                   activeTab === "content"
                     ? "bg-primary/10 text-primary border-b-2 border-primary"
-                    : "bg-background text-foreground/40 hover:text-foreground/60"
+                    : "bg-background text-foreground/60 hover:text-foreground/60"
                 }`}
               >
                 <Type className="w-4 h-4" />
@@ -126,7 +126,7 @@ export default function QRGeneratorPage() {
                 className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold transition-all ${
                   activeTab === "design"
                     ? "bg-primary/10 text-primary border-b-2 border-primary"
-                    : "bg-background text-foreground/40 hover:text-foreground/60"
+                    : "bg-background text-foreground/60 hover:text-foreground/60"
                 }`}
               >
                 <Palette className="w-4 h-4" />
@@ -143,7 +143,7 @@ export default function QRGeneratorPage() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs text-foreground/40 mb-1.5 block">QR TEXT OR URL</label>
+                  <label className="text-xs text-foreground/60 mb-1.5 block">QR TEXT OR URL</label>
                   <input
                     value={text}
                     onChange={(e) => setText(e.target.value)}
@@ -152,7 +152,7 @@ export default function QRGeneratorPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-foreground/40 mb-1.5 block">CUSTOM TITLE (APPEARS ON TOP)</label>
+                  <label className="text-xs text-foreground/60 mb-1.5 block">CUSTOM TITLE (APPEARS ON TOP)</label>
                   <input
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
@@ -188,13 +188,13 @@ export default function QRGeneratorPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div>
-                    <label className="text-xs text-foreground/40 mb-3 block">SHEET TYPE</label>
+                    <label className="text-xs text-foreground/60 mb-3 block">SHEET TYPE</label>
                     <div className="flex flex-wrap gap-2">
                       {(["square", "a4", "minimal"] as const).map((t) => (
                         <button
                           key={t}
                           onClick={() => setSheetType(t)}
-                          className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${sheetType === t ? "bg-primary text-primary-foreground shadow-lg" : "bg-secondary text-foreground/40 hover:text-foreground hover:bg-accent"}`}
+                          className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${sheetType === t ? "bg-primary text-primary-foreground shadow-lg" : "bg-secondary text-foreground/60 hover:text-foreground hover:bg-accent"}`}
                         >
                           {t}
                         </button>
@@ -203,7 +203,7 @@ export default function QRGeneratorPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs text-foreground/40 mb-3 block">BORDER WIDTH: {borderWidth}px</label>
+                    <label className="text-xs text-foreground/60 mb-3 block">BORDER WIDTH: {borderWidth}px</label>
                     <input 
                       type="range" min="0" max="20" step="1"
                       value={borderWidth} onChange={(e) => setBorderWidth(parseInt(e.target.value))}
@@ -212,13 +212,13 @@ export default function QRGeneratorPage() {
                   </div>
                   
                   <div>
-                    <label className="text-xs text-foreground/40 mb-3 block">BORDER STYLE</label>
+                    <label className="text-xs text-foreground/60 mb-3 block">BORDER STYLE</label>
                     <div className="flex flex-wrap gap-2">
                       {borderStyles.map((s) => (
                         <button
                           key={s}
                           onClick={() => setBorderStyle(s)}
-                          className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${borderStyle === s ? "bg-primary text-primary-foreground shadow-lg" : "bg-secondary text-foreground/40 hover:text-foreground hover:bg-accent"}`}
+                          className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${borderStyle === s ? "bg-primary text-primary-foreground shadow-lg" : "bg-secondary text-foreground/60 hover:text-foreground hover:bg-accent"}`}
                         >
                           {s}
                         </button>
@@ -246,7 +246,7 @@ export default function QRGeneratorPage() {
           <div className="lg:col-span-5 space-y-6 order-1 lg:order-none">
             <div className="bg-background border border-border rounded-xl p-6 flex flex-col items-center shadow-xl">
               <div className="w-full flex justify-between items-center mb-6">
-                <div className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">LIVE PREVIEW</div>
+                <div className="text-[10px] font-bold text-foreground/60 uppercase tracking-widest">LIVE PREVIEW</div>
                 <div className="flex gap-1.5">
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
                   <div className="w-2 h-2 rounded-full bg-primary/40"></div>
@@ -364,7 +364,7 @@ export default function QRGeneratorPage() {
 function ColorPicker({ label, value, onChange }: { label: string, value: string, onChange: (v: string) => void }) {
   return (
     <div>
-      <label className="text-[10px] font-bold text-foreground/40 mb-2 block tracking-widest uppercase">{label}</label>
+      <label className="text-[10px] font-bold text-foreground/60 mb-2 block tracking-widest uppercase">{label}</label>
       <div className="flex items-center gap-3">
         <div className="relative w-10 h-10 shrink-0 border border-foreground/10 rounded-lg overflow-hidden cursor-pointer group">
           <input 
@@ -391,7 +391,7 @@ function OptionToggle({ label, active, onToggle }: { label: string, active: bool
       onClick={onToggle}
       className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all ${active ? "bg-primary/10 border-primary/30" : "bg-secondary border-border hover:bg-accent"}`}
     >
-      <span className={`text-xs font-bold ${active ? "text-foreground" : "text-foreground/40"}`}>{label}</span>
+      <span className={`text-xs font-bold ${active ? "text-foreground" : "text-foreground/60"}`}>{label}</span>
       <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all ${active ? "bg-primary text-primary-foreground" : "bg-background border border-foreground/5"}`}>
         {active && <Check className="w-3.5 h-3.5" />}
       </div>

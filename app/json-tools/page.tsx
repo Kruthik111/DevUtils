@@ -226,10 +226,10 @@ export default function JsonToolsPage() {
 
   const actionBtn = (active: boolean) =>
     cn(
-      "flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 w-full disabled:opacity-30 disabled:cursor-not-allowed",
+      "flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 w-full disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-secondary disabled:hover:border-border",
       active
-        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-        : "bg-secondary border border-border text-foreground/80 hover:text-foreground"
+        ? "bg-primary text-primary-foreground border border-primary shadow-sm"
+        : "bg-secondary border border-border text-foreground hover:bg-accent hover:border-primary/40"
     );
 
   const handleSwap = () => {
@@ -248,8 +248,8 @@ export default function JsonToolsPage() {
                 className={cn(
                   "mb-4 px-4 py-2.5 rounded-xl border flex items-center justify-between text-xs font-bold uppercase tracking-wider transition-colors",
                   validation.valid
-                    ? "bg-green-500/10 border-green-500/20 text-green-400"
-                    : "bg-secondary border-border text-foreground/40"
+                    ? "bg-green-500/10 border-green-500/20 text-green-600"
+                    : "bg-secondary border-border text-foreground/60"
                 )}
               >
                 <div className="flex items-center gap-3">
@@ -268,7 +268,7 @@ export default function JsonToolsPage() {
             >
               <div className="bg-secondary border border-border rounded-2xl p-4">
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30" />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/55" />
                   <input
                     type="text"
                     value={searchQuery}
@@ -296,13 +296,13 @@ export default function JsonToolsPage() {
                               <span className="text-primary font-black tracking-tighter truncate">
                                 {result.path}
                               </span>
-                              <span className="text-foreground/40 font-mono truncate">
+                              <span className="text-foreground/60 font-mono truncate">
                                 {result.value}
                               </span>
                             </div>
                             <button
                               onClick={() => handleCopy(result.value)}
-                              className="shrink-0 p-2 text-foreground/20 hover:text-foreground transition-colors"
+                              className="shrink-0 p-2 text-foreground/45 hover:text-foreground transition-colors"
                             >
                               <Copy className="w-3.5 h-3.5" />
                             </button>
@@ -310,7 +310,7 @@ export default function JsonToolsPage() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-center py-4 text-xs font-bold text-foreground/20 uppercase tracking-widest">No matching keys or values</p>
+                      <p className="text-center py-4 text-xs font-bold text-foreground/45 uppercase tracking-widest">No matching keys or values</p>
                     )}
                   </div>
                 )}
@@ -326,14 +326,14 @@ export default function JsonToolsPage() {
                 transition={{ delay: 0.2 }}
                 className="flex flex-col h-full"
               >
-                <div className="bg-background border border-border rounded-2xl shadow-xl overflow-hidden flex flex-col grow">
-                  <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-secondary">
-                    <div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-foreground/50">
+                <div className="bg-secondary border border-border rounded-2xl shadow-xl overflow-hidden flex flex-col grow">
+                  <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-accent/40">
+                    <div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-foreground">
                       <div className="w-2 h-2 rounded-full bg-primary" />
                       Input
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="text-[10px] font-bold text-foreground/30">
+                      <span className="text-[10px] font-bold text-foreground/55 uppercase">
                         {input.trim() ? `${lineCount} LINES · ${input.length} CHARS` : "Paste below"}
                       </span>
                       {input && (
@@ -353,9 +353,9 @@ export default function JsonToolsPage() {
                     spellCheck={false}
                     className={cn(
                       "w-full min-h-[500px] p-6 font-mono text-sm",
-                      "bg-secondary/50 text-foreground/90",
+                      "bg-secondary text-foreground",
                       "focus:outline-none resize-none leading-relaxed",
-                      "placeholder:text-foreground/20"
+                      "placeholder:text-foreground/45"
                     )}
                     placeholder={'Paste JSON to validate/format, or any text to URL encode/decode...\n\n{\n  "name": "DevUtils",\n  "active": true\n}'}
                   />
@@ -421,7 +421,7 @@ export default function JsonToolsPage() {
 
                 <button
                   onClick={handleClear}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-foreground/40 hover:text-red-400 hover:bg-red-400/5 transition-all w-full"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-foreground/70 border border-transparent hover:text-red-600 hover:border-red-600/30 hover:bg-red-600/10 transition-all w-full"
                 >
                   <Trash2 className="w-4 h-4" />
                   CLEAR ALL
@@ -435,18 +435,18 @@ export default function JsonToolsPage() {
                 transition={{ delay: 0.2 }}
                 className="flex flex-col h-full"
               >
-                <div className="bg-background border border-border rounded-2xl shadow-xl overflow-hidden flex flex-col grow">
-                  <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-secondary">
-                    <div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-foreground/50">
+                <div className="bg-secondary border border-border rounded-2xl shadow-xl overflow-hidden flex flex-col grow">
+                  <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-accent/40">
+                    <div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-foreground">
                       <div className="w-2 h-2 rounded-full bg-green-500" />
                       Result
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className="text-[10px] font-bold text-foreground/30 uppercase">
+                      <span className="text-[10px] font-bold text-foreground/55 uppercase">
                         {output.trim() ? `${outputLineCount} LINES` : "Result here"}
                       </span>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-bold text-foreground/40 uppercase">Indent</span>
+                        <span className="text-[10px] font-bold text-foreground/55 uppercase">Indent</span>
                         <select
                           value={indentSize}
                           onChange={(e) => setIndentSize(Number(e.target.value))}
@@ -475,14 +475,14 @@ export default function JsonToolsPage() {
                       placeholder="Result will appear here..."
                       className={cn(
                         "w-full h-full p-6 font-mono text-sm leading-relaxed",
-                        "bg-secondary/50 text-foreground/90",
+                        "bg-secondary text-foreground",
                         "focus:outline-none resize-none",
-                        "placeholder:text-foreground/10"
+                        "placeholder:text-foreground/45"
                       )}
                     />
                     {!output && validation.valid && (
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="bg-primary/5 border border-primary/10 px-4 py-2 rounded-lg text-[10px] font-bold text-primary/40 uppercase tracking-widest">
+                        <div className="bg-primary/10 border border-primary/20 px-4 py-2 rounded-lg text-[10px] font-bold text-primary/80 uppercase tracking-widest">
                           Ready to format
                         </div>
                       </div>
@@ -510,15 +510,15 @@ export default function JsonToolsPage() {
                   <h2 className="text-sm font-black text-foreground uppercase tracking-widest leading-none">
                     External Utilities
                   </h2>
-                  <p className="text-[10px] text-foreground/30 uppercase tracking-tighter mt-1 font-bold">
+                  <p className="text-[10px] text-foreground/55 uppercase tracking-tighter mt-1 font-bold">
                     Advanced tools for special use cases
                   </p>
                 </div>
                 <div className="ml-auto">
                   {showExternalTools ? (
-                    <ChevronUp className="w-4 h-4 text-foreground/20" />
+                    <ChevronUp className="w-4 h-4 text-foreground/45" />
                   ) : (
-                    <ChevronDown className="w-4 h-4 text-foreground/20" />
+                    <ChevronDown className="w-4 h-4 text-foreground/45" />
                   )}
                 </div>
               </button>
@@ -536,19 +536,19 @@ export default function JsonToolsPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className={cn(
-                        "flex items-start gap-4 p-5 rounded-2xl border border-border bg-secondary/50",
-                        "hover:bg-accent hover:border-primary/30 transition-all duration-300",
+                        "flex items-start gap-4 p-5 rounded-2xl border border-border bg-background",
+                        "hover:bg-accent hover:border-primary/40 transition-all duration-300",
                         "group/tool"
                       )}
                     >
-                      <div className="mt-1 opacity-20 group-hover/tool:opacity-100 transition-opacity">
+                      <div className="mt-1 opacity-60 group-hover/tool:opacity-100 transition-opacity">
                         <ExternalLink className="w-3.5 h-3.5 text-primary" />
                       </div>
                       <div>
-                        <div className="font-black text-[11px] text-foreground/70 group-hover/tool:text-primary transition-colors uppercase tracking-widest">
+                        <div className="font-black text-[11px] text-foreground group-hover/tool:text-primary transition-colors uppercase tracking-widest">
                           {tool.name}
                         </div>
-                        <div className="text-[10px] text-foreground/30 mt-1.5 leading-relaxed font-medium">
+                        <div className="text-[10px] text-foreground/55 mt-1.5 leading-relaxed font-medium">
                           {tool.description}
                         </div>
                       </div>

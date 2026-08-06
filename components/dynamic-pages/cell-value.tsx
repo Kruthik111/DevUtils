@@ -34,7 +34,7 @@ export function CellValue({
     const value = resolveTemplate(rawValue, template);
 
     if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
-        return <span className={cn('text-foreground/30', className)}>—</span>;
+        return <span className={cn('text-foreground/55', className)}>—</span>;
     }
 
     // Arrays get type-aware handling before the scalar rendering below.
@@ -98,7 +98,7 @@ export function CellValue({
                 <span
                     className={cn(
                         'inline-flex items-center gap-1.5 text-xs font-medium',
-                        truthy ? 'text-green-600 dark:text-green-400' : 'text-foreground/50',
+                        truthy ? 'text-green-600 dark:text-green-600' : 'text-foreground/50',
                         className
                     )}
                 >

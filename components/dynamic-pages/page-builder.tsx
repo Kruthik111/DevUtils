@@ -524,7 +524,7 @@ export function PageBuilder({ initial, pageId }: { initial: DynamicPageConfig; p
                                             {col.visible ? (
                                                 <Eye className="w-4 h-4 text-primary" />
                                             ) : (
-                                                <EyeOff className="w-4 h-4 text-foreground/40" />
+                                                <EyeOff className="w-4 h-4 text-foreground/60" />
                                             )}
                                         </button>
                                         <input
@@ -574,7 +574,7 @@ export function PageBuilder({ initial, pageId }: { initial: DynamicPageConfig; p
                                             }
                                             className={cn(
                                                 'p-1.5 rounded-lg hover:bg-foreground/10 shrink-0 text-xs font-mono',
-                                                templateOpen ? 'text-primary' : 'text-foreground/40'
+                                                templateOpen ? 'text-primary' : 'text-foreground/60'
                                             )}
                                             title="Value template — wrap the API value with your own text"
                                         >

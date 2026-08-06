@@ -205,7 +205,7 @@ export function NoteEditModal({
                         {pinError && (
                             <p className="mt-2 text-xs text-red-500 font-medium px-1 animate-in fade-in slide-in-from-top-1">{pinError}</p>
                         )}
-                        <p className="mt-3 text-[10px] text-foreground/40 font-medium uppercase tracking-widest">
+                        <p className="mt-3 text-[10px] text-foreground/60 font-medium uppercase tracking-widest">
                             {pin != null ? `Selected: Position ${pin}` : "Select a position to pin this note to the top of your list"}
                         </p>
                     </div>

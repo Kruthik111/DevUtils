@@ -312,7 +312,7 @@ export default function BetterPromptsPage() {
                                                         className={cn(
                                                             "flex items-center justify-center w-8 h-8 rounded-lg shrink-0 transition-all",
                                                             copiedId === prompt.id
-                                                                ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                                                                ? "bg-green-500/10 text-green-600 dark:text-green-600"
                                                                 : "bg-secondary text-foreground/50 hover:bg-primary/10 hover:text-primary"
                                                         )}
                                                         title="Copy prompt"

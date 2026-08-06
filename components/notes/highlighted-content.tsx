@@ -33,7 +33,7 @@ export function HighlightedContent({ text, environment }: HighlightedContentProp
                 className={
                     isKnown
                         ? 'bg-primary/20 text-primary font-medium px-1 py-0.5 rounded border border-primary/40'
-                        : 'bg-amber-500/20 text-amber-600 dark:text-amber-400 font-medium px-1 py-0.5 rounded border border-amber-500/40'
+                        : 'bg-amber-500/20 text-amber-600 dark:text-amber-600 font-medium px-1 py-0.5 rounded border border-amber-500/40'
                 }
                 title={isKnown ? `${varName} = ${varValue || '(empty)'}` : `${varName} is not defined in the selected environment`}
             >

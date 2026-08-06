@@ -145,7 +145,7 @@ export function EnvironmentBar() {
                             <Layers
                                 className={cn(
                                     'w-4 h-4 shrink-0',
-                                    selectedEnvironment ? 'text-primary' : 'text-foreground/40'
+                                    selectedEnvironment ? 'text-primary' : 'text-foreground/60'
                                 )}
                             />
                             <span
@@ -161,7 +161,7 @@ export function EnvironmentBar() {
                                     {Object.keys(selectedEnvironment.variables || {}).length}
                                 </span>
                             )}
-                            <ChevronDown className="w-4 h-4 text-foreground/40 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
+                            <ChevronDown className="w-4 h-4 text-foreground/60 shrink-0 transition-transform group-data-[state=open]:rotate-180" />
                         </button>
                     </DropdownMenuTrigger>
 

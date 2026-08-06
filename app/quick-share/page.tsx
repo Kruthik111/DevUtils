@@ -631,7 +631,7 @@ export default function QuickSharePage() {
 
                 {receivedTexts.length > 0 && (
                   <div className="mt-6 space-y-3">
-                    <p className="text-xs font-bold text-foreground/40 uppercase">
+                    <p className="text-xs font-bold text-foreground/60 uppercase">
                       Received Messages
                     </p>
                     {receivedTexts.map((text, i) => (
@@ -640,7 +640,7 @@ export default function QuickSharePage() {
                         className="bg-secondary border border-border/50 rounded-lg p-3 text-sm"
                       >
                         <p className="text-foreground break-words">{text.content}</p>
-                        <p className="text-xs text-foreground/40 mt-1">
+                        <p className="text-xs text-foreground/60 mt-1">
                           {new Date(text.timestamp).toLocaleTimeString()}
                         </p>
                       </div>
@@ -652,7 +652,7 @@ export default function QuickSharePage() {
               <div className="bg-background border border-border rounded-xl p-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">Share Files</h3>
                 <label className="block w-full border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:bg-secondary/50 transition">
-                  <FileUp className="w-8 h-8 text-foreground/40 mx-auto mb-2" />
+                  <FileUp className="w-8 h-8 text-foreground/60 mx-auto mb-2" />
                   <p className="text-sm font-semibold text-foreground">
                     Drop files here or click to select
                   </p>
@@ -687,7 +687,7 @@ export default function QuickSharePage() {
 
                 {receivedFiles.length > 0 && (
                   <div className="mt-6 space-y-3">
-                    <p className="text-xs font-bold text-foreground/40 uppercase">
+                    <p className="text-xs font-bold text-foreground/60 uppercase">
                       Received Files
                     </p>
                     {receivedFiles.map((file, i) => (

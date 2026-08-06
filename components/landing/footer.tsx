@@ -38,7 +38,7 @@ export function Footer() {
   };
 
   return (
-    <footer className="bg-secondary text-foreground border-t border-border/50">
+    <footer className="bg-footer text-footer-foreground border-t border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
           {/* Brand */}
@@ -46,16 +46,16 @@ export function Footer() {
             <Button
               variant="link"
               onClick={scrollToTop}
-              className="text-2xl font-bold text-foreground mb-4 p-0 h-auto"
+              className="text-2xl font-bold text-footer-foreground mb-4 p-0 h-auto"
             >
               DevUtils
             </Button>
-            <p className="text-foreground/60 mb-6 max-w-md">
+            <p className="text-footer-foreground/70 mb-6 max-w-md">
               The all-in-one developer toolkit for notes, API testing, and team
               collaboration. Build faster, work smarter.
             </p>
             <div className="mb-6">
-              <p className="text-foreground/80 font-medium mb-3">Connect with Kruthik</p>
+              <p className="text-footer-foreground/90 font-medium mb-3">Connect with Kruthik</p>
               <div className="flex items-center gap-4">
                 {socialLinks.map((social) => {
                   const Icon = social.icon;
@@ -67,12 +67,12 @@ export function Footer() {
                       target="_blank"
                       className={cn(
                         "w-10 h-10 rounded-lg flex items-center justify-center",
-                        "bg-background border border-border/50",
-                        "hover:bg-primary/10 hover:border-primary/50",
+                        "bg-footer-foreground/10 border border-footer-foreground/20",
+                        "hover:bg-footer-foreground/20 hover:border-footer-foreground/40",
                         "transition-all duration-200 hover:scale-110"
                       )}
                     >
-                      <Icon className="w-5 h-5 text-foreground" />
+                      <Icon className="w-5 h-5 text-footer-foreground" />
                     </a>
                   );
                 })}
@@ -82,13 +82,13 @@ export function Footer() {
 
           {/* Product Links */}
           <div>
-            <h3 className="font-semibold mb-4 text-foreground">Product</h3>
+            <h3 className="font-semibold mb-4 text-footer-foreground">Product</h3>
             <ul className="space-y-3">
               {footerLinks.product.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="text-gray-400 hover:text-white transition-colors"
+                    className="text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                   >
                     {link.name}
                   </Link>
@@ -99,13 +99,13 @@ export function Footer() {
 
           {/* Company Links */}
           <div>
-            <h3 className="font-semibold mb-4 text-foreground">Company</h3>
+            <h3 className="font-semibold mb-4 text-footer-foreground">Company</h3>
             <ul className="space-y-3">
               {footerLinks.company.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="text-foreground/60 hover:text-primary transition-colors"
+                    className="text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                   >
                     {link.name}
                   </Link>
@@ -116,13 +116,13 @@ export function Footer() {
 
           {/* Legal Links */}
           <div>
-            <h3 className="font-semibold mb-4 text-foreground">Legal</h3>
+            <h3 className="font-semibold mb-4 text-footer-foreground">Legal</h3>
             <ul className="space-y-3">
               {footerLinks.legal.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="text-foreground/60 hover:text-primary transition-colors"
+                    className="text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                   >
                     {link.name}
                   </Link>
@@ -133,11 +133,11 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-border/50 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-foreground/60 text-sm">
+        <div className="pt-8 border-t border-footer-foreground/15 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-footer-foreground/70 text-sm">
             © {new Date().getFullYear()} DevUtils. All rights reserved.
           </p>
-          <p className="text-foreground/60 text-sm">
+          <p className="text-footer-foreground/70 text-sm">
             Built with <span className="text-red-500">❤️</span> for developers
           </p>
         </div>

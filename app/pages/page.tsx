@@ -68,7 +68,7 @@ export default function DynamicPagesListPage() {
                         className={cn(
                             'h-10 px-4 inline-flex items-center gap-2 rounded-lg text-sm font-medium transition-all',
                             atLimit
-                                ? 'bg-foreground/10 text-foreground/40 cursor-not-allowed'
+                                ? 'bg-foreground/10 text-foreground/60 cursor-not-allowed'
                                 : 'bg-primary text-primary-foreground hover:bg-primary/90'
                         )}
                     >
@@ -88,7 +88,7 @@ export default function DynamicPagesListPage() {
                     </div>
                 ) : pages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl border border-dashed border-border">
-                        <Globe className="w-10 h-10 text-foreground/20 mb-3" />
+                        <Globe className="w-10 h-10 text-foreground/45 mb-3" />
                         <div className="font-medium">No pages yet</div>
                         <div className="text-sm text-foreground/60 mt-1 max-w-sm">
                             Point a page at any JSON API, choose which fields to show, and save it for later.

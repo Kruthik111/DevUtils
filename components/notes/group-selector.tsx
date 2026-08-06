@@ -173,7 +173,7 @@ export function GroupSelector({
                                 className={cn(
                                     "flex items-center gap-2 text-sm transition-colors w-full",
                                     groups.length >= 2
-                                        ? "text-foreground/30 cursor-not-allowed"
+                                        ? "text-foreground/55 cursor-not-allowed"
                                         : "text-foreground/60 hover:text-primary"
                                 )}
                                 title={groups.length >= 2 ? "Maximum 2 groups allowed. Delete a group to create a new one." : "Create a new group"}

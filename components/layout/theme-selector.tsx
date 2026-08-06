@@ -60,7 +60,7 @@ export function ThemeSelector({ collapsed }: ThemeSelectorProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align={collapsed ? "end" : "start"} className="w-56 p-2 bg-background border-border shadow-2xl rounded-2xl">
-        <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-foreground/40 px-2 py-1.5">
+        <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-foreground/60 px-2 py-1.5">
           Select Theme
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-border/50" />
