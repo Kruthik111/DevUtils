@@ -22,6 +22,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
+    CardField,
     ColumnType,
     DynamicPageConfig,
     FilterConfig,
@@ -36,6 +37,7 @@ import {
     humanizeKey,
 } from '@/lib/dynamic-pages/introspect';
 import { initialQueryState, isValidUrl, runRequest } from '@/lib/dynamic-pages/runner';
+import { resolveExpression } from '@/lib/dynamic-pages/template';
 import { parseCurl } from '@/lib/parse-curl';
 import { PageRenderer } from './page-renderer';
 
@@ -141,6 +143,34 @@ export function PageBuilder({ initial, pageId }: { initial: DynamicPageConfig; p
 
     const candidates = useMemo(() => (sample ? findArrayCandidates(sample) : []), [sample]);
     const scalarPaths = useMemo(() => (sample ? detectScalarPaths(sample) : []), [sample]);
+
+    // First row of the sample, used to preview what each card expression resolves to.
+    const previewRow = useMemo(() => {
+        const rows = getByPath(sample, config.rowsPath);
+        return Array.isArray(rows) ? rows[0] : undefined;
+    }, [sample, config.rowsPath]);
+
+    const patchCard = (partial: Partial<DynamicPageConfig['card']>) =>
+        setConfig((prev) => ({ ...prev, card: { ...prev.card, ...partial } }));
+
+    /** Show the saved expression, or lift a legacy column key into one. */
+    const cardSlot = (slot: 'title' | 'subtitle' | 'image' | 'badge', legacyKey?: string) =>
+        config.card[slot] ?? (legacyKey ? `{{${legacyKey}}}` : '');
+
+    /** Editable rows for the card body, migrating legacy fieldKeys on first edit. */
+    const cardFieldRows: CardField[] =
+        config.card.fields ??
+        (config.card.fieldKeys || []).map((key) => {
+            const col = config.columns.find((c) => c.key === key);
+            return {
+                id: key,
+                label: col?.label || humanizeKey(key),
+                value: `{{${key}}}`,
+                type: col?.type || 'text',
+            };
+        });
+
+    const setCardFields = (fields: CardField[]) => patchCard({ fields, fieldKeys: [] });
 
     const applyRowsPath = (data: unknown, path: string) => {
         const rows = getByPath(data, path);
@@ -665,62 +695,156 @@ export function PageBuilder({ initial, pageId }: { initial: DynamicPageConfig; p
                 </div>
 
                 {config.layout === 'cards' && (
-                    <div className="grid sm:grid-cols-2 gap-3 mt-3">
-                        {(
-                            [
-                                { key: 'titleKey', label: 'Title field' },
-                                { key: 'subtitleKey', label: 'Subtitle field' },
-                                { key: 'imageKey', label: 'Image field' },
-                                { key: 'badgeKey', label: 'Badge field' },
-                            ] as const
-                        ).map(({ key, label }) => (
-                            <div key={key}>
-                                <div className="text-xs font-medium mb-1.5">{label}</div>
-                                <select
-                                    value={config.card[key] || ''}
-                                    onChange={(e) =>
-                                        patch({ card: { ...config.card, [key]: e.target.value || undefined } })
-                                    }
-                                    className={cn(smallInputCls, 'w-full h-10')}
-                                >
-                                    <option value="">None</option>
-                                    {config.columns.map((c) => (
-                                        <option key={c.key} value={c.key}>
-                                            {c.label} ({c.key})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        ))}
-                        <div className="sm:col-span-2">
-                            <div className="text-xs font-medium mb-1.5">Extra fields on the card</div>
-                            <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
-                                {config.columns.map((c) => {
-                                    const active = config.card.fieldKeys.includes(c.key);
-                                    return (
-                                        <button
-                                            key={c.key}
-                                            onClick={() =>
-                                                patch({
-                                                    card: {
-                                                        ...config.card,
-                                                        fieldKeys: active
-                                                            ? config.card.fieldKeys.filter((k) => k !== c.key)
-                                                            : [...config.card.fieldKeys, c.key],
-                                                    },
-                                                })
+                    <div className="mt-3 space-y-3">
+                        <p className="text-xs text-foreground/60">
+                            Type an expression for each slot. Use{' '}
+                            <code className="text-primary">{'{{path}}'}</code> to pull a value from the row — wrap it in
+                            any text you like, e.g.{' '}
+                            <code>https://upg.storeking.in/asset/v1/{'{{images[0]}}'}</code>.
+                        </p>
+
+                        {/* Detected paths — click to append to the focused expression is
+                            overkill; showing them as a datalist keeps typing fast. */}
+                        <datalist id="card-paths">
+                            {config.columns.map((c) => (
+                                <option key={c.key} value={`{{${c.key}}}`} />
+                            ))}
+                        </datalist>
+
+                        <div className="grid sm:grid-cols-2 gap-3">
+                            {(
+                                [
+                                    { slot: 'title', legacy: 'titleKey', label: 'Title', hint: '{{name}}' },
+                                    { slot: 'subtitle', legacy: 'subtitleKey', label: 'Subtitle', hint: '{{dealId}}' },
+                                    {
+                                        slot: 'image',
+                                        legacy: 'imageKey',
+                                        label: 'Image',
+                                        hint: 'https://upg.storeking.in/asset/v1/{{images[0]}}',
+                                    },
+                                    { slot: 'badge', legacy: 'badgeKey', label: 'Badge', hint: '{{status}}' },
+                                ] as const
+                            ).map(({ slot, legacy, label, hint }) => {
+                                const expr = cardSlot(slot, config.card[legacy]);
+                                const preview = previewRow ? resolveExpression(previewRow, expr) : undefined;
+                                return (
+                                    <div key={slot}>
+                                        <div className="text-xs font-medium mb-1.5">{label}</div>
+                                        <input
+                                            value={expr}
+                                            list="card-paths"
+                                            onChange={(e) =>
+                                                patchCard({ [slot]: e.target.value, [legacy]: undefined })
                                             }
-                                            className={cn(
-                                                'px-2.5 py-1 rounded-lg text-xs border transition-all',
-                                                active
-                                                    ? 'border-primary bg-primary/10 text-primary'
-                                                    : 'border-border bg-background/50 hover:bg-foreground/5'
-                                            )}
-                                        >
-                                            {c.label}
-                                        </button>
+                                            placeholder={hint}
+                                            className={cn(smallInputCls, 'w-full h-10 font-mono text-xs')}
+                                        />
+                                        {expr && (
+                                            <div className="mt-1 text-[11px] text-foreground/55 truncate">
+                                                {previewRow ? (
+                                                    preview === undefined || preview === null || preview === '' ? (
+                                                        <span className="text-amber-600">resolves to nothing</span>
+                                                    ) : (
+                                                        <>→ {String(preview)}</>
+                                                    )
+                                                ) : (
+                                                    'Fetch a sample to preview'
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div>
+                            <div className="flex items-center justify-between mb-1.5">
+                                <div className="text-xs font-medium">Extra fields on the card</div>
+                                <button
+                                    onClick={() =>
+                                        setCardFields([
+                                            ...cardFieldRows,
+                                            { id: nextId('cf'), label: '', value: '', type: 'text' },
+                                        ])
+                                    }
+                                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                                >
+                                    <Plus className="w-3 h-3" /> Add field
+                                </button>
+                            </div>
+                            <div className="space-y-2">
+                                {cardFieldRows.map((field, index) => {
+                                    const preview = previewRow ? resolveExpression(previewRow, field.value) : undefined;
+                                    return (
+                                        <div key={field.id} className="flex items-start gap-2">
+                                            <input
+                                                value={field.label}
+                                                onChange={(e) =>
+                                                    setCardFields(
+                                                        cardFieldRows.map((f, i) =>
+                                                            i === index ? { ...f, label: e.target.value } : f
+                                                        )
+                                                    )
+                                                }
+                                                placeholder="Label"
+                                                className={cn(smallInputCls, 'w-36 shrink-0')}
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <input
+                                                    value={field.value}
+                                                    list="card-paths"
+                                                    onChange={(e) =>
+                                                        setCardFields(
+                                                            cardFieldRows.map((f, i) =>
+                                                                i === index ? { ...f, value: e.target.value } : f
+                                                            )
+                                                        )
+                                                    }
+                                                    placeholder="{{price}}"
+                                                    className={cn(smallInputCls, 'w-full font-mono text-xs')}
+                                                />
+                                                {field.value && previewRow && (
+                                                    <div className="mt-1 text-[11px] text-foreground/55 truncate">
+                                                        → {String(preview ?? '')}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <select
+                                                value={field.type}
+                                                onChange={(e) =>
+                                                    setCardFields(
+                                                        cardFieldRows.map((f, i) =>
+                                                            i === index
+                                                                ? { ...f, type: e.target.value as ColumnType }
+                                                                : f
+                                                        )
+                                                    )
+                                                }
+                                                className={cn(smallInputCls, 'w-24 shrink-0')}
+                                            >
+                                                {COLUMN_TYPES.map((t) => (
+                                                    <option key={t} value={t}>
+                                                        {t}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <button
+                                                onClick={() =>
+                                                    setCardFields(cardFieldRows.filter((_, i) => i !== index))
+                                                }
+                                                className="h-9 w-9 shrink-0 inline-flex items-center justify-center rounded-lg text-foreground/50 hover:text-red-600 hover:bg-red-600/10"
+                                                title="Remove field"
+                                            >
+                                                <X className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
                                     );
                                 })}
+                                {cardFieldRows.length === 0 && (
+                                    <p className="text-xs text-foreground/50">
+                                        No extra fields. Add one to show a label/value row in the card body.
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>

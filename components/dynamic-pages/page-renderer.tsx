@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { DynamicPageConfig } from '@/lib/dynamic-pages/types';
 import { getByPath } from '@/lib/dynamic-pages/introspect';
 import { QueryState, RunResult, initialQueryState, runRequest } from '@/lib/dynamic-pages/runner';
+import { resolveExpression } from '@/lib/dynamic-pages/template';
 import { CellValue, resolveTemplate } from './cell-value';
 
 // Renders a configured page: controls on top, then the API's rows as a table or
@@ -102,6 +103,24 @@ export function PageRenderer({ config, compact = false }: { config: DynamicPageC
         const value = getByPath(result.data, controls.totalPath);
         return typeof value === 'number' ? value : null;
     }, [result, controls.totalPath]);
+
+    // Card body rows: typed label/expression pairs, or the column keys a page
+    // may have been saved with before expressions existed.
+    const cardFields = useMemo(() => {
+        if (card.fields?.length) {
+            return card.fields.map((f) => ({ ...f, template: undefined as string | undefined }));
+        }
+        return (card.fieldKeys || []).map((key) => {
+            const col = columns.find((c) => c.key === key);
+            return {
+                id: key,
+                label: col?.label || key,
+                value: key,
+                type: col?.type || ('text' as const),
+                template: col?.template,
+            };
+        });
+    }, [card.fields, card.fieldKeys, columns]);
 
     const totalPages = total !== null && controls.pageSize > 0 ? Math.ceil(total / controls.pageSize) : null;
     const pageIndex = state.page - controls.startPage; // 0-based, for display math
@@ -347,15 +366,24 @@ export function PageRenderer({ config, compact = false }: { config: DynamicPageC
                     )}
                 >
                     {rows.map((row, index) => {
-                        const title = card.titleKey ? getByPath(row, card.titleKey) : null;
-                        const subtitle = card.subtitleKey ? getByPath(row, card.subtitleKey) : null;
-                        const badge = card.badgeKey ? getByPath(row, card.badgeKey) : null;
-                        // Route the card image through the matching column's template
-                        // (S3 keys → full URLs); arrays fall back to their first entry.
+                        // A typed expression wins; otherwise fall back to the column
+                        // key a page may have been saved with.
+                        const slot = (expr: string | undefined, key: string | undefined) =>
+                            expr ? resolveExpression(row, expr) : key ? getByPath(row, key) : null;
+
+                        const title = slot(card.title, card.titleKey);
+                        const subtitle = slot(card.subtitle, card.subtitleKey);
+                        const badge = slot(card.badge, card.badgeKey);
+
+                        // Legacy image keys route through the matching column's
+                        // template (asset id → full URL); expressions carry their
+                        // own prefix. Arrays fall back to their first entry.
                         const imageCol = card.imageKey ? columns.find((c) => c.key === card.imageKey) : undefined;
-                        const imageRaw = card.imageKey
-                            ? resolveTemplate(getByPath(row, card.imageKey), imageCol?.template)
-                            : null;
+                        const imageRaw = card.image
+                            ? resolveExpression(row, card.image)
+                            : card.imageKey
+                              ? resolveTemplate(getByPath(row, card.imageKey), imageCol?.template)
+                              : null;
                         const image = Array.isArray(imageRaw) ? imageRaw[0] : imageRaw;
                         return (
                             <button
@@ -390,22 +418,19 @@ export function PageRenderer({ config, compact = false }: { config: DynamicPageC
                                     </div>
                                 </div>
 
-                                {card.fieldKeys.length > 0 && (
+                                {cardFields.length > 0 && (
                                     <div className="mt-3 pt-3 border-t border-border/50 space-y-1.5">
-                                        {card.fieldKeys.map((key) => {
-                                            const col = columns.find((c) => c.key === key);
-                                            return (
-                                                <div key={key} className="flex items-center justify-between gap-3 text-sm">
-                                                    <span className="text-foreground/50 shrink-0">{col?.label || key}</span>
-                                                    <CellValue
-                                                        value={getByPath(row, key)}
-                                                        type={col?.type || 'text'}
-                                                        template={col?.template}
-                                                        className="text-right"
-                                                    />
-                                                </div>
-                                            );
-                                        })}
+                                        {cardFields.map((field) => (
+                                            <div key={field.id} className="flex items-center justify-between gap-3 text-sm">
+                                                <span className="text-foreground/50 shrink-0">{field.label}</span>
+                                                <CellValue
+                                                    value={resolveExpression(row, field.value)}
+                                                    type={field.type}
+                                                    template={field.template}
+                                                    className="text-right"
+                                                />
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
                             </button>

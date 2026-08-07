@@ -43,12 +43,36 @@ export interface FilterConfig {
     defaultValue?: string;
 }
 
+/** One label/value row in the card body, configured by typing an expression. */
+export interface CardField {
+    id: string;
+    label: string;
+    /** Expression with {{path}} tokens, e.g. "{{price}}" or "₹{{price}}". */
+    value: string;
+    type: ColumnType;
+}
+
 export interface CardConfig {
+    /**
+     * Slot expressions — typed directly, e.g. "{{dealId}}" or
+     * "https://upg.storeking.in/asset/v1/{{images[0]}}". These take precedence
+     * over the *Key fields below.
+     */
+    title?: string;
+    subtitle?: string;
+    image?: string;
+    badge?: string;
+    fields?: CardField[];
+
+    /**
+     * Legacy: a column key whose value fills the slot, formatted with that
+     * column's own template. Kept so pages saved before expressions still render.
+     */
     titleKey?: string;
     subtitleKey?: string;
     imageKey?: string;
     badgeKey?: string;
-    /** Extra key/label pairs shown in the card body. */
+    /** Legacy: extra column keys shown in the card body. */
     fieldKeys: string[];
 }
 
