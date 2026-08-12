@@ -37,7 +37,7 @@ export function HighlightedContent({ text, environment }: HighlightedContentProp
                 }
                 title={isKnown ? `${varName} = ${varValue || '(empty)'}` : `${varName} is not defined in the selected environment`}
             >
-                {match[0]}
+                {isKnown ? `{{${varValue || varName}}}` : match[0]}
             </span>
         );
 
