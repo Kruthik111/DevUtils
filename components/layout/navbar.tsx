@@ -24,6 +24,7 @@ import {
 
 const pageTitles: [string, string][] = [
   ["/notes", "Notes"],
+  ["/tasks", "Tasks"],
   ["/json-tools", "JSON Tools"],
   ["/qr-generator", "QR Code"],
   ["/quick-share", "Quick Share"],

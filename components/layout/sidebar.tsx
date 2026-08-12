@@ -22,7 +22,8 @@ import {
   BookOpen,
   QrCode,
   Share2,
-  Globe
+  Globe,
+  ListTodo
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -58,6 +59,7 @@ const navGroups: NavGroup[] = [
     items: [
       // { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", authRequired: true },
       { id: "notes", label: "Notes", icon: StickyNote, href: "/notes", authRequired: true },
+      { id: "tasks", label: "Tasks", icon: ListTodo, href: "/tasks" },
       { id: "qr-generator", label: "Qr Code", icon: QrCode, href: "/qr-generator" },
       { id: "quick-share", label: "Quick Share", icon: Share2, href: "/quick-share" },
       { id: "api", label: "API", icon: Code, href: "/api", authRequired: true },
