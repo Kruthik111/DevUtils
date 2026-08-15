@@ -22,10 +22,22 @@ export function Notifications() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const shownNotificationsRef = useRef<Set<string>>(new Set());
   const router = useRouter();
 
   useEffect(() => {
+    // Load previously shown notifications from localStorage
+    const storedShown = localStorage.getItem("shownNotifications");
+    if (storedShown) {
+      try {
+        shownNotificationsRef.current = new Set(JSON.parse(storedShown));
+      } catch {
+        shownNotificationsRef.current = new Set();
+      }
+    }
+
     fetchNotifications();
+    requestNotificationPermission();
   }, []);
 
   // Close dropdown when clicking outside
@@ -45,12 +57,56 @@ export function Notifications() {
     };
   }, [isOpen]);
 
+  const requestNotificationPermission = async () => {
+    if (!("Notification" in window)) return;
+    if (Notification.permission === "granted") return;
+    if (Notification.permission !== "denied") {
+      await Notification.requestPermission();
+    }
+  };
+
+  const saveShownNotifications = () => {
+    localStorage.setItem(
+      "shownNotifications",
+      JSON.stringify(Array.from(shownNotificationsRef.current))
+    );
+  };
+
+  const showBrowserNotification = (notification: Notification) => {
+    if ("Notification" in window && Notification.permission === "granted") {
+      const browserNotif = new Notification(notification.title, {
+        body: notification.message,
+        tag: notification._id,
+        requireInteraction: false,
+      });
+
+      browserNotif.onclick = () => {
+        window.focus();
+        if (notification.link) {
+          router.push(notification.link);
+        }
+        browserNotif.close();
+      };
+    }
+  };
+
   const fetchNotifications = async () => {
     try {
       const response = await fetch("/api/notifications");
       if (response.ok) {
         const data = await response.json();
-        setNotifications(data.notifications || []);
+        const newNotifications = data.notifications || [];
+
+        // Show browser notifications for new unread notifications
+        newNotifications.forEach((notification: Notification) => {
+          if (!notification.read && !shownNotificationsRef.current.has(notification._id)) {
+            showBrowserNotification(notification);
+            shownNotificationsRef.current.add(notification._id);
+          }
+        });
+
+        saveShownNotifications();
+        setNotifications(newNotifications);
         setUnreadCount(data.unreadCount || 0);
       }
     } catch (error) {
@@ -59,6 +115,12 @@ export function Notifications() {
       setIsLoading(false);
     }
   };
+
+  // Poll for new notifications every 15 seconds
+  useEffect(() => {
+    const interval = setInterval(fetchNotifications, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   const markAsRead = async (notificationId: string) => {
     try {
@@ -76,6 +138,8 @@ export function Notifications() {
           )
         );
         setUnreadCount((prev) => Math.max(0, prev - 1));
+        shownNotificationsRef.current.add(notificationId);
+        saveShownNotifications();
       }
     } catch (error) {
       console.error("Error marking notification as read:", error);
