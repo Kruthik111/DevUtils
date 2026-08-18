@@ -24,7 +24,8 @@ import {
   QrCode,
   Share2,
   Globe,
-  ListTodo
+  ListTodo,
+  ChevronDown
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -56,19 +57,33 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
   {
-    label: "",
+    label: "WORKSPACE",
     items: [
-      // { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/dashboard", authRequired: true },
       { id: "notes", label: "Notes", icon: StickyNote, href: "/notes", authRequired: true },
       { id: "tasks", label: "Tasks", icon: ListTodo, href: "/tasks" },
-      { id: "qr-generator", label: "Qr Code", icon: QrCode, href: "/qr-generator" },
-      { id: "quick-share", label: "Quick Share", icon: Share2, href: "/quick-share" },
+    ]
+  },
+  {
+    label: "API",
+    items: [
       { id: "api", label: "API", icon: Code, href: "/api", authRequired: true },
       { id: "pages", label: "API Pages", icon: Globe, href: "/pages", authRequired: true },
-      { id: "json-tools", label: "JSON Tools", icon: Braces, href: "/json-tools" },
       { id: "load-test", label: "Load Test", icon: Gauge, href: "/load-test", authRequired: true },
-      { id: "better-prompts", label: "Better Prompts", icon: Sparkles, href: "/better-prompts" },
+    ]
+  },
+  {
+    label: "JSON",
+    items: [
+      { id: "json-tools", label: "JSON Tools", icon: Braces, href: "/json-tools" },
+    ]
+  },
+  {
+    label: "UTILITIES",
+    items: [
+      { id: "qr-generator", label: "Qr Code", icon: QrCode, href: "/qr-generator" },
       { id: "readme-preview", label: "README Preview", icon: BookOpen, href: "/readme-preview" },
+      { id: "quick-share", label: "Quick Share", icon: Share2, href: "/quick-share" },
+      { id: "better-prompts", label: "Better Prompts", icon: Sparkles, href: "/better-prompts" },
     ]
   },
   {
@@ -88,6 +103,7 @@ export function Sidebar() {
   const { isMobileSidebarOpen, setIsMobileSidebarOpen, isCollapsed, setIsCollapsed } = useSidebar();
   const { data: session, status } = useSession();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [closedGroups, setClosedGroups] = useState<string[]>([]);
 
   useEffect(() => {
     if (session?.user?.email === 'gokruthik2003@gmail.com') {
@@ -154,6 +170,43 @@ export function Sidebar() {
 
       return content;
     });
+  };
+
+  const renderGroup = (group: NavGroup, idx: number, mobile = false) => {
+    const expanded = !closedGroups.includes(group.label);
+    const showHeader = group.label && (mobile || !isCollapsed);
+
+    return (
+      <div key={idx} className="space-y-1">
+        {!mobile && isCollapsed && idx > 0 && (
+          <div className="mx-6 mb-3 border-t border-border/50" />
+        )}
+        {showHeader && (
+          <button
+            onClick={() =>
+              setClosedGroups((prev) =>
+                prev.includes(group.label)
+                  ? prev.filter((l) => l !== group.label)
+                  : [...prev, group.label]
+              )
+            }
+            aria-expanded={expanded}
+            className="w-full flex items-center justify-between px-7 pb-2 text-foreground/60 hover:text-foreground transition-colors"
+          >
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+              {group.label}
+            </span>
+            <ChevronDown
+              className={cn(
+                "w-3 h-3 transition-transform duration-200",
+                !expanded && "-rotate-90"
+              )}
+            />
+          </button>
+        )}
+        {(expanded || (!mobile && isCollapsed)) && renderNavItems(group.items, mobile)}
+      </div>
+    );
   };
 
   return (
@@ -225,18 +278,7 @@ export function Sidebar() {
 
           {/* Nav Groups */}
           <div className="flex-1 overflow-y-auto py-4 space-y-6 custom-scrollbar">
-            {navGroups.map((group, idx) => (
-              <div key={idx} className="space-y-1">
-                {group.label && !isCollapsed && (
-                  <div className="px-7 pb-2">
-                    <span className="text-[10px] font-black text-foreground/60 uppercase tracking-[0.2em]">
-                      {group.label}
-                    </span>
-                  </div>
-                )}
-                {renderNavItems(group.items)}
-              </div>
-            ))}
+            {navGroups.map((group, idx) => renderGroup(group, idx))}
           </div>
 
           {/* User Profile */}
@@ -289,20 +331,7 @@ export function Sidebar() {
           </div>
 
           <div className="flex-1 overflow-y-auto py-6 space-y-8">
-            {navGroups.map((group, idx) => (
-              <div key={idx} className="space-y-2">
-                {group.label && (
-                  <div className="px-6 pb-2">
-                    <span className="text-[10px] font-black text-foreground/60 uppercase tracking-[0.2em]">
-                      {group.label}
-                    </span>
-                  </div>
-                )}
-                <div className="space-y-1">
-                  {renderNavItems(group.items, true)}
-                </div>
-              </div>
-            ))}
+            {navGroups.map((group, idx) => renderGroup(group, idx, true))}
           </div>
 
           {/* Mobile User Footer */}
