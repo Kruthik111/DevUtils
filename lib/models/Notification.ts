@@ -36,6 +36,8 @@ const NotificationSchema = new Schema({
 
 // Index for efficient queries
 NotificationSchema.index({ userId: 1, read: 1, createdAt: -1 });
+// Auto-delete notifications 5 months after creation
+NotificationSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 150 });
 
 const Notification = models?.Notification || model('Notification', NotificationSchema);
 
