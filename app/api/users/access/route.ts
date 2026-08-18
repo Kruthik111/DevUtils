@@ -19,7 +19,7 @@ export async function GET(req: Request) {
         }
 
         // Get all users
-        const users = await User.find({}, { email: 1, name: 1, role: 1, hasAccess: 1, suspended: 1 });
+        const users = await User.find({}, { email: 1, name: 1, role: 1, hasAccess: 1, suspended: 1, lastActive: 1 });
 
         return NextResponse.json({ users });
     } catch (error) {

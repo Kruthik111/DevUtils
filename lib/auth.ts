@@ -182,6 +182,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.name = session.name;
       }
 
+      // Track last activity, at most once every 15 minutes per session
+      const now = Date.now();
+      if (token.sub && now - ((token.lastActive as number) || 0) > 15 * 60 * 1000) {
+        token.lastActive = now;
+        try {
+          await connectDB();
+          await User.updateOne({ _id: token.sub }, { lastActive: new Date(now) });
+        } catch {
+          // activity tracking is best-effort
+        }
+      }
+
       return token;
     },
   },

@@ -46,6 +46,9 @@ const UserSchema = new Schema({
         type: Boolean,
         default: false,
     },
+    lastActive: {
+        type: Date,
+    },
 }, {
     timestamps: true,
 });

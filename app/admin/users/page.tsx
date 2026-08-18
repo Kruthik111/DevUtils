@@ -16,7 +16,11 @@ interface User {
     role: string;
     hasAccess: string[];
     suspended?: boolean;
+    lastActive?: string;
 }
+
+const formatLastActive = (d?: string) =>
+    d ? new Date(d).toLocaleString() : 'Never';
 
 
 export default function AdminUsersPage() {
@@ -313,6 +317,7 @@ export default function AdminUsersPage() {
                                         <thead>
                                             <tr className="border-b border-border/50">
                                                 <th className="text-left p-3">User</th>
+                                                <th className="text-center p-3">Last Active</th>
                                                 <th className="text-center p-3">Status</th>
                                                 <th className="text-center p-3">Actions</th>
                                             </tr>
@@ -330,6 +335,9 @@ export default function AdminUsersPage() {
                                                                 </span>
                                                             )}
                                                         </div>
+                                                    </td>
+                                                    <td className="p-3 text-center text-xs text-foreground/70 whitespace-nowrap">
+                                                        {formatLastActive(user.lastActive)}
                                                     </td>
                                                     <td className="p-3 text-center">
                                                         <button
@@ -391,6 +399,10 @@ export default function AdminUsersPage() {
                                             </div>
                                         </div>
                                         <div className="space-y-2 mb-4">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm text-foreground/70">Last Active</span>
+                                                <span className="text-xs text-foreground/70">{formatLastActive(user.lastActive)}</span>
+                                            </div>
                                             <div className="flex items-center justify-between">
                                                 <span className="text-sm text-foreground/70">Status</span>
                                                 <button

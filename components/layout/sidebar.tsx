@@ -25,7 +25,8 @@ import {
   Share2,
   Globe,
   ListTodo,
-  ChevronDown
+  ChevronDown,
+  Search
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -68,7 +69,7 @@ const navGroups: NavGroup[] = [
     items: [
       { id: "api", label: "API", icon: Code, href: "/api", authRequired: true },
       { id: "pages", label: "API Pages", icon: Globe, href: "/pages", authRequired: true },
-      { id: "load-test", label: "Load Test", icon: Gauge, href: "/load-test", authRequired: true },
+      { id: "load-test", label: "API Load Test", icon: Gauge, href: "/load-test", authRequired: true },
     ]
   },
   {
@@ -104,6 +105,7 @@ export function Sidebar() {
   const { data: session, status } = useSession();
   const [isAdmin, setIsAdmin] = useState(false);
   const [closedGroups, setClosedGroups] = useState<string[]>([]);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     if (session?.user?.email === 'gokruthik2003@gmail.com') {
@@ -172,8 +174,52 @@ export function Sidebar() {
     });
   };
 
+  // Shift+L focuses whichever menu search is on screen
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!e.shiftKey || e.ctrlKey || e.metaKey || e.altKey || e.key !== "L") return;
+      const target = e.target as HTMLElement | null;
+      if (target?.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target?.tagName || "")) return;
+
+      setIsCollapsed(false);
+      requestAnimationFrame(() => {
+        const inputs = Array.from(
+          document.querySelectorAll<HTMLInputElement>("[data-menu-search]")
+        ).filter((el) => el.offsetParent !== null);
+        inputs.at(-1)?.focus();
+      });
+      e.preventDefault();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [setIsCollapsed]);
+
+  const q = query.trim().toLowerCase();
+  const visibleGroups = q
+    ? navGroups
+        .map((g) => ({ ...g, items: g.items.filter((i) => i.label.toLowerCase().includes(q)) }))
+        .filter((g) => g.items.length > 0)
+    : navGroups;
+
+  const renderSearch = (mobile = false) => (
+    <div className={cn("px-4 pb-2", mobile ? "px-6" : "")}>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search menu... (Shift+L)"
+          aria-label="Search menu"
+          data-menu-search
+          className="w-full pl-9 pr-3 py-2 text-sm rounded-xl bg-foreground/5 border border-border/50 outline-hidden focus:border-primary/50 placeholder:text-foreground/40"
+        />
+      </div>
+    </div>
+  );
+
   const renderGroup = (group: NavGroup, idx: number, mobile = false) => {
-    const expanded = !closedGroups.includes(group.label);
+    const expanded = q ? true : !closedGroups.includes(group.label);
     const showHeader = group.label && (mobile || !isCollapsed);
 
     return (
@@ -243,7 +289,7 @@ export function Sidebar() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={() => setIsCollapsed(true)}
+                      onClick={() => { setIsCollapsed(true); setQuery(""); }}
                       className="p-1.5 rounded-lg text-foreground/60 hover:text-foreground hover:bg-foreground/5 transition-colors"
                       aria-label="Collapse sidebar"
                     >
@@ -277,8 +323,12 @@ export function Sidebar() {
           )}
 
           {/* Nav Groups */}
+          {!isCollapsed && renderSearch()}
           <div className="flex-1 overflow-y-auto py-4 space-y-6 custom-scrollbar">
-            {navGroups.map((group, idx) => renderGroup(group, idx))}
+            {visibleGroups.map((group, idx) => renderGroup(group, idx))}
+            {visibleGroups.length === 0 && !isCollapsed && (
+              <p className="px-7 text-xs text-foreground/50">No matches</p>
+            )}
           </div>
 
           {/* User Profile */}
@@ -331,7 +381,11 @@ export function Sidebar() {
           </div>
 
           <div className="flex-1 overflow-y-auto py-6 space-y-8">
-            {navGroups.map((group, idx) => renderGroup(group, idx, true))}
+            {renderSearch(true)}
+            {visibleGroups.map((group, idx) => renderGroup(group, idx, true))}
+            {visibleGroups.length === 0 && (
+              <p className="px-6 text-xs text-foreground/50">No matches</p>
+            )}
           </div>
 
           {/* Mobile User Footer */}
