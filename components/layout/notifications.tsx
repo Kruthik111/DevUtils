@@ -37,7 +37,6 @@ export function Notifications() {
     }
 
     fetchNotifications();
-    requestNotificationPermission();
   }, []);
 
   // Close dropdown when clicking outside
@@ -57,14 +56,6 @@ export function Notifications() {
     };
   }, [isOpen]);
 
-  const requestNotificationPermission = async () => {
-    if (!("Notification" in window)) return;
-    if (Notification.permission === "granted") return;
-    if (Notification.permission !== "denied") {
-      await Notification.requestPermission();
-    }
-  };
-
   const saveShownNotifications = () => {
     localStorage.setItem(
       "shownNotifications",
@@ -72,8 +63,13 @@ export function Notifications() {
     );
   };
 
-  const showBrowserNotification = (notification: Notification) => {
-    if ("Notification" in window && Notification.permission === "granted") {
+  const showBrowserNotification = async (notification: Notification) => {
+    if (!("Notification" in window)) return;
+    // Ask only when there is actually something new to show
+    if (Notification.permission === "default") {
+      await Notification.requestPermission();
+    }
+    if (Notification.permission === "granted") {
       const browserNotif = new Notification(notification.title, {
         body: notification.message,
         tag: notification._id,
