@@ -18,7 +18,8 @@ import {
   QrCode,
   History,
   Copy,
-  ExternalLink
+  ExternalLink,
+  Gauge
 } from "lucide-react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -108,6 +109,7 @@ export default function DashboardPage() {
               <ToolCard icon={<Braces className="w-5 h-5 text-primary" />} label="JSON FORMAT" href="/json-tools" />
               <ToolCard icon={<QrCode className="w-5 h-5 text-primary" />} label="QR GENERATOR" href="/qr-generator" />
               <ToolCard icon={<History className="w-5 h-5 text-primary" />} label="EPOCH CONV" href="/epoch-converter" />
+              <ToolCard icon={<Gauge className="w-5 h-5 text-primary" />} label="LOAD TEST" href="/load-test" />
             </div>
           </div>
 

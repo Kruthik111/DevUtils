@@ -13,6 +13,7 @@ import {
   Bell,
   MessageSquare,
   Braces,
+  Gauge,
   Sparkles,
   Menu,
   X,
@@ -65,6 +66,7 @@ const navGroups: NavGroup[] = [
       { id: "api", label: "API", icon: Code, href: "/api", authRequired: true },
       { id: "pages", label: "API Pages", icon: Globe, href: "/pages", authRequired: true },
       { id: "json-tools", label: "JSON Tools", icon: Braces, href: "/json-tools" },
+      { id: "load-test", label: "Load Test", icon: Gauge, href: "/load-test", authRequired: true },
       { id: "better-prompts", label: "Better Prompts", icon: Sparkles, href: "/better-prompts" },
       { id: "readme-preview", label: "README Preview", icon: BookOpen, href: "/readme-preview" },
     ]
