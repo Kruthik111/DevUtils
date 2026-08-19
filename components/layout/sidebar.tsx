@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { ThemeSelector } from "./theme-selector";
+import { useFocusHotkey } from "@/lib/use-focus-hotkey";
 
 interface NavItem {
   id: string;
@@ -175,25 +176,7 @@ export function Sidebar() {
   };
 
   // Shift+L focuses whichever menu search is on screen
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (!e.shiftKey || e.ctrlKey || e.metaKey || e.altKey || e.key !== "L") return;
-      const target = e.target as HTMLElement | null;
-      if (target?.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target?.tagName || "")) return;
-
-      setIsCollapsed(false);
-      requestAnimationFrame(() => {
-        const inputs = Array.from(
-          document.querySelectorAll<HTMLInputElement>("[data-menu-search]")
-        ).filter((el) => el.offsetParent !== null);
-        inputs.at(-1)?.focus();
-      });
-      e.preventDefault();
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [setIsCollapsed]);
+  useFocusHotkey("L", "[data-menu-search]", () => setIsCollapsed(false));
 
   const q = query.trim().toLowerCase();
   const visibleGroups = q

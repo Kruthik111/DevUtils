@@ -12,6 +12,7 @@ import { NotesList } from '@/components/notes/notes-list';
 import { NoteEditModal } from '@/components/notes/note-edit-modal';
 import { BlockEditModal } from '@/components/notes/block-edit-modal';
 import { ConfirmDialog } from '@/components/notes/confirm-dialog';
+import { useFocusHotkey } from '@/lib/use-focus-hotkey';
 import { ContextMenu } from '@/components/notes/context-menu';
 import { Loading } from '@/components/ui/loading';
 import { NotesPageSkeleton } from '@/components/notes/notes-page-skeleton';
@@ -72,6 +73,8 @@ export default function NotesPage() {
       await persistNotesData(loadedData);
     }
   };
+
+  useFocusHotkey("P", "[data-project-search]");
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -1041,7 +1044,8 @@ export default function NotesPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search Projects..."
+              placeholder="Search Projects... (Shift+P)"
+              data-project-search
               className="w-full pl-10 pr-4 py-2 rounded-lg border border-border bg-background/50 text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm"
             />
           </div>
