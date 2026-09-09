@@ -74,7 +74,9 @@ export default function NotesPage() {
     }
   };
 
-  useFocusHotkey("P", "[data-project-search]");
+  useFocusHotkey("P", "[data-environment-trigger]", undefined, (el) =>
+    el.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }))
+  );
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -1044,8 +1046,7 @@ export default function NotesPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search Projects... (Shift+P)"
-              data-project-search
+              placeholder="Search Projects..."
               className="w-full pl-10 pr-4 py-2 rounded-lg border border-border bg-background/50 text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm"
             />
           </div>

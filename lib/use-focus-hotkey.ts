@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 /** Shift+<key> focuses the last visible element matching `selector`. Ignored while typing. */
-export function useFocusHotkey(key: string, selector: string, before?: () => void) {
+export function useFocusHotkey(key: string, selector: string, before?: () => void, after?: (el: HTMLElement) => void) {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (!e.shiftKey || e.ctrlKey || e.metaKey || e.altKey || e.key !== key) return;
@@ -14,7 +14,9 @@ export function useFocusHotkey(key: string, selector: string, before?: () => voi
       requestAnimationFrame(() => {
         const els = Array.from(document.querySelectorAll<HTMLElement>(selector))
           .filter((el) => el.offsetParent !== null);
-        els.at(-1)?.focus();
+        const el = els.at(-1);
+        el?.focus();
+        if (el) after?.(el);
       });
       e.preventDefault();
     };

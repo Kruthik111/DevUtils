@@ -134,13 +134,14 @@ export function EnvironmentBar() {
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <button
+                            data-environment-trigger
                             className={cn(
                                 'group flex items-center gap-2 h-10 pl-3 pr-2.5 rounded-lg border border-border',
                                 'bg-background/50 hover:bg-foreground/5 transition-all',
                                 'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary',
                                 'data-[state=open]:ring-2 data-[state=open]:ring-primary/50 data-[state=open]:border-primary'
                             )}
-                            title="Environment used to resolve {{variables}} in notes"
+                            title="Environment used to resolve {{variables}} in notes (Shift+P)"
                         >
                             <Layers
                                 className={cn(
