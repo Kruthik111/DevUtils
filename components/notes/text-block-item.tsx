@@ -33,10 +33,13 @@ export function TextBlockItem({ block, onToggleTodo, onContextMenu, isEnvCopyTar
     };
 
     return (
-        <div className="relative" onContextMenu={onContextMenu}>
+        <div
+            className={`relative rounded-lg transition-shadow ${isEnvCopyTarget ? 'ring-2 ring-orange-500/70 shadow-lg shadow-orange-500/10' : ''}`}
+            onContextMenu={onContextMenu}
+        >
             {isEnvCopyTarget && (
                 <span
-                    className="absolute -top-1.5 -right-1.5 z-10 flex items-center justify-center w-4 h-4 rounded-full bg-primary text-primary-foreground"
+                    className="absolute -top-1.5 -right-1.5 z-10 flex items-center justify-center w-4 h-4 rounded-full bg-orange-500 text-white"
                     title="Copied to clipboard when the environment changes"
                 >
                     <Crosshair className="w-2.5 h-2.5" />

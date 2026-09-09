@@ -62,7 +62,7 @@ export function ContextMenu({ x, y, onEdit, onDelete, onClose, isEnvCopyTarget, 
                     }}
                     className="w-full px-4 py-2 text-left hover:bg-foreground/5 transition-colors flex items-center gap-2 text-sm"
                 >
-                    <Crosshair className={`w-4 h-4 ${isEnvCopyTarget ? 'text-primary' : ''}`} />
+                    <Crosshair className={`w-4 h-4 ${isEnvCopyTarget ? 'text-orange-500' : ''}`} />
                     {isEnvCopyTarget ? 'Clear env copy block' : 'Copy on env change'}
                 </button>
             )}
