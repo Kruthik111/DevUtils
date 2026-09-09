@@ -20,6 +20,9 @@ import { useRefresh } from '@/components/providers/refresh-provider';
 import { useNotes } from '@/components/providers/notes-provider';
 import { EnvironmentProvider } from '@/components/providers/environment-provider';
 import { EnvironmentBar } from '@/components/notes/environment-bar';
+import { Environment, substituteVariables } from '@/lib/notes/env';
+import { copyToClipboard } from '@/lib/notes/clipboard';
+import { getEnvCopyTarget, setEnvCopyTarget } from '@/lib/notes/env-copy';
 import { RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, Search, Grid3x3, List, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -45,6 +48,8 @@ export default function NotesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showAddNoteModal, setShowAddNoteModal] = useState(false);
+  // Block that gets auto-copied to the clipboard when the environment changes (per tab)
+  const [envCopyBlockId, setEnvCopyBlockId] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -140,6 +145,12 @@ export default function NotesPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isNoteLimitReached]);
+
+  // Load the "copy on environment change" block for the active tab
+  useEffect(() => {
+    if (!displayData.activeTabId) return;
+    setEnvCopyBlockId(getEnvCopyTarget(displayData.activeTabId)?.blockId ?? null);
+  }, [displayData.activeTabId]);
 
   // Sort and filter notes based on sortMode and search (must be before conditional returns)
   // Pinned notes always appear first, sorted by pin number, then unpinned notes
@@ -914,6 +925,46 @@ export default function NotesPage() {
     });
   };
 
+  const handleToggleEnvCopyTarget = (note: Note, block: TextBlock) => {
+    const tabId = displayData.activeTabId;
+    if (!tabId) return;
+    if (envCopyBlockId === block.id) {
+      setEnvCopyTarget(tabId, null);
+      setEnvCopyBlockId(null);
+      toast.success('Environment copy block cleared.');
+    } else {
+      setEnvCopyTarget(tabId, { noteId: note.id, blockId: block.id });
+      setEnvCopyBlockId(block.id);
+      toast.success('This block will be copied to your clipboard whenever the environment changes.');
+    }
+  };
+
+  // Called by EnvironmentBar when the user picks a different environment:
+  // copy the marked block's content with the new environment's variables resolved.
+  const handleEnvironmentChange = (env: Environment | null) => {
+    if (!activeTab) return;
+    const target = getEnvCopyTarget(activeTab.id);
+    if (!target) return;
+
+    const note = activeTab.notes.find((n) => n.id === target.noteId);
+    const block = note?.blocks.find((b) => b.id === target.blockId);
+    if (!note || !block) {
+      // The marked block no longer exists — drop the stale target
+      setEnvCopyTarget(activeTab.id, null);
+      setEnvCopyBlockId(null);
+      return;
+    }
+
+    const resolved = substituteVariables(block.content, env?.variables || {});
+    copyToClipboard(resolved).then((ok) => {
+      if (ok) {
+        toast.success(`Copied "${note.title}" block (${env?.name || 'No Environment'}).`);
+      } else {
+        toast.error('Failed to copy block to clipboard.');
+      }
+    });
+  };
+
   const handleEditBlock = async (updatedBlock: TextBlock) => {
     if (!editingBlock || !data || !activeGroup || !activeTab) return;
 
@@ -1017,6 +1068,12 @@ export default function NotesPage() {
       groups: updatedGroups,
     };
     setData(updatedData);
+
+    // If the deleted block was the environment copy target, clear it
+    if (deletingBlock.blockId === envCopyBlockId) {
+      setEnvCopyTarget(data.activeTabId, null);
+      setEnvCopyBlockId(null);
+    }
 
     setDeletingBlock(null);
   };
@@ -1190,7 +1247,7 @@ export default function NotesPage() {
             onDeleteGroup={(groupId) => setDeletingGroupId(groupId)}
             onUpdateGroupName={handleUpdateGroupName}
           />
-          <EnvironmentBar />
+          <EnvironmentBar onEnvironmentChange={handleEnvironmentChange} />
         </div>
 
         {/* Notes List */}
@@ -1205,6 +1262,7 @@ export default function NotesPage() {
             onAddBlock={handleAddBlock}
             onToggleTodo={handleToggleTodo}
             onBlockContextMenu={handleBlockContextMenu}
+            envCopyBlockId={envCopyBlockId}
           />
         )}
 
@@ -1270,6 +1328,8 @@ export default function NotesPage() {
               setDeletingBlock({ noteId: contextMenu.note.id, blockId: contextMenu.block.id });
               setContextMenu(null);
             }}
+            isEnvCopyTarget={contextMenu.block.id === envCopyBlockId}
+            onToggleEnvCopyTarget={() => handleToggleEnvCopyTarget(contextMenu.note, contextMenu.block)}
             onClose={() => setContextMenu(null)}
           />
         )}

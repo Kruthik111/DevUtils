@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 // Environment selector + management modal for the Notes page.
 // Backed by /api/note-environments — these are notes-only variables and are
 // kept completely separate from the API testing page's environments.
-export function EnvironmentBar() {
+export function EnvironmentBar({ onEnvironmentChange }: { onEnvironmentChange?: (env: Environment | null) => void }) {
     const env = useEnvironment();
     const [showModal, setShowModal] = useState(false);
     const [editingEnv, setEditingEnv] = useState<Environment | null>(null);
@@ -175,7 +175,10 @@ export function EnvironmentBar() {
                         </div>
 
                         <DropdownMenuItem
-                            onSelect={() => setSelectedEnvironment(null)}
+                            onSelect={() => {
+                                setSelectedEnvironment(null);
+                                onEnvironmentChange?.(null);
+                            }}
                             className="rounded-xl px-2.5 py-2 cursor-pointer focus:bg-foreground/10 hover:bg-foreground/10"
                         >
                             <span className="flex-1 text-sm text-foreground/70">No Environment</span>
@@ -185,7 +188,10 @@ export function EnvironmentBar() {
                         {environments.map((e) => (
                             <DropdownMenuItem
                                 key={e._id}
-                                onSelect={() => setSelectedEnvironment(e)}
+                                onSelect={() => {
+                                    setSelectedEnvironment(e);
+                                    onEnvironmentChange?.(e);
+                                }}
                                 className="rounded-xl px-2.5 py-2 cursor-pointer gap-2 focus:bg-foreground/10 hover:bg-foreground/10"
                             >
                                 <div className="flex-1 min-w-0">

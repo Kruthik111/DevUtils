@@ -14,6 +14,7 @@ interface NotesListProps {
     onToggleTodo: (noteId: string, blockId: string) => void;
     onBlockContextMenu: (e: React.MouseEvent, note: Note, block: TextBlock) => void;
     isLoading?: boolean;
+    envCopyBlockId?: string | null;
 }
 
 export function NotesList({
@@ -26,6 +27,7 @@ export function NotesList({
     onToggleTodo,
     onBlockContextMenu,
     isLoading,
+    envCopyBlockId,
 }: NotesListProps) {
     if (isLoading) {
         return (
@@ -64,6 +66,7 @@ export function NotesList({
                     onAddBlock={(type, content, copyMode) => onAddBlock(note.id, type, content, copyMode)}
                     onToggleTodo={(blockId) => onToggleTodo(note.id, blockId)}
                     onBlockContextMenu={(e, block) => onBlockContextMenu(e, note, block)}
+                    envCopyBlockId={envCopyBlockId}
                 />
             ))}
         </div>

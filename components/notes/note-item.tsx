@@ -18,6 +18,7 @@ interface NoteItemProps {
     onAddBlock: (type: NoteType, content: string, copyMode: CopyMode) => void;
     onToggleTodo: (blockId: string) => void;
     onBlockContextMenu: (e: React.MouseEvent, block: TextBlock) => void;
+    envCopyBlockId?: string | null;
 }
 
 export function NoteItem({
@@ -29,6 +30,7 @@ export function NoteItem({
     onAddBlock,
     onToggleTodo,
     onBlockContextMenu,
+    envCopyBlockId,
 }: NoteItemProps) {
     const [showAddBlock, setShowAddBlock] = useState(false);
     const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -166,6 +168,7 @@ export function NoteItem({
                             block={block}
                             onToggleTodo={() => onToggleTodo(block.id)}
                             onContextMenu={(e) => onBlockContextMenu(e, block)}
+                            isEnvCopyTarget={block.id === envCopyBlockId}
                         />
                     ))}
                 </div>

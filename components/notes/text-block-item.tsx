@@ -1,6 +1,7 @@
 "use client";
 
 import { TextBlock } from '@/lib/notes/types';
+import { Crosshair } from 'lucide-react';
 import { LinkNote } from './note-types/link-note';
 import { SnippetNote } from './note-types/snippet-note';
 import { TodoNote } from './note-types/todo-note';
@@ -9,9 +10,10 @@ interface TextBlockItemProps {
     block: TextBlock;
     onToggleTodo: () => void;
     onContextMenu: (e: React.MouseEvent) => void;
+    isEnvCopyTarget?: boolean;
 }
 
-export function TextBlockItem({ block, onToggleTodo, onContextMenu }: TextBlockItemProps) {
+export function TextBlockItem({ block, onToggleTodo, onContextMenu, isEnvCopyTarget }: TextBlockItemProps) {
     const renderBlock = () => {
         switch (block.type) {
             case 'link':
@@ -30,5 +32,17 @@ export function TextBlockItem({ block, onToggleTodo, onContextMenu }: TextBlockI
         }
     };
 
-    return <div onContextMenu={onContextMenu}>{renderBlock()}</div>;
+    return (
+        <div className="relative" onContextMenu={onContextMenu}>
+            {isEnvCopyTarget && (
+                <span
+                    className="absolute -top-1.5 -right-1.5 z-10 flex items-center justify-center w-4 h-4 rounded-full bg-primary text-primary-foreground"
+                    title="Copied to clipboard when the environment changes"
+                >
+                    <Crosshair className="w-2.5 h-2.5" />
+                </span>
+            )}
+            {renderBlock()}
+        </div>
+    );
 }
