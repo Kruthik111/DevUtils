@@ -66,17 +66,17 @@ const navGroups: NavGroup[] = [
     ]
   },
   {
+    label: "JSON",
+    items: [
+      { id: "json-tools", label: "JSON Tools", icon: Braces, href: "/json-tools" },
+    ]
+  },
+  {
     label: "API",
     items: [
       { id: "api", label: "API", icon: Code, href: "/api", authRequired: true },
       { id: "pages", label: "API Pages", icon: Globe, href: "/pages", authRequired: true },
       { id: "load-test", label: "API Load Test", icon: Gauge, href: "/load-test", authRequired: true },
-    ]
-  },
-  {
-    label: "JSON",
-    items: [
-      { id: "json-tools", label: "JSON Tools", icon: Braces, href: "/json-tools" },
     ]
   },
   {
