@@ -1035,47 +1035,66 @@ export default function NotesPage() {
     }
   };
 
-  const handleDeleteBlock = () => {
-    if (!deletingBlock || !data) return;
+  const handleDeleteBlock = async () => {
+    if (!deletingBlock || !data || !activeGroup || !activeTab) return;
 
-    const updatedGroups = data.groups.map((g) =>
-      g.id === data.activeGroupId
-        ? {
-          ...g,
-          tabs: g.tabs.map((t) =>
-            t.id === data.activeTabId
-              ? {
-                ...t,
-                notes: t.notes.map((n) =>
-                  n.id === deletingBlock.noteId
-                    ? {
-                      ...n,
-                      blocks: n.blocks.filter((b) => b.id !== deletingBlock.blockId),
-                      updatedAt: Date.now(),
-                    }
-                    : n
-                ),
-              }
-              : t
-          ),
-        }
-        : g
-    );
+    const noteToUpdate = activeTab.notes.find((n) => n.id === deletingBlock.noteId);
+    if (!noteToUpdate) return;
 
-    const d = data;
-    const updatedData: NotesData = {
-      ...d,
-      groups: updatedGroups,
+    const updatedNote: Note = {
+      ...noteToUpdate,
+      blocks: noteToUpdate.blocks.filter((b) => b.id !== deletingBlock.blockId),
+      updatedAt: Date.now(),
     };
-    setData(updatedData);
 
-    // If the deleted block was the environment copy target, clear it
-    if (deletingBlock.blockId === envCopyBlockId) {
-      setEnvCopyTarget(data.activeTabId, null);
-      setEnvCopyBlockId(null);
+    try {
+      const response = await fetch(`/api/notes/${updatedNote.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: updatedNote.title,
+          blocks: updatedNote.blocks,
+          pin: updatedNote.pin,
+          groupId: activeGroup.id,
+          tabId: activeTab.id,
+          createdAt: updatedNote.createdAt,
+          updatedAt: updatedNote.updatedAt,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to delete block:', await response.json());
+        toast.error('Failed to delete block. Please try again.');
+        return;
+      }
+
+      setData({
+        ...data,
+        groups: data.groups.map((g) =>
+          g.id === data.activeGroupId
+            ? {
+              ...g,
+              tabs: g.tabs.map((t) =>
+                t.id === data.activeTabId
+                  ? { ...t, notes: t.notes.map((n) => (n.id === updatedNote.id ? updatedNote : n)) }
+                  : t
+              ),
+            }
+            : g
+        ),
+      });
+
+      // If the deleted block was the environment copy target, clear it
+      if (deletingBlock.blockId === envCopyBlockId) {
+        setEnvCopyTarget(data.activeTabId, null);
+        setEnvCopyBlockId(null);
+      }
+
+      setDeletingBlock(null);
+    } catch (error) {
+      console.error('Error deleting block:', error);
+      toast.error('Failed to delete block. Please try again.');
     }
-
-    setDeletingBlock(null);
   };
 
   return (
