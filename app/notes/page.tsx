@@ -944,7 +944,10 @@ export default function NotesPage() {
   const handleEnvironmentChange = (env: Environment | null) => {
     if (!activeTab) return;
     const target = getEnvCopyTarget(activeTab.id);
-    if (!target) return;
+    if (!target) {
+      toast.error('No block marked for environment copy. Right-click a block to mark one.');
+      return;
+    }
 
     const note = activeTab.notes.find((n) => n.id === target.noteId);
     const block = note?.blocks.find((b) => b.id === target.blockId);
@@ -1266,7 +1269,7 @@ export default function NotesPage() {
             onDeleteGroup={(groupId) => setDeletingGroupId(groupId)}
             onUpdateGroupName={handleUpdateGroupName}
           />
-          <EnvironmentBar onEnvironmentChange={handleEnvironmentChange} />
+          <EnvironmentBar onEnvironmentChange={handleEnvironmentChange} onCopyHotkey={handleEnvironmentChange} />
         </div>
 
         {/* Notes List */}

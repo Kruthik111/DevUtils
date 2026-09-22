@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Settings, X, Check, ChevronDown, Layers, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Environment } from '@/lib/notes/env';
@@ -18,8 +18,24 @@ import { toast } from 'sonner';
 // Environment selector + management modal for the Notes page.
 // Backed by /api/note-environments — these are notes-only variables and are
 // kept completely separate from the API testing page's environments.
-export function EnvironmentBar({ onEnvironmentChange }: { onEnvironmentChange?: (env: Environment | null) => void }) {
+export function EnvironmentBar({ onEnvironmentChange, onCopyHotkey }: {
+    onEnvironmentChange?: (env: Environment | null) => void;
+    /** Shift+B: copy the marked block with the current environment. */
+    onCopyHotkey?: (env: Environment | null) => void;
+}) {
     const env = useEnvironment();
+    const selected = env?.selectedEnvironment ?? null;
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (!e.shiftKey || e.ctrlKey || e.metaKey || e.altKey || e.key !== 'B') return;
+            const t = e.target as HTMLElement | null;
+            if (t?.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t?.tagName || '')) return;
+            e.preventDefault();
+            onCopyHotkey?.(selected);
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [selected, onCopyHotkey]);
     const [showModal, setShowModal] = useState(false);
     const [editingEnv, setEditingEnv] = useState<Environment | null>(null);
     const [envName, setEnvName] = useState('');
