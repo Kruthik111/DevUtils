@@ -1,19 +1,20 @@
 "use client";
 
 import { useEffect, useRef } from 'react';
-import { Edit2, Trash2, Crosshair } from 'lucide-react';
+import { Edit2, Trash2, Crosshair, Maximize2 } from 'lucide-react';
 
 interface ContextMenuProps {
     x: number;
     y: number;
     onEdit: () => void;
+    onFocus?: () => void;
     onDelete: () => void;
     onClose: () => void;
     isEnvCopyTarget?: boolean;
     onToggleEnvCopyTarget?: () => void;
 }
 
-export function ContextMenu({ x, y, onEdit, onDelete, onClose, isEnvCopyTarget, onToggleEnvCopyTarget }: ContextMenuProps) {
+export function ContextMenu({ x, y, onEdit, onFocus, onDelete, onClose, isEnvCopyTarget, onToggleEnvCopyTarget }: ContextMenuProps) {
     const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -54,6 +55,18 @@ export function ContextMenu({ x, y, onEdit, onDelete, onClose, isEnvCopyTarget, 
                 <Edit2 className="w-4 h-4" />
                 Edit
             </button>
+            {onFocus && (
+                <button
+                    onClick={() => {
+                        onFocus();
+                        onClose();
+                    }}
+                    className="w-full px-4 py-2 text-left hover:bg-foreground/5 transition-colors flex items-center gap-2 text-sm"
+                >
+                    <Maximize2 className="w-4 h-4" />
+                    Open note in modal
+                </button>
+            )}
             {onToggleEnvCopyTarget && (
                 <button
                     onClick={() => {

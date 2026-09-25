@@ -11,6 +11,7 @@ import { AddNoteModal } from '@/components/notes/add-note-modal';
 import { NotesList } from '@/components/notes/notes-list';
 import { NoteEditModal } from '@/components/notes/note-edit-modal';
 import { BlockEditModal } from '@/components/notes/block-edit-modal';
+import { NoteFocusModal } from '@/components/notes/note-focus-modal';
 import { ConfirmDialog } from '@/components/notes/confirm-dialog';
 import { useFocusHotkey } from '@/lib/use-focus-hotkey';
 import { ContextMenu } from '@/components/notes/context-menu';
@@ -50,6 +51,8 @@ export default function NotesPage() {
   const [showAddNoteModal, setShowAddNoteModal] = useState(false);
   // Block that gets auto-copied to the clipboard when the environment changes (per tab)
   const [envCopyBlockId, setEnvCopyBlockId] = useState<string | null>(null);
+  // Note shown in the focus modal until the user closes it
+  const [focusedNoteId, setFocusedNoteId] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -122,6 +125,7 @@ export default function NotesPage() {
   // Calculate active group and tab (before conditional returns)
   const activeGroup = displayData.groups.find((g) => g.id === displayData.activeGroupId);
   const activeTab = activeGroup?.tabs.find((t) => t.id === displayData.activeTabId);
+  const focusedNote = focusedNoteId ? activeTab?.notes.find((n) => n.id === focusedNoteId) : undefined;
 
   // Check if note limit reached (9 notes per tab)
   const isNoteLimitReached = useMemo(() => {
@@ -1319,6 +1323,14 @@ export default function NotesPage() {
           onCancel={() => setEditingBlock(null)}
         />
 
+        <NoteFocusModal
+          note={focusedNote ?? null}
+          envCopyBlockId={envCopyBlockId}
+          onToggleTodo={handleToggleTodo}
+          onContextMenu={handleBlockContextMenu}
+          onClose={() => setFocusedNoteId(null)}
+        />
+
         {/* Block Delete Confirmation */}
         <ConfirmDialog
           isOpen={!!deletingBlock}
@@ -1344,6 +1356,10 @@ export default function NotesPage() {
             y={contextMenu.y}
             onEdit={() => {
               setEditingBlock({ note: contextMenu.note, block: contextMenu.block });
+              setContextMenu(null);
+            }}
+            onFocus={() => {
+              setFocusedNoteId(contextMenu.note.id);
               setContextMenu(null);
             }}
             onDelete={() => {
