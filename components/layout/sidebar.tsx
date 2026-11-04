@@ -26,7 +26,9 @@ import {
   Globe,
   ListTodo,
   ChevronDown,
-  Search
+  Search,
+  Grid3x3,
+  Keyboard
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -86,6 +88,13 @@ const navGroups: NavGroup[] = [
       { id: "readme-preview", label: "README Preview", icon: BookOpen, href: "/readme-preview" },
       { id: "quick-share", label: "Quick Share", icon: Share2, href: "/quick-share" },
       { id: "better-prompts", label: "Better Prompts", icon: Sparkles, href: "/better-prompts" },
+    ]
+  },
+  {
+    label: "GAMES",
+    items: [
+      { id: "tic-tac-toe", label: "Tic-tac-toe", icon: Grid3x3, href: "/games/tic-tac-toe" },
+      { id: "typing-test", label: "Typing Test", icon: Keyboard, href: "/games/typing-test" },
     ]
   },
   {
