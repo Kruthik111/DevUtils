@@ -8,6 +8,8 @@ import { compare, hash } from "bcryptjs";
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
+const WEEK_SECONDS = 7 * 24 * 60 * 60;
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true, // Add this line - allows localhost and other hosts
   providers: [
@@ -175,6 +177,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.name = user.name;
         token.email = user.email;
         token.picture = (user as any).image;
+        token.loginAt = Date.now();
+      }
+
+      // Force re-login once a week, regardless of activity
+      token.loginAt ??= Date.now(); // sessions created before this check existed
+      if (Date.now() - (token.loginAt as number) > WEEK_SECONDS * 1000) {
+        return null;
       }
 
       // Handle token updates (when update() is called)
@@ -199,5 +208,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   session: {
     strategy: "jwt",
+    maxAge: WEEK_SECONDS,
   },
 });
